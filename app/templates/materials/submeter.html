@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Enviar material — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Header -->
+      <div class="mb-4">
+        <h4 class="fw-800 mb-1"><i class="bi bi-cloud-upload me-2 text-orange"></i>Enviar material</h4>
+        <p class="text-muted small">Preenche os detalhes do material. Após submissão, será revisto pela nossa equipa.</p>
+      </div>
+
+      <!-- Créditos info -->
+      <div class="alert border-0 mb-4 d-flex align-items-center gap-2"
+           style="background:var(--p24-green-lt);border-radius:var(--p24-radius)">
+        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+        <span class="small fw-600 text-success">
+          Ganhas <strong>+5 créditos</strong> por cada material aprovado!
+        </span>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        <!-- Secção 1: Ficheiro -->
+        <div class="p24-form-card mb-4">
+          <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">1</span>Ficheiro</h6>
+
+          <div class="p24-upload-zone" id="uploadZone" onclick="document.getElementById('ficheiro').click()">
+            <i class="bi bi-cloud-upload fs-1 text-muted mb-2 d-block"></i>
+            <div class="fw-600 mb-1">Clica para selecionar ou arrasta aqui</div>
+            <div class="text-muted small">PDF, PNG, JPG, DOCX — máx. 20MB</div>
+            <div id="fileName" class="mt-2 fw-600 text-success d-none"></div>
+          </div>
+          <input type="file" name="ficheiro" id="ficheiro" class="d-none"
+                 accept=".pdf,.png,.jpg,.jpeg,.docx"
+                 onchange="showFileName(this)" required />
+        </div>
+
+        <!-- Secção 2: Identificação -->
+        <div class="p24-form-card mb-4">
+          <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">2</span>Identificação</h6>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Título *</label>
+              <input type="text" name="titulo" class="form-control"
+                     placeholder="Ex: 1ª Frequência de Cálculo I — Informática de Gestão Financeira 2024" required />
+            </div>
+            <div class="col-12">
+              <label class="form-label">Tipo de material *</label>
+              <select name="categoria_id" class="form-select" required>
+                <option value="">Seleciona o tipo...</option>
+                {% for c in categorias %}
+                <option value="{{ c.id }}">{{ c.icone }} {{ c.nome }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descrição</label>
+              <textarea name="descricao" class="form-control" rows="2"
+                        placeholder="Breve descrição do material..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secção 3: Classificação -->
+        <div class="p24-form-card mb-4">
+          <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">3</span>Classificação académica</h6>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Universidade *</label>
+              <input type="text" name="instituicao" class="form-control"
+                     placeholder="Ex: Universidade Agostinho Neto, UCAN, ISPAJ, UniPiaget" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Disciplina *</label>
+              <input type="text" name="disciplina" class="form-control"
+                     placeholder="Ex: Cálculo I, Álgebra Linear, Programação" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Curso</label>
+              <input type="text" name="curso" class="form-control"
+                     placeholder="Ex: Informática de Gestão Financeira, Direito, Medicina" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Ano do curso</label>
+              <select name="ano_escolar" class="form-select">
+                <option value="">Seleciona...</option>
+                <option value="1º Ano">1º Ano</option>
+                <option value="2º Ano">2º Ano</option>
+                <option value="3º Ano">3º Ano</option>
+                <option value="4º Ano">4º Ano</option>
+                <option value="5º Ano">5º Ano</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Ano letivo</label>
+              <select name="ano_letivo" class="form-select">
+                <option value="">Seleciona...</option>
+                {% for ano in ['2026','2025','2024','2023','2022','2021'] %}
+                <option value="{{ ano }}">{{ ano }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Avaliação</label>
+              <select name="semestre" class="form-select">
+                <option value="">Seleciona...</option>
+                <option value="1freq">1ª Frequência</option>
+                <option value="2freq">2ª Frequência</option>
+                <option value="exame">Exame</option>
+                <option value="recurso">Recurso</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="d-flex gap-3 justify-content-end">
+          <a href="{{ url_for('materiais.listar') }}" class="btn btn-light fw-600 px-4">Cancelar</a>
+          <button type="submit" class="btn btn-primary fw-700 px-5">
+            <i class="bi bi-send me-2"></i>Submeter material
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showFileName(input) {
+  const el = document.getElementById('fileName');
+  if (input.files.length > 0) {
+    el.textContent = '✓ ' + input.files[0].name;
+    el.classList.remove('d-none');
+    document.getElementById('uploadZone').style.borderColor = 'var(--p24-green)';
+    document.getElementById('uploadZone').style.background = 'var(--p24-green-lt)';
+  }
+}
+
+// Drag and drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  const input = document.getElementById('ficheiro');
+  input.files = e.dataTransfer.files;
+  showFileName(input);
+});
+</script>
+{% endblock %}

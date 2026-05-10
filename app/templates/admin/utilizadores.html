@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Utilizadores — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-800 mb-1">Utilizadores</h4>
+      <p class="text-muted small mb-0">{{ users.total }} utilizadores registados</p>
+    </div>
+    <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+  </div>
+
+  <div class="p24-card p-0 overflow-hidden">
+    <table class="p24-table w-100">
+      <thead>
+        <tr>
+          <th>Utilizador</th>
+          <th class="d-none d-md-table-cell">Instituição</th>
+          <th>Créditos</th>
+          <th>Uploads</th>
+          <th>Admin</th>
+          <th>Registo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users.items %}
+        <tr>
+          <td>
+            <div class="fw-600 small">{{ u.nome }}</div>
+            <div class="text-muted" style="font-size:.72rem">{{ u.email }}</div>
+          </td>
+          <td class="d-none d-md-table-cell text-muted small">{{ u.instituicao or '—' }}</td>
+          <td><span class="fw-700 text-warning">{{ u.creditos }}</span></td>
+          <td class="fw-600 text-p24">{{ u.total_uploads }}</td>
+          <td>
+            {% if u.is_admin %}
+            <span class="badge bg-warning text-dark fw-600">Admin</span>
+            {% else %}
+            <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+          <td class="text-muted small">{{ u.criado_em.strftime('%d/%m/%Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

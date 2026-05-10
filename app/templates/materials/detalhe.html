@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+{% block title %}{{ material.titulo }} — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb p24-breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Início</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('materiais.listar') }}">Explorar</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('materiais.listar') }}?disciplina={{ material.disciplina }}">{{ material.disciplina }}</a></li>
+      {% if material.ano_escolar %}
+      <li class="breadcrumb-item"><a href="#">{{ material.ano_escolar }}</a></li>
+      {% endif %}
+      <li class="breadcrumb-item active" aria-current="page">{{ material.titulo }}</li>
+    </ol>
+  </nav>
+
+  <div class="row g-4">
+
+    <!-- ═══ LEFT: Main content ═══ -->
+    <div class="col-lg-8">
+
+      <!-- Title card -->
+      <div class="p24-card mb-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <!-- File icon -->
+          <div class="rounded-3 p-3 text-white d-flex align-items-center justify-content-center flex-shrink-0"
+               style="background:var(--p24-blue);width:60px;height:60px">
+            <i class="bi bi-file-earmark-pdf fs-4"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h4 class="fw-800 mb-1">{{ material.titulo }}</h4>
+            <div class="text-muted small">
+              {% if material.ano_letivo %}{{ material.ano_letivo }}{% endif %}
+              {% if material.semestre %} • {{ material.semestre }}º Trimestre{% endif %}
+              {% if material.instituicao %} • {{ material.instituicao }}{% endif %}
+            </div>
+            <div class="d-flex gap-2 mt-2 flex-wrap">
+              <span class="p24-type-badge badge-{{ material.categoria.nome|lower if material.categoria else 'outro' }}">
+                {{ material.categoria.nome if material.categoria else 'Outro' }}
+              </span>
+              <span class="badge-aprovado">✓ Aprovado</span>
+            </div>
+          </div>
+          <!-- Actions -->
+          <div class="d-flex gap-2 flex-shrink-0">
+            <button class="btn btn-sm btn-light" title="Guardar"><i class="bi bi-bookmark"></i></button>
+            <button class="btn btn-sm btn-light" title="Partilhar"><i class="bi bi-share me-1"></i>Partilhar</button>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('materiais.download', id=material.id) }}"
+               class="btn btn-primary fw-700 btn-sm">
+              <i class="bi bi-download me-1"></i>Download
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.entrar') }}" class="btn btn-primary fw-700 btn-sm">
+              <i class="bi bi-download me-1"></i>Download
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF viewer placeholder -->
+      <div class="p24-pdf-viewer mb-4 d-flex align-items-center justify-content-center" style="min-height:420px">
+        <div class="text-center text-white">
+          <!-- PDF viewer toolbar mockup -->
+          <div class="bg-white bg-opacity-10 rounded-3 p-3 mb-3 d-flex align-items-center gap-3 mx-3" style="font-size:.8rem">
+            <i class="bi bi-list text-white-50"></i>
+            <span class="flex-grow-1 text-white-50">{{ material.ficheiro_nome }}</span>
+            <span class="text-white">1 / ?</span>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-dark btn-sm">−</button>
+              <span class="text-white px-2">100%</span>
+              <button class="btn btn-sm btn-dark btn-sm">+</button>
+            </div>
+          </div>
+          <div class="py-4">
+            <i class="bi bi-file-earmark-pdf text-white-50" style="font-size:4rem"></i>
+            <p class="text-white-50 mt-2">
+              {% if current_user.is_authenticated %}
+              <a href="{{ url_for('materiais.download', id=material.id) }}" class="btn btn-warning fw-700">
+                <i class="bi bi-download me-2"></i>Fazer download para ver o ficheiro
+              </a>
+              {% else %}
+              <a href="{{ url_for('auth.entrar') }}" class="btn btn-warning fw-700">
+                <i class="bi bi-lock me-2"></i>Entra para aceder ao ficheiro
+              </a>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descrição + Tags -->
+      <div class="p24-card mb-4">
+        <h6 class="fw-700 mb-2">Descrição</h6>
+        <p class="text-muted small mb-3">{{ material.descricao or 'Sem descrição disponível.' }}</p>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge bg-p24-light text-p24 fw-500">{{ material.disciplina }}</span>
+          {% if material.ano_escolar %}
+          <span class="badge bg-p24-light text-p24 fw-500">{{ material.ano_escolar }}</span>
+          {% endif %}
+          {% if material.ano_letivo %}
+          <span class="badge bg-p24-light text-p24 fw-500">{{ material.ano_letivo }}</span>
+          {% endif %}
+          {% if material.semestre %}
+          <span class="badge bg-p24-light text-p24 fw-500">{{ material.semestre }}º Trimestre</span>
+          {% endif %}
+          {% if material.categoria %}
+          <span class="badge bg-p24-light text-p24 fw-500">{{ material.categoria.nome }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Avaliações -->
+      <div class="p24-card">
+        <div class="p24-section-header mb-4">
+          <h5>Avaliações e comentários ({{ material.avaliacoes.count() }})</h5>
+          {% if current_user.is_authenticated and current_user.id != material.autor_id %}
+          <button class="btn btn-outline-primary btn-sm fw-600" data-bs-toggle="modal" data-bs-target="#avaliarModal">
+            Avaliar material
+          </button>
+          {% endif %}
+        </div>
+
+        <!-- Rating summary -->
+        <div class="row align-items-center mb-4">
+          <div class="col-3 text-center">
+            <div style="font-size:3rem;font-weight:800;color:var(--p24-blue);line-height:1">
+              {{ "%.1f"|format(material.nota_media) }}
+            </div>
+            <div class="p24-stars p24-stars-lg">
+              {% for i in range(5) %}
+              <i class="bi bi-star{% if i < material.nota_media|round %}-fill{% endif %}"></i>
+              {% endfor %}
+            </div>
+            <div class="text-muted small mt-1">Excelente</div>
+          </div>
+          <div class="col-9">
+            {% for n in [5,4,3,2,1] %}
+            {% set cnt = material.avaliacoes.filter_by(nota=n).count() %}
+            {% set total = material.avaliacoes.count() %}
+            {% set pct = (cnt/total*100)|round if total > 0 else 0 %}
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <span class="text-muted small" style="width:8px">{{ n }}</span>
+              <div class="progress flex-grow-1" style="height:6px">
+                <div class="progress-bar bg-warning" style="width:{{ pct }}%"></div>
+              </div>
+              <span class="text-muted small" style="width:16px">{{ cnt }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Comments -->
+        {% for av in material.avaliacoes.limit(5).all() %}
+        <div class="d-flex gap-3 py-3 border-top">
+          <div class="p24-avatar flex-shrink-0">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <strong class="small">{{ av.utilizador.nome }}</strong>
+              <span class="badge bg-p24-light text-p24 fw-500" style="font-size:.65rem">Estudante</span>
+              <div class="p24-stars ms-auto" style="font-size:.8rem">
+                {% for i in range(5) %}
+                <i class="bi bi-star{% if i < av.nota %}-fill{% endif %}"></i>
+                {% endfor %}
+              </div>
+            </div>
+            {% if av.comentario %}
+            <p class="small text-muted mb-1">{{ av.comentario }}</p>
+            {% endif %}
+            <div class="text-muted" style="font-size:.72rem">{{ av.criado_em.strftime('%d/%m/%Y') }}</div>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted text-center small py-3">Ainda sem avaliações. Sê o primeiro!</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT: Info sidebar ═══ -->
+    <div class="col-lg-4">
+
+      <!-- Info do material -->
+      <div class="p24-card mb-4">
+        <h6 class="fw-700 mb-3">Informações do material</h6>
+        <table class="p24-info-table w-100">
+          <tr><td>Tipo de material</td><td><span class="p24-type-badge badge-{{ material.categoria.nome|lower if material.categoria else 'outro' }}">{{ material.categoria.nome if material.categoria else '—' }}</span></td></tr>
+          <tr><td>Disciplina</td><td>{{ material.disciplina }}</td></tr>
+          {% if material.ano_escolar %}<tr><td>Classe</td><td>{{ material.ano_escolar }}</td></tr>{% endif %}
+          {% if material.ano_letivo %}<tr><td>Ano</td><td>{{ material.ano_letivo }}</td></tr>{% endif %}
+          {% if material.semestre %}<tr><td>Período</td><td>{{ material.semestre }}º Trimestre</td></tr>{% endif %}
+          <tr><td>Instituição</td><td>{{ material.instituicao }}</td></tr>
+          <tr><td>Formato</td>
+            <td>
+              {% if material.ficheiro_tipo == 'pdf' %}
+              <span class="text-danger fw-600"><i class="bi bi-filetype-pdf me-1"></i>PDF</span>
+              {% else %}
+              <span class="fw-600">{{ material.ficheiro_tipo|upper }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% if material.ficheiro_tamanho %}
+          <tr><td>Tamanho</td><td>{{ (material.ficheiro_tamanho / 1024 / 1024)|round(1) }} MB</td></tr>
+          {% endif %}
+          <tr><td>Upload em</td><td>{{ material.criado_em.strftime('%d/%m/%Y') }}</td></tr>
+          <tr><td>Status</td><td><span class="badge-aprovado">Aprovado</span></td></tr>
+        </table>
+      </div>
+
+      <!-- Enviado por -->
+      <div class="p24-card mb-4">
+        <h6 class="fw-700 mb-3">Enviado por</h6>
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="p24-avatar" style="width:44px;height:44px;font-size:1.2rem">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <div>
+            <div class="fw-700">{{ material.autor.nome }}</div>
+            <div class="text-muted small">{{ material.autor.instituicao or 'Estudante' }}</div>
+            {% if material.autor.curso %}
+            <div class="text-muted small">{{ material.autor.curso }}</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="row g-2 text-center mb-3">
+          <div class="col-4">
+            <div class="fw-800 text-orange">{{ "%.1f"|format(material.nota_media) }}</div>
+            <div class="p24-stars" style="font-size:.7rem"><i class="bi bi-star-fill"></i></div>
+            <div class="text-muted" style="font-size:.7rem">Avaliação</div>
+          </div>
+          <div class="col-4">
+            <div class="fw-800 text-p24">{{ material.autor.total_uploads }}</div>
+            <div class="text-muted" style="font-size:.7rem">Materiais</div>
+          </div>
+          <div class="col-4">
+            <div class="fw-800 text-success">{{ material.autor.materiais.filter_by(status='aprovado').count() }}</div>
+            <div class="text-muted" style="font-size:.7rem">Aprovados</div>
+          </div>
+        </div>
+        <a href="#" class="btn btn-light w-100 btn-sm fw-600">Ver perfil</a>
+      </div>
+
+      <!-- Estatísticas -->
+      <div class="p24-card">
+        <h6 class="fw-700 mb-3">Estatísticas do material</h6>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="small text-muted"><i class="bi bi-download me-2"></i>Downloads</span>
+          <strong>{{ material.downloads }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="small text-muted"><i class="bi bi-eye me-2"></i>Visualizações</span>
+          <strong>{{ material.visualizacoes }}</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+          <span class="small text-muted"><i class="bi bi-bookmark me-2"></i>Favoritos</span>
+          <strong>—</strong>
+        </div>
+        <div class="d-flex justify-content-between align-items-center py-2">
+          <span class="small text-muted"><i class="bi bi-share me-2"></i>Partilhas</span>
+          <strong>—</strong>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Avaliar -->
+{% if current_user.is_authenticated %}
+<div class="modal fade" id="avaliarModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-700">Avaliar material</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('materiais.avaliar', id=material.id) }}" method="post">
+        <div class="modal-body">
+          <!-- Star rating -->
+          <div class="text-center mb-4">
+            <p class="text-muted small mb-2">Seleciona a tua avaliação</p>
+            <div class="d-flex justify-content-center gap-2" id="starRating">
+              {% for n in [1,2,3,4,5] %}
+              <label class="fs-2 cursor-pointer">
+                <input type="radio" name="nota" value="{{ n }}" class="d-none"
+                       {% if avaliacao_user and avaliacao_user.nota == n %}checked{% endif %}>
+                <i class="bi bi-star text-warning star-icon" data-val="{{ n }}"></i>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Comentário (opcional)</label>
+            <textarea class="form-control" name="comentario" rows="3"
+                      placeholder="Partilha a tua opinião sobre este material...">{{ avaliacao_user.comentario if avaliacao_user else '' }}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light fw-600" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary fw-700">Guardar avaliação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Star rating UI
+document.querySelectorAll('.star-icon').forEach(star => {
+  star.addEventListener('click', function() {
+    const val = +this.dataset.val;
+    this.closest('form').querySelector(`input[value="${val}"]`).checked = true;
+    document.querySelectorAll('.star-icon').forEach((s, i) => {
+      s.classList.toggle('bi-star-fill', i < val);
+      s.classList.toggle('bi-star', i >= val);
+    });
+  });
+  star.addEventListener('mouseover', function() {
+    const val = +this.dataset.val;
+    document.querySelectorAll('.star-icon').forEach((s, i) => {
+      s.classList.toggle('bi-star-fill', i < val);
+      s.classList.toggle('bi-star', i >= val);
+    });
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Flask / SQLite
+instance/
+*.db
+*.sqlite3
+
+# Uploads (não commitar ficheiros de utilizadores)
+app/static/uploads/
+config/app/static/uploads/
+
+# Variáveis de ambiente
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Migrations (podes incluir se quiseres versionar)
+# migrations/
