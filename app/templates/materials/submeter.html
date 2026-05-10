@@ -24,17 +24,35 @@
       <form method="post" enctype="multipart/form-data">
         <!-- Secção 1: Ficheiro -->
         <div class="p24-form-card mb-4">
-          <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">1</span>Ficheiro</h6>
+          <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">1</span>Ficheiro(s)</h6>
+
+          <!-- Aviso multi-foto (oculto inicialmente) -->
+          <div id="avisoMulti" class="alert alert-warning border-0 d-none mb-3 small fw-600" role="alert"
+               style="border-radius:var(--p24-radius)">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Estás a enviar várias fotos — certifica-te de que <strong>todas pertencem à mesma prova</strong>:
+            mesmo ano letivo, mesma disciplina e mesmo tipo de avaliação.
+          </div>
 
           <div class="p24-upload-zone" id="uploadZone" onclick="document.getElementById('ficheiro').click()">
-            <i class="bi bi-cloud-upload fs-1 text-muted mb-2 d-block"></i>
+            <i class="bi bi-images fs-1 text-muted mb-2 d-block"></i>
             <div class="fw-600 mb-1">Clica para selecionar ou arrasta aqui</div>
-            <div class="text-muted small">PDF, PNG, JPG, DOCX — máx. 20MB</div>
-            <div id="fileName" class="mt-2 fw-600 text-success d-none"></div>
+            <div class="text-muted small">PDF, PNG, JPG, DOCX — podes selecionar várias fotos de uma vez — máx. 20MB cada</div>
           </div>
           <input type="file" name="ficheiro" id="ficheiro" class="d-none"
                  accept=".pdf,.png,.jpg,.jpeg,.docx"
-                 onchange="showFileName(this)" required />
+                 multiple onchange="mostrarFicheiros(this)" required />
+
+          <!-- Prévia dos ficheiros selecionados -->
+          <div id="previa" class="mt-3 d-none">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="small fw-700" id="contadorFicheiros"></span>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limparSelecao()">
+                <i class="bi bi-x-lg me-1"></i>Limpar
+              </button>
+            </div>
+            <div id="grelhaFotos" class="d-flex flex-wrap gap-2"></div>
+          </div>
         </div>
 
         <!-- Secção 2: Identificação -->
@@ -69,18 +87,24 @@
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label">Universidade *</label>
-              <input type="text" name="instituicao" class="form-control"
-                     placeholder="Ex: Universidade Agostinho Neto, UCAN, ISPAJ, UniPiaget" required />
+              <input type="text" name="instituicao" id="instituicao" class="form-control"
+                     placeholder="Ex: ISAF, ISPTEC, UCAN, ISPAJ, UniPiaget"
+                     autocomplete="off" list="list-instituicao" required />
+              <datalist id="list-instituicao"></datalist>
             </div>
             <div class="col-md-6">
               <label class="form-label">Disciplina *</label>
-              <input type="text" name="disciplina" class="form-control"
-                     placeholder="Ex: Cálculo I, Álgebra Linear, Programação" required />
+              <input type="text" name="disciplina" id="disciplina" class="form-control"
+                     placeholder="Ex: Cálculo I, Álgebra Linear, Programação"
+                     autocomplete="off" list="list-disciplina" required />
+              <datalist id="list-disciplina"></datalist>
             </div>
             <div class="col-md-6">
               <label class="form-label">Curso</label>
-              <input type="text" name="curso" class="form-control"
-                     placeholder="Ex: Informática de Gestão Financeira, Direito, Medicina" />
+              <input type="text" name="curso" id="curso" class="form-control"
+                     placeholder="Ex: Informática de Gestão Financeira, Contabilidade, Medicina"
+                     autocomplete="off" list="list-curso" />
+              <datalist id="list-curso"></datalist>
             </div>
             <div class="col-md-4">
               <label class="form-label">Ano do curso</label>
@@ -130,14 +154,63 @@
 
 {% block extra_js %}
 <script>
-function showFileName(input) {
-  const el = document.getElementById('fileName');
-  if (input.files.length > 0) {
-    el.textContent = '✓ ' + input.files[0].name;
-    el.classList.remove('d-none');
-    document.getElementById('uploadZone').style.borderColor = 'var(--p24-green)';
-    document.getElementById('uploadZone').style.background = 'var(--p24-green-lt)';
-  }
+function mostrarFicheiros(input) {
+  const files = Array.from(input.files);
+  const aviso = document.getElementById('avisoMulti');
+  const previa = document.getElementById('previa');
+  const grelha = document.getElementById('grelhaFotos');
+  const contador = document.getElementById('contadorFicheiros');
+  const zone = document.getElementById('uploadZone');
+
+  if (files.length === 0) { limparSelecao(); return; }
+
+  // Aviso multi-foto
+  aviso.classList.toggle('d-none', files.length <= 1);
+
+  // Feedback visual na zona de upload
+  zone.style.borderColor = 'var(--p24-green)';
+  zone.style.background = 'var(--p24-green-lt)';
+
+  contador.textContent = files.length === 1
+    ? `✓ 1 ficheiro selecionado`
+    : `✓ ${files.length} ficheiros selecionados`;
+
+  grelha.innerHTML = '';
+  files.forEach(file => {
+    const item = document.createElement('div');
+    item.style.cssText = 'width:80px;text-align:center;font-size:11px;word-break:break-all;';
+
+    const isImg = file.type.startsWith('image/');
+    if (isImg) {
+      const img = document.createElement('img');
+      img.style.cssText = 'width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;';
+      img.src = URL.createObjectURL(file);
+      item.appendChild(img);
+    } else {
+      const icon = document.createElement('div');
+      icon.style.cssText = 'width:80px;height:80px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px solid #dee2e6;background:#f8f9fa;font-size:28px;';
+      icon.textContent = file.name.endsWith('.pdf') ? '📄' : '📝';
+      item.appendChild(icon);
+    }
+
+    const nome = document.createElement('div');
+    nome.className = 'mt-1 text-muted';
+    nome.textContent = file.name.length > 12 ? file.name.slice(0, 10) + '…' : file.name;
+    item.appendChild(nome);
+    grelha.appendChild(item);
+  });
+
+  previa.classList.remove('d-none');
+}
+
+function limparSelecao() {
+  const input = document.getElementById('ficheiro');
+  input.value = '';
+  document.getElementById('previa').classList.add('d-none');
+  document.getElementById('avisoMulti').classList.add('d-none');
+  const zone = document.getElementById('uploadZone');
+  zone.style.borderColor = '';
+  zone.style.background = '';
 }
 
 // Drag and drop
@@ -149,7 +222,44 @@ zone.addEventListener('drop', e => {
   zone.classList.remove('dragover');
   const input = document.getElementById('ficheiro');
   input.files = e.dataTransfer.files;
-  showFileName(input);
+  mostrarFicheiros(input);
+});
+
+// Autocomplete com sugestões da base de dados
+const SUGESTOES_URL = "{{ url_for('materiais.sugestoes') }}";
+let timers = {};
+
+function preencherDatalist(listId, resultados) {
+  const dl = document.getElementById(listId);
+  dl.innerHTML = resultados.map(v => `<option value="${v}">`).join('');
+}
+
+function pedirSugestoes(campo, listId, q, instituicao = '') {
+  clearTimeout(timers[campo]);
+  timers[campo] = setTimeout(async () => {
+    if (q.length < 1) return;
+    const params = new URLSearchParams({ campo, q });
+    if (instituicao) params.append('instituicao', instituicao);
+    const res = await fetch(`${SUGESTOES_URL}?${params}`);
+    preencherDatalist(listId, await res.json());
+  }, 200);
+}
+
+document.getElementById('instituicao').addEventListener('input', function () {
+  pedirSugestoes('instituicao', 'list-instituicao', this.value);
+  // Ao mudar universidade, recarrega sugestões de disciplina e curso
+  document.getElementById('list-disciplina').innerHTML = '';
+  document.getElementById('list-curso').innerHTML = '';
+});
+
+document.getElementById('disciplina').addEventListener('input', function () {
+  const univ = document.getElementById('instituicao').value;
+  pedirSugestoes('disciplina', 'list-disciplina', this.value, univ);
+});
+
+document.getElementById('curso').addEventListener('input', function () {
+  const univ = document.getElementById('instituicao').value;
+  pedirSugestoes('curso', 'list-curso', this.value, univ);
 });
 </script>
 {% endblock %}
