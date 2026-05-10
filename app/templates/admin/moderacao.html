@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Moderação — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-800 mb-1">Moderação de materiais</h4>
+      <p class="text-muted small mb-0">Aprova ou rejeita os materiais submetidos pelos estudantes</p>
+    </div>
+    <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar ao painel
+    </a>
+  </div>
+
+  <div class="p24-card p-0 overflow-hidden">
+    {% if materiais.items %}
+    <table class="p24-table w-100">
+      <thead>
+        <tr>
+          <th>Material</th>
+          <th>Autor</th>
+          <th class="d-none d-md-table-cell">Instituição</th>
+          <th class="d-none d-lg-table-cell">Data</th>
+          <th>Tipo</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in materiais.items %}
+        <tr>
+          <td>
+            <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
+               class="text-decoration-none fw-600 text-dark small">
+              <i class="bi bi-file-earmark-pdf text-danger me-2"></i>{{ m.titulo }}
+            </a>
+            <div class="text-muted" style="font-size:.72rem">{{ m.disciplina }} • {{ m.instituicao }}</div>
+          </td>
+          <td class="small fw-600">{{ m.autor.nome }}</td>
+          <td class="d-none d-md-table-cell text-muted small">{{ m.instituicao }}</td>
+          <td class="d-none d-lg-table-cell text-muted small">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
+          <td>
+            <span class="p24-type-badge badge-{{ m.categoria.nome|lower if m.categoria else 'outro' }}">
+              {{ m.categoria.nome if m.categoria else '—' }}
+            </span>
+          </td>
+          <td class="text-center">
+            <div class="d-flex gap-2 justify-content-center">
+              <!-- Aprovar -->
+              <form action="{{ url_for('admin.aprovar', id=m.id) }}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-success btn-sm fw-600" title="Aprovar">
+                  <i class="bi bi-check-lg"></i>
+                </button>
+              </form>
+              <!-- Rejeitar -->
+              <button type="button" class="btn btn-danger btn-sm fw-600" title="Rejeitar"
+                      data-bs-toggle="modal" data-bs-target="#rejeitar{{ m.id }}">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% if materiais.pages > 1 %}
+    <div class="p-3 border-top">
+      <nav><ul class="pagination justify-content-center mb-0">
+        {% for p in materiais.iter_pages() %}
+          {% if p %}
+          <li class="page-item {% if p == materiais.page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+      </ul></nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+      <div style="font-size:3rem">✅</div>
+      <h5 class="mt-3 fw-700">Tudo em dia!</h5>
+      <p class="text-muted">Não há materiais pendentes de aprovação.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modais de rejeição -->
+{% for m in materiais.items %}
+<div class="modal fade" id="rejeitar{{ m.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-700 text-danger">Rejeitar material</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('admin.rejeitar', id=m.id) }}" method="post">
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Material: <strong>{{ m.titulo }}</strong></p>
+          <div class="mb-3">
+            <label class="form-label">Motivo da rejeição</label>
+            <textarea name="motivo" class="form-control" rows="3"
+                      placeholder="Ex: Ficheiro ilegível, conteúdo incorreto..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light fw-600" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger fw-700">Rejeitar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

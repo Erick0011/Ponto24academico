@@ -1,0 +1,55 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+
+class Config:
+    """Configuração base — partilhada por todos os ambientes."""
+
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-insegura")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Upload
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "app", "static", "uploads")
+    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH_MB", 20)) * 1024 * 1024
+    ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "gif", "webp", "docx"}
+
+    # Créditos iniciais ao registar
+    CREDITOS_INICIAIS = 10
+    CREDITOS_POR_UPLOAD_APROVADO = 5
+    CREDITOS_POR_DOWNLOAD = 1
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'ponto24_dev.db')}"
+    )
+
+
+class ProductionConfig(Config):
+    DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+
+    # Em produção, exige SECRET_KEY segura
+    @classmethod
+    def init_app(cls, app):
+        assert cls.SECRET_KEY != "dev-secret-key-insegura", \
+            "Define SECRET_KEY no .env antes de usar em produção!"
+
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    WTF_CSRF_ENABLED = False
+
+
+config = {
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "testing": TestingConfig,
+    "default": DevelopmentConfig,
+}

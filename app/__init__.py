@@ -1,0 +1,61 @@
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager
+
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
+
+
+def create_app(config_name: str = None):
+    """Application Factory — cria e configura a instância Flask."""
+
+    app = Flask(__name__, instance_relative_config=False)
+
+    # Configuração
+    from config import config
+    env = config_name or os.environ.get("FLASK_ENV", "development")
+    app.config.from_object(config.get(env, config["default"]))
+
+    # Garante que a pasta de uploads existe
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+    # Extensões
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.entrar"
+    login_manager.login_message = "Faz login para continuar."
+    login_manager.login_message_category = "aviso"
+
+    # User loader para Flask-Login
+    from app.models.user import User
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
+    # Blueprints
+    from app.routes.auth import auth_bp
+    from app.routes.main import main_bp
+    from app.routes.materiais import materiais_bp
+    from app.routes.admin import admin_bp
+
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(main_bp)
+    app.register_blueprint(materiais_bp)
+    app.register_blueprint(admin_bp)
+
+    # Handler de erros
+    @app.errorhandler(403)
+    def forbidden(e):
+        return "Acesso negado.", 403
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return "Página não encontrada.", 404
+
+    return app
