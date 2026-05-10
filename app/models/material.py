@@ -61,6 +61,9 @@ class Material(db.Model):
     downloads = db.Column(db.Integer, default=0)
     nota_media = db.Column(db.Float, default=0.0)
 
+    # Agrupamento de uploads múltiplos (mesmo UUID = mesmo conjunto de fotos)
+    grupo_upload = db.Column(db.String(36), index=True)
+
     # Chaves estrangeiras
     autor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     categoria_id = db.Column(db.Integer, db.ForeignKey("categorias.id"))
@@ -77,6 +80,24 @@ class Material(db.Model):
     @property
     def esta_aprovado(self) -> bool:
         return self.status == self.STATUS_APROVADO
+
+    @property
+    def e_imagem(self) -> bool:
+        return self.ficheiro_tipo in {"png", "jpg", "jpeg", "gif", "webp"}
+
+    @property
+    def tem_preview(self) -> bool:
+        return self.ficheiro_tipo in {"png", "jpg", "jpeg", "gif", "webp", "pdf"}
+
+    @property
+    def thumbnail_path(self):
+        """Caminho relativo para usar em url_for('static', filename=...)."""
+        if not self.e_imagem:
+            return None
+        partes = self.ficheiro_path.rsplit("/", 1)
+        if len(partes) == 2:
+            return f"uploads/{partes[0]}/thumbs/{partes[1]}"
+        return f"uploads/thumbs/{self.ficheiro_path}"
 
     def incrementar_visualizacoes(self):
         self.visualizacoes += 1

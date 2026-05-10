@@ -1,6 +1,8 @@
+import os
+import uuid
 from flask import (
     Blueprint, render_template, redirect, url_for,
-    flash, request, current_app, send_from_directory, abort
+    flash, request, current_app, send_from_directory, abort, jsonify
 )
 from flask_login import login_required, current_user
 from app import db
@@ -83,11 +85,46 @@ def detalhe(id):
             material_id=id
         ).first()
 
+    grupo_materiais = []
+    if material.grupo_upload:
+        grupo_materiais = (
+            Material.query
+            .filter_by(grupo_upload=material.grupo_upload, status=Material.STATUS_APROVADO)
+            .order_by(Material.id)
+            .all()
+        )
+
     return render_template(
         "materials/detalhe.html",
         material=material,
         avaliacao_user=avaliacao_user,
+        grupo_materiais=grupo_materiais,
     )
+
+
+@materiais_bp.route("/sugestoes")
+def sugestoes():
+    """Retorna sugestões de autocompletar para os campos do formulário de upload."""
+    campo = request.args.get("campo", "")
+    q = request.args.get("q", "").strip()
+    instituicao = request.args.get("instituicao", "").strip()
+
+    campos_permitidos = {"instituicao", "disciplina", "curso"}
+    if campo not in campos_permitidos:
+        return jsonify([])
+
+    col = getattr(Material, campo)
+    query = db.session.query(col).filter(col.isnot(None), col != "")
+
+    if q:
+        query = query.filter(col.ilike(f"%{q}%"))
+
+    # Se pedir disciplinas/cursos filtrados por instituição
+    if campo in ("disciplina", "curso") and instituicao:
+        query = query.filter(Material.instituicao.ilike(f"%{instituicao}%"))
+
+    resultados = [r[0] for r in query.distinct().order_by(col).limit(10).all()]
+    return jsonify(resultados)
 
 
 @materiais_bp.route("/submeter", methods=["GET", "POST"])
@@ -106,47 +143,81 @@ def submeter():
         ano_escolar = request.form.get("ano_escolar", "").strip()
         semestre = request.form.get("semestre", "").strip()
         categoria_id = request.form.get("categoria_id", type=int)
-        ficheiro = request.files.get("ficheiro")
+        ficheiros = [f for f in request.files.getlist("ficheiro") if f.filename != ""]
 
         # Validações
-        if not all([titulo, instituicao, disciplina, ficheiro]):
-            flash("Preenche os campos obrigatórios e seleciona um ficheiro.", "erro")
+        if not all([titulo, instituicao, disciplina]) or not ficheiros:
+            flash("Preenche os campos obrigatórios e seleciona pelo menos um ficheiro.", "erro")
             return render_template("materials/submeter.html", categorias=categorias)
 
-        if ficheiro.filename == "":
-            flash("Nenhum ficheiro selecionado.", "erro")
-            return render_template("materials/submeter.html", categorias=categorias)
+        total = len(ficheiros)
+        grupo_id = str(uuid.uuid4()) if total > 1 else None
 
+        guardados = []
         try:
-            info = guardar_ficheiro(ficheiro, subfolder="materiais")
+            for f in ficheiros:
+                guardados.append(guardar_ficheiro(f, subfolder="materiais"))
         except ValueError as e:
+            from app.services.upload_service import apagar_ficheiro
+            for info in guardados:
+                apagar_ficheiro(info["path_relativo"])
             flash(str(e), "erro")
             return render_template("materials/submeter.html", categorias=categorias)
 
-        material = Material(
-            titulo=titulo,
-            descricao=descricao,
-            instituicao=instituicao,
-            curso=curso,
-            disciplina=disciplina,
-            ano_letivo=ano_letivo,
-            ano_escolar=ano_escolar,
-            semestre=semestre,
-            categoria_id=categoria_id,
-            ficheiro_nome=info["nome_original"],
-            ficheiro_path=info["path_relativo"],
-            ficheiro_tipo=info["tipo"],
-            ficheiro_tamanho=info["tamanho"],
-            autor_id=current_user.id,
-            status=Material.STATUS_PENDENTE,
-        )
-        db.session.add(material)
+        primeiro_id = None
+        for i, info in enumerate(guardados):
+            titulo_final = titulo if total == 1 else f"{titulo} — Pág. {i + 1} de {total}"
+            material = Material(
+                titulo=titulo_final,
+                descricao=descricao,
+                instituicao=instituicao,
+                curso=curso,
+                disciplina=disciplina,
+                ano_letivo=ano_letivo,
+                ano_escolar=ano_escolar,
+                semestre=semestre,
+                categoria_id=categoria_id,
+                ficheiro_nome=info["nome_original"],
+                ficheiro_path=info["path_relativo"],
+                ficheiro_tipo=info["tipo"],
+                ficheiro_tamanho=info["tamanho"],
+                autor_id=current_user.id,
+                status=Material.STATUS_PENDENTE,
+                grupo_upload=grupo_id,
+            )
+            db.session.add(material)
+            db.session.flush()
+            if primeiro_id is None:
+                primeiro_id = material.id
+
         db.session.commit()
 
-        flash("Material submetido com sucesso! Está a aguardar aprovação.", "sucesso")
-        return redirect(url_for("materiais.detalhe", id=material.id))
+        if total == 1:
+            flash("Material submetido com sucesso! Está a aguardar aprovação.", "sucesso")
+        else:
+            flash(f"{total} fotografias submetidas com sucesso! Estão a aguardar aprovação.", "sucesso")
+        return redirect(url_for("materiais.detalhe", id=primeiro_id))
 
     return render_template("materials/submeter.html", categorias=categorias)
+
+
+@materiais_bp.route("/<int:id>/preview")
+@login_required
+def preview(id):
+    """Serve o ficheiro inline para previsualização (sem cobrar créditos)."""
+    material = Material.query.get_or_404(id)
+    if not material.esta_aprovado:
+        abort(403)
+
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    pasta = "materiais"
+    nome_ficheiro = material.ficheiro_path.replace(f"{pasta}/", "")
+
+    return send_from_directory(
+        directory=os.path.join(upload_folder, pasta),
+        path=nome_ficheiro,
+        as_attachment=False,
+    )
 
 
 @materiais_bp.route("/<int:id>/download")
