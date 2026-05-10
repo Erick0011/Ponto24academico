@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Como funciona — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+
+  <!-- Hero -->
+  <div class="text-center mb-5">
+    <h2 class="fw-800 mb-2">Como funciona o Ponto 24?</h2>
+    <p class="text-muted" style="max-width:560px;margin:0 auto">
+      Uma plataforma colaborativa onde estudantes partilham e acedem a materiais académicos universitários de forma simples e justa.
+    </p>
+  </div>
+
+  <!-- Passos -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-3 text-center">
+      <div class="rounded-4 p-4 h-100" style="background:var(--p24-blue-lt)">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:var(--p24-blue);color:#fff;font-size:1.4rem">
+          <i class="bi bi-person-plus-fill"></i>
+        </div>
+        <div class="fw-800 mb-1" style="font-size:.75rem;letter-spacing:.1em;color:var(--p24-blue)">PASSO 1</div>
+        <h6 class="fw-700 mb-2">Regista-te</h6>
+        <p class="text-muted small mb-0">Cria a tua conta gratuitamente e recebe <strong>10 créditos</strong> de boas-vindas para começar a aceder a materiais.</p>
+      </div>
+    </div>
+    <div class="col-md-3 text-center">
+      <div class="rounded-4 p-4 h-100" style="background:#fff3e0">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:#ff9800;color:#fff;font-size:1.4rem">
+          <i class="bi bi-search"></i>
+        </div>
+        <div class="fw-800 mb-1" style="font-size:.75rem;letter-spacing:.1em;color:#ff9800">PASSO 2</div>
+        <h6 class="fw-700 mb-2">Explora</h6>
+        <p class="text-muted small mb-0">Pesquisa por universidade, disciplina, ano letivo ou tipo de avaliação. Filtra e pré-visualiza antes de descarregar.</p>
+      </div>
+    </div>
+    <div class="col-md-3 text-center">
+      <div class="rounded-4 p-4 h-100" style="background:#e8f5e9">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:#43a047;color:#fff;font-size:1.4rem">
+          <i class="bi bi-cloud-upload-fill"></i>
+        </div>
+        <div class="fw-800 mb-1" style="font-size:.75rem;letter-spacing:.1em;color:#43a047">PASSO 3</div>
+        <h6 class="fw-700 mb-2">Partilha</h6>
+        <p class="text-muted small mb-0">Envia as tuas provas, resumos e apontamentos. Cada material aprovado dá-te <strong>+5 créditos</strong>.</p>
+      </div>
+    </div>
+    <div class="col-md-3 text-center">
+      <div class="rounded-4 p-4 h-100" style="background:#f3e5f5">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:#8e24aa;color:#fff;font-size:1.4rem">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <div class="fw-800 mb-1" style="font-size:.75rem;letter-spacing:.1em;color:#8e24aa">PASSO 4</div>
+        <h6 class="fw-700 mb-2">Pratica</h6>
+        <p class="text-muted small mb-0">Usa as <strong>Provas Simuladas</strong> para treinar com materiais reais de anos anteriores antes dos teus exames.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sistema de créditos -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-6">
+      <div class="p24-card h-100">
+        <h5 class="fw-800 mb-1"><i class="bi bi-coin me-2 text-warning"></i>Sistema de créditos</h5>
+        <p class="text-muted small mb-4">Os créditos são a moeda da plataforma — ganhas ao contribuir e gastas ao aceder.</p>
+        <table class="table table-borderless mb-0">
+          <thead>
+            <tr class="border-bottom">
+              <th class="text-muted fw-600 small ps-0">Ação</th>
+              <th class="text-muted fw-600 small text-end pe-0">Créditos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ps-0"><i class="bi bi-person-check me-2 text-success"></i>Registo na plataforma</td>
+              <td class="text-end pe-0 fw-700 text-success">+10</td>
+            </tr>
+            <tr>
+              <td class="ps-0"><i class="bi bi-check-circle me-2 text-success"></i>Material aprovado</td>
+              <td class="text-end pe-0 fw-700 text-success">+5</td>
+            </tr>
+            <tr>
+              <td class="ps-0"><i class="bi bi-download me-2 text-danger"></i>Download de material</td>
+              <td class="text-end pe-0 fw-700 text-danger">-1</td>
+            </tr>
+            <tr class="border-top">
+              <td class="ps-0 text-muted small" colspan="2">
+                <i class="bi bi-info-circle me-1"></i>
+                Descarregar os teus próprios materiais não gasta créditos.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="p24-card h-100">
+        <h5 class="fw-800 mb-1"><i class="bi bi-shield-check me-2 text-primary"></i>Moderação e qualidade</h5>
+        <p class="text-muted small mb-4">Todos os materiais passam por revisão antes de ficarem disponíveis.</p>
+        <div class="d-flex gap-3 mb-3">
+          <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+               style="width:36px;height:36px;background:var(--p24-blue-lt)">
+            <i class="bi bi-upload text-p24"></i>
+          </div>
+          <div>
+            <div class="fw-600 small">Submissão</div>
+            <div class="text-muted small">O estudante envia o ficheiro com os metadados correctos.</div>
+          </div>
+        </div>
+        <div class="d-flex gap-3 mb-3">
+          <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+               style="width:36px;height:36px;background:#fff3e0">
+            <i class="bi bi-eye" style="color:#ff9800"></i>
+          </div>
+          <div>
+            <div class="fw-600 small">Revisão</div>
+            <div class="text-muted small">A equipa verifica a relevância, qualidade e categorização.</div>
+          </div>
+        </div>
+        <div class="d-flex gap-3">
+          <div class="flex-shrink-0 rounded-circle d-flex align-items-center justify-content-center"
+               style="width:36px;height:36px;background:#e8f5e9">
+            <i class="bi bi-check-lg text-success"></i>
+          </div>
+          <div>
+            <div class="fw-600 small">Publicação e recompensa</div>
+            <div class="text-muted small">Material aprovado fica disponível e o autor recebe créditos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tipos de materiais -->
+  <div class="p24-card mb-5">
+    <h5 class="fw-800 mb-4"><i class="bi bi-collection me-2 text-p24"></i>Que materiais podes encontrar?</h5>
+    <div class="row g-3">
+      {% set tipos = [
+        ('bi-file-text', 'text-danger', 'Provas', 'Exames e frequências de anos anteriores — 1.ª Frequência, 2.ª Frequência, Exame e Recurso.'),
+        ('bi-book', 'text-primary', 'Resumos', 'Sínteses e resumos de matérias organizados por capítulos ou temas.'),
+        ('bi-pencil-square', 'text-warning', 'Exercícios', 'Listas e fichas de exercícios com e sem resolução.'),
+        ('bi-journal-text', 'text-success', 'Apontamentos', 'Notas de aulas e apontamentos detalhados.'),
+        ('bi-check-square', 'text-info', 'Gabaritos', 'Resoluções e correcções de exercícios e provas.'),
+        ('bi-display', 'text-secondary', 'Slides', 'Apresentações e diapositivos de aulas.'),
+      ] %}
+      {% for icon, color, nome, desc in tipos %}
+      <div class="col-sm-6 col-lg-4">
+        <div class="d-flex gap-3 align-items-start">
+          <i class="bi {{ icon }} {{ color }} fs-4 flex-shrink-0 mt-1"></i>
+          <div>
+            <div class="fw-700 small">{{ nome }}</div>
+            <div class="text-muted small">{{ desc }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="mb-5">
+    <h5 class="fw-800 mb-4 text-center">Perguntas frequentes</h5>
+    <div class="accordion" id="faqAccordion" style="max-width:720px;margin:0 auto">
+
+      {% set faqs = [
+        ('É gratuito?', 'Sim, o registo e a navegação são completamente gratuitos. Os créditos são a única "moeda" — e ganhas créditos ao partilhar materiais.'),
+        ('Os meus materiais ficam disponíveis imediatamente?', 'Não. Após o upload, os materiais ficam em análise. Após aprovação pela equipa, ficam públicos e recebes os teus créditos.'),
+        ('Que formatos de ficheiro são aceites?', 'PDF, imagens (JPG, PNG) e documentos Word (DOCX). Tamanho máximo de 20 MB por ficheiro.'),
+        ('Posso enviar várias páginas de uma prova de uma vez?', 'Sim! No formulário de upload podes selecionar múltiplas fotos de uma vez. Serão agrupadas automaticamente e aparecerão como uma única entrada na plataforma.'),
+        ('O que são Provas Simuladas?', 'É uma funcionalidade que te permite selecionar materiais disponíveis na plataforma e praticar em modo de exame — com temporizador e navegação página a página.'),
+      ] %}
+      {% for pergunta, resposta in faqs %}
+      <div class="accordion-item border-0 mb-2 rounded-3 overflow-hidden shadow-sm">
+        <h2 class="accordion-header">
+          <button class="accordion-button {% if not loop.first %}collapsed{% endif %} fw-600"
+                  type="button" data-bs-toggle="collapse"
+                  data-bs-target="#faq{{ loop.index }}">
+            {{ pergunta }}
+          </button>
+        </h2>
+        <div id="faq{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+             data-bs-parent="#faqAccordion">
+          <div class="accordion-body text-muted small">{{ resposta }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="p24-card text-center py-5">
+    <h4 class="fw-800 mb-2">Pronto para começar?</h4>
+    <p class="text-muted mb-4">Junta-te a milhares de estudantes angolanos que já partilham e aprendem juntos.</p>
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{{ url_for('auth.registar') }}" class="btn btn-primary fw-700 px-5">
+        <i class="bi bi-person-plus me-2"></i>Criar conta grátis
+      </a>
+      <a href="{{ url_for('materiais.listar') }}" class="btn btn-outline-primary fw-600 px-4">
+        <i class="bi bi-search me-2"></i>Explorar materiais
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

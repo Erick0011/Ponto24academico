@@ -78,6 +78,38 @@ def perfil():
     return render_template("dashboard/perfil.html", materiais=materiais_aprovados)
 
 
+@main_bp.route("/como-funciona")
+def como_funciona():
+    return render_template("main/como_funciona.html")
+
+
+@main_bp.route("/provas-simuladas")
+def provas_simuladas():
+    universidade = request.args.get("universidade", "").strip()
+    disciplina = request.args.get("disciplina", "").strip()
+    tipo = request.args.get("tipo", "").strip()
+    ano = request.args.get("ano", "").strip()
+
+    materiais = []
+    if any([universidade, disciplina, tipo, ano]):
+        query = Material.query.filter_by(status=Material.STATUS_APROVADO)
+        if universidade:
+            query = query.filter(Material.instituicao.ilike(f"%{universidade}%"))
+        if disciplina:
+            query = query.filter(Material.disciplina.ilike(f"%{disciplina}%"))
+        if tipo:
+            query = query.filter(Material.semestre == tipo)
+        if ano:
+            query = query.filter(Material.ano_letivo == ano)
+        materiais = query.order_by(Material.criado_em.desc()).limit(60).all()
+
+    return render_template(
+        "main/provas_simuladas.html",
+        materiais=materiais,
+        filtros={"universidade": universidade, "disciplina": disciplina, "tipo": tipo, "ano": ano},
+    )
+
+
 @main_bp.route("/perfil/editar", methods=["POST"])
 @login_required
 def editar_perfil():
