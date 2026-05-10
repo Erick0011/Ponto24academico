@@ -24,7 +24,7 @@
           <tbody>
             {% for c in categorias %}
             <tr>
-              <td class="fs-4">{{ c.icone }}</td>
+              <td><i class="bi {{ c.icone }} fs-4"></i></td>
               <td class="fw-700">{{ c.nome }}</td>
               <td class="text-muted small">{{ c.descricao or '—' }}</td>
               <td class="fw-600 text-p24">{{ c.materiais.count() }}</td>

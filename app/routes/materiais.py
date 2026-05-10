@@ -1,5 +1,6 @@
 import os
 import uuid
+from sqlalchemy import func
 from flask import (
     Blueprint, render_template, redirect, url_for,
     flash, request, current_app, send_from_directory, abort, jsonify
@@ -43,6 +44,16 @@ def listar():
     if categoria_id:
         query = query.filter(Material.categoria_id == categoria_id)
 
+    # Deduplicar grupos: só mostrar o primeiro material de cada grupo
+    lider_ids = (
+        db.session.query(func.min(Material.id))
+        .filter(Material.grupo_upload.isnot(None), Material.status == Material.STATUS_APROVADO)
+        .group_by(Material.grupo_upload)
+    )
+    query = query.filter(
+        db.or_(Material.grupo_upload.is_(None), Material.id.in_(lider_ids))
+    )
+
     # Ordenação
     if ordenar == "popular":
         query = query.order_by(Material.downloads.desc())
@@ -54,6 +65,28 @@ def listar():
     materiais = query.paginate(page=page, per_page=12, error_out=False)
     categorias = Categoria.query.all()
 
+    # Pré-carregar contagens e thumbnails de grupos visíveis na página
+    grupos_ids = [m.grupo_upload for m in materiais.items if m.grupo_upload]
+    grupo_counts = {}
+    grupo_thumbs = {}
+    if grupos_ids:
+        contagens = (
+            db.session.query(Material.grupo_upload, func.count(Material.id))
+            .filter(Material.grupo_upload.in_(grupos_ids), Material.status == Material.STATUS_APROVADO)
+            .group_by(Material.grupo_upload)
+            .all()
+        )
+        grupo_counts = {g: c for g, c in contagens}
+
+        membros = (
+            db.session.query(Material)
+            .filter(Material.grupo_upload.in_(grupos_ids), Material.status == Material.STATUS_APROVADO)
+            .order_by(Material.id)
+            .all()
+        )
+        for m in membros:
+            grupo_thumbs.setdefault(m.grupo_upload, []).append(m)
+
     return render_template(
         "materials/listar.html",
         materiais=materiais,
@@ -61,6 +94,8 @@ def listar():
         busca=busca,
         filtros={"instituicao": instituicao, "disciplina": disciplina, "categoria_id": categoria_id},
         ordenar=ordenar,
+        grupo_counts=grupo_counts,
+        grupo_thumbs=grupo_thumbs,
     )
 
 
@@ -206,15 +241,15 @@ def submeter():
 def preview(id):
     """Serve o ficheiro inline para previsualização (sem cobrar créditos)."""
     material = Material.query.get_or_404(id)
-    if not material.esta_aprovado:
+    e_autor = current_user.is_authenticated and current_user.id == material.autor_id
+    if not material.esta_aprovado and not e_autor:
         abort(403)
 
     upload_folder = current_app.config["UPLOAD_FOLDER"]
-    pasta = "materiais"
-    nome_ficheiro = material.ficheiro_path.replace(f"{pasta}/", "")
+    nome_ficheiro = os.path.basename(material.ficheiro_path)
 
     return send_from_directory(
-        directory=os.path.join(upload_folder, pasta),
+        directory=os.path.join(upload_folder, "materiais"),
         path=nome_ficheiro,
         as_attachment=False,
     )
@@ -226,11 +261,12 @@ def download(id):
     """Faz download de um material (gasta créditos)."""
     material = Material.query.get_or_404(id)
 
-    if not material.esta_aprovado:
+    e_autor = current_user.id == material.autor_id
+    if not material.esta_aprovado and not e_autor:
         abort(403)
 
     # Não cobra créditos ao próprio autor
-    if current_user.id != material.autor_id:
+    if not e_autor:
         sucesso = cobrar_creditos_download(current_user)
         if not sucesso:
             flash("Créditos insuficientes. Submete materiais para ganhar mais.", "erro")
@@ -240,11 +276,10 @@ def download(id):
     db.session.commit()
 
     upload_folder = current_app.config["UPLOAD_FOLDER"]
-    pasta = "materiais"
-    nome_ficheiro = material.ficheiro_path.replace(f"{pasta}/", "")
+    nome_ficheiro = os.path.basename(material.ficheiro_path)
 
     return send_from_directory(
-        directory=os.path.join(upload_folder, pasta),
+        directory=os.path.join(upload_folder, "materiais"),
         path=nome_ficheiro,
         as_attachment=True,
         download_name=material.ficheiro_nome,

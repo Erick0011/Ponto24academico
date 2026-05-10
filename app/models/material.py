@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 from app import db
 
 
@@ -82,6 +83,13 @@ class Material(db.Model):
         return self.status == self.STATUS_APROVADO
 
     @property
+    def titulo_base(self) -> str:
+        """Para grupos, remove o sufixo '— Pág. X de N'."""
+        if self.grupo_upload and " — Pág. " in self.titulo:
+            return self.titulo.rsplit(" — Pág. ", 1)[0]
+        return self.titulo
+
+    @property
     def e_imagem(self) -> bool:
         return self.ficheiro_tipo in {"png", "jpg", "jpeg", "gif", "webp"}
 
@@ -94,10 +102,8 @@ class Material(db.Model):
         """Caminho relativo para usar em url_for('static', filename=...)."""
         if not self.e_imagem:
             return None
-        partes = self.ficheiro_path.rsplit("/", 1)
-        if len(partes) == 2:
-            return f"uploads/{partes[0]}/thumbs/{partes[1]}"
-        return f"uploads/thumbs/{self.ficheiro_path}"
+        p = Path(self.ficheiro_path)
+        return f"uploads/materiais/thumbs/{p.name}"
 
     def incrementar_visualizacoes(self):
         self.visualizacoes += 1

@@ -15,13 +15,13 @@ app = create_app()
 def seed_db():
     """Popula a base de dados com dados iniciais (categorias, etc.)."""
     categorias_base = [
-        ("Prova", "📝", "Exames e testes de anos anteriores"),
-        ("Resumo", "📖", "Resumos e sínteses de matérias"),
-        ("Exercícios", "✏️", "Listas e fichas de exercícios"),
-        ("Apontamentos", "📋", "Notas de aulas e apontamentos"),
-        ("Gabarito", "✅", "Soluções e respostas de exercícios"),
-        ("Slides", "🖥️", "Apresentações e slides de aulas"),
-        ("Outro", "📄", "Outros tipos de materiais"),
+        ("Prova", "bi-file-text", "Exames e testes de anos anteriores"),
+        ("Resumo", "bi-book", "Resumos e sínteses de matérias"),
+        ("Exercícios", "bi-pencil-square", "Listas e fichas de exercícios"),
+        ("Apontamentos", "bi-journal-text", "Notas de aulas e apontamentos"),
+        ("Gabarito", "bi-check-square", "Soluções e respostas de exercícios"),
+        ("Slides", "bi-display", "Apresentações e slides de aulas"),
+        ("Outro", "bi-file-earmark", "Outros tipos de materiais"),
     ]
 
     for nome, icone, descricao in categorias_base:

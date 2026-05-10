@@ -7,7 +7,7 @@
   <!-- Header -->
   <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
     <div>
-      <h4 class="fw-800 mb-1">Olá, {{ current_user.nome.split()[0] }}! 👋</h4>
+      <h4 class="fw-800 mb-1">Olá, {{ current_user.nome.split()[0] }}! <i class="bi bi-hand-wave text-warning"></i></h4>
       <p class="text-muted mb-0 small">Bem-vindo de volta ao teu espaço académico.</p>
     </div>
     <a href="{{ url_for('materiais.submeter') }}" class="btn btn-primary fw-700">
@@ -80,9 +80,9 @@
               </td>
               <td>
                 <span class="badge-{{ m.status }}">
-                  {% if m.status == 'aprovado' %}✓ Aprovado
-                  {% elif m.status == 'pendente' %}⏳ Em análise
-                  {% else %}✗ Rejeitado{% endif %}
+                  {% if m.status == 'aprovado' %}<i class="bi bi-check-lg me-1"></i>Aprovado
+                  {% elif m.status == 'pendente' %}<i class="bi bi-hourglass-split me-1"></i>Em análise
+                  {% else %}<i class="bi bi-x-lg me-1"></i>Rejeitado{% endif %}
                 </span>
               </td>
               <td class="text-muted small">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
@@ -92,7 +92,7 @@
         </table>
         {% else %}
         <div class="text-center py-4">
-          <div style="font-size:2.5rem">📤</div>
+          <i class="bi bi-cloud-upload text-muted" style="font-size:2.5rem"></i>
           <p class="text-muted small mt-2">Ainda não enviaste nenhum material.</p>
           <a href="{{ url_for('materiais.submeter') }}" class="btn btn-primary btn-sm fw-600">
             Enviar agora
@@ -182,7 +182,7 @@
 
       <!-- CTA -->
       <div class="p24-cta-card">
-        <div style="font-size:2rem" class="mb-2">📤</div>
+        <i class="bi bi-cloud-upload-fill fs-2 mb-2 d-block"></i>
         <h5 class="mb-1">Envia e ganha!</h5>
         <p>Partilha os teus materiais e recebe créditos por cada aprovação.</p>
         <a href="{{ url_for('materiais.submeter') }}" class="btn btn-warning fw-700 w-100">

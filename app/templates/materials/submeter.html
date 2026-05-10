@@ -69,7 +69,7 @@
               <select name="categoria_id" class="form-select" required>
                 <option value="">Seleciona o tipo...</option>
                 {% for c in categorias %}
-                <option value="{{ c.id }}">{{ c.icone }} {{ c.nome }}</option>
+                <option value="{{ c.id }}">{{ c.nome }}</option>
                 {% endfor %}
               </select>
             </div>
