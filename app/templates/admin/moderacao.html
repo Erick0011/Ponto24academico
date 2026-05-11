@@ -53,6 +53,7 @@
               </a>
               <!-- Aprovar rápido -->
               <form action="{{ url_for('admin.aprovar', id=m.id) }}" method="post" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success btn-sm fw-600" title="Aprovar">
                   <i class="bi bi-check-lg"></i>
                 </button>
@@ -104,6 +105,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form action="{{ url_for('admin.rejeitar', id=m.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <p class="text-muted small mb-3">Material: <strong>{{ m.titulo }}</strong></p>
           <div class="mb-2">

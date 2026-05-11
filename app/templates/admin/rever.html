@@ -146,6 +146,7 @@
 
         <!-- Aprovar -->
         <form action="{{ url_for('admin.aprovar', id=material.id) }}" method="post" class="mb-2">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="next_url" value="{{ url_for('admin.rever_material', id=next_id) if next_id else url_for('admin.moderacao') }}">
           <button type="submit" class="btn btn-success fw-700 w-100">
             <i class="bi bi-check-circle me-2"></i>Aprovar material
@@ -159,6 +160,7 @@
         </button>
         <div class="collapse mt-3" id="formRejeitar">
           <form action="{{ url_for('admin.rejeitar', id=material.id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="next_url" value="{{ url_for('admin.rever_material', id=next_id) if next_id else url_for('admin.moderacao') }}">
             <div class="mb-2">
               <label class="form-label small fw-600">Motivo rápido</label>

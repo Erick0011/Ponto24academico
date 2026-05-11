@@ -334,6 +334,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form action="{{ url_for('materiais.avaliar', id=material.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <!-- Star rating -->
           <div class="text-center mb-4">
@@ -372,7 +373,8 @@
 const GUARDAR_URL = "{{ url_for('materiais.guardar', id=material.id) }}";
 
 async function toggleFavorito(btn) {
-  const res = await fetch(GUARDAR_URL, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  const res = await fetch(GUARDAR_URL, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken } });
   if (!res.ok) return;
   const { guardado } = await res.json();
   const icon = btn.querySelector('i');
