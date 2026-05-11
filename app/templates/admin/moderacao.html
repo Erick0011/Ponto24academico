@@ -106,10 +106,29 @@
       <form action="{{ url_for('admin.rejeitar', id=m.id) }}" method="post">
         <div class="modal-body">
           <p class="text-muted small mb-3">Material: <strong>{{ m.titulo }}</strong></p>
-          <div class="mb-3">
-            <label class="form-label">Motivo da rejeição</label>
+          <div class="mb-2">
+            <label class="form-label small fw-600">Motivo rápido</label>
+            <div class="d-flex flex-wrap gap-1 mb-2">
+              {% for mot in [
+                "Ficheiro ilegível ou de baixa qualidade",
+                "Conteúdo não corresponde ao título",
+                "Ficheiro duplicado — já existe na plataforma",
+                "Ficheiro incompleto ou corrompido",
+                "Resolução demasiado baixa para leitura",
+                "Conteúdo incorreto ou com erros graves"
+              ] %}
+              <button type="button" class="btn btn-light btn-sm fw-600"
+                      style="font-size:.72rem"
+                      onclick="this.closest('form').querySelector('textarea').value='{{ mot }}'">
+                {{ mot }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-600">Motivo da rejeição</label>
             <textarea name="motivo" class="form-control" rows="3"
-                      placeholder="Ex: Ficheiro ilegível, conteúdo incorreto..." required></textarea>
+                      placeholder="Seleciona um motivo acima ou escreve aqui..." required></textarea>
           </div>
         </div>
         <div class="modal-footer border-0">

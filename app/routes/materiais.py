@@ -10,6 +10,8 @@ from app import db
 from app.models.material import Material, Categoria, Avaliacao, Favorito
 from app.services.upload_service import guardar_ficheiro
 from app.services.creditos_service import dar_creditos_upload, cobrar_creditos_download
+from app.services.notificacoes_service import criar_notificacao
+from app.models.notificacao import Notificacao
 
 materiais_bp = Blueprint("materiais", __name__, url_prefix="/materiais")
 
@@ -368,6 +370,17 @@ def avaliar(id):
         db.session.add(avaliacao)
 
     material.recalcular_nota()
+
+    # Notifica o autor (só se não for ele próprio a avaliar)
+    if material.autor_id != current_user.id:
+        criar_notificacao(
+            utilizador_id=material.autor_id,
+            tipo=Notificacao.TIPO_SISTEMA,
+            titulo="Nova avaliação no teu material",
+            mensagem=f"{current_user.nome.split()[0]} avaliou \"{material.titulo_base}\" — {nota} de 5.",
+            url=url_for("materiais.detalhe", id=material.id),
+        )
+
     db.session.commit()
 
     flash("Avaliação guardada!", "sucesso")

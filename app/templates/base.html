@@ -71,10 +71,15 @@
       {% if current_user.is_authenticated %}
       <div class="d-flex align-items-center gap-2">
         <!-- Notifications -->
-        <button class="btn btn-light btn-icon position-relative">
-          <i class="bi bi-bell"></i>
-          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem">3</span>
-        </button>
+        <a href="{{ url_for('notificacoes.index') }}"
+           class="btn btn-light btn-icon position-relative text-decoration-none"
+           title="Notificações">
+          <i class="bi bi-bell{% if notif_nao_lidas %}-fill text-p24{% endif %}"></i>
+          {% if notif_nao_lidas %}
+          <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style="font-size:.6rem">{{ notif_nao_lidas if notif_nao_lidas < 100 else '99+' }}</span>
+          {% endif %}
+        </a>
 
         <!-- User dropdown -->
         <div class="dropdown">
