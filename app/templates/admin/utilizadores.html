@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container-xl py-4">
-  <div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <div>
       <h4 class="fw-800 mb-1">Utilizadores</h4>
       <p class="text-muted small mb-0">{{ users.total }} utilizadores registados</p>
@@ -18,35 +18,119 @@
       <thead>
         <tr>
           <th>Utilizador</th>
-          <th class="d-none d-md-table-cell">Instituição</th>
+          <th class="d-none d-md-table-cell">Curso</th>
           <th>Créditos</th>
-          <th>Uploads</th>
-          <th>Admin</th>
-          <th>Registo</th>
+          <th class="d-none d-sm-table-cell">Materiais</th>
+          <th>Estado</th>
+          <th class="text-center">Ações</th>
         </tr>
       </thead>
       <tbody>
         {% for u in users.items %}
         <tr>
           <td>
-            <div class="fw-600 small">{{ u.nome }}</div>
-            <div class="text-muted" style="font-size:.72rem">{{ u.email }}</div>
+            <div class="d-flex align-items-center gap-2">
+              <div>
+                <div class="fw-600 small d-flex align-items-center gap-1">
+                  {{ u.nome }}
+                  {% if u.is_admin %}
+                  <span class="badge bg-warning text-dark fw-600" style="font-size:.65rem">Admin</span>
+                  {% endif %}
+                </div>
+                <div class="text-muted" style="font-size:.72rem">{{ u.email }}</div>
+              </div>
+            </div>
           </td>
-          <td class="d-none d-md-table-cell text-muted small">{{ u.instituicao or '—' }}</td>
+          <td class="d-none d-md-table-cell text-muted small">
+            {{ u.curso or u.instituicao or '—' }}
+          </td>
           <td><span class="fw-700 text-warning">{{ u.creditos }}</span></td>
-          <td class="fw-600 text-p24">{{ u.total_uploads }}</td>
+          <td class="d-none d-sm-table-cell fw-600 text-p24">{{ u.total_uploads }}</td>
           <td>
-            {% if u.is_admin %}
-            <span class="badge bg-warning text-dark fw-600">Admin</span>
+            {% if u.is_active %}
+            <span class="badge bg-success-subtle text-success fw-600">Ativo</span>
             {% else %}
-            <span class="text-muted small">—</span>
+            <span class="badge bg-danger-subtle text-danger fw-600">Inativo</span>
             {% endif %}
           </td>
-          <td class="text-muted small">{{ u.criado_em.strftime('%d/%m/%Y') }}</td>
+          <td class="text-center">
+            <div class="d-flex gap-1 justify-content-center">
+              <!-- Ver perfil público -->
+              <a href="{{ url_for('main.ver_perfil', id=u.id) }}"
+                 class="btn btn-light btn-sm" title="Ver perfil" target="_blank">
+                <i class="bi bi-person"></i>
+              </a>
+              <!-- Ajustar créditos -->
+              <button class="btn btn-warning btn-sm" title="Ajustar créditos"
+                      data-bs-toggle="modal" data-bs-target="#creditos{{ u.id }}">
+                <i class="bi bi-coin"></i>
+              </button>
+              <!-- Toggle admin -->
+              <form action="{{ url_for('admin.toggle_admin', id=u.id) }}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-sm {% if u.is_admin %}btn-warning{% else %}btn-outline-warning{% endif %}"
+                        title="{% if u.is_admin %}Remover admin{% else %}Tornar admin{% endif %}">
+                  <i class="bi bi-shield{% if u.is_admin %}-fill{% endif %}"></i>
+                </button>
+              </form>
+              <!-- Toggle ativo -->
+              <form action="{{ url_for('admin.toggle_ativo', id=u.id) }}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-success{% endif %}"
+                        title="{% if u.is_active %}Desativar conta{% else %}Ativar conta{% endif %}">
+                  <i class="bi bi-{% if u.is_active %}slash-circle{% else %}check-circle{% endif %}"></i>
+                </button>
+              </form>
+            </div>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+
+    <!-- Paginação -->
+    {% if users.pages > 1 %}
+    <div class="p-3 border-top">
+      <nav><ul class="pagination justify-content-center mb-0">
+        {% for p in users.iter_pages() %}
+          {% if p %}
+          <li class="page-item {% if p == users.page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+      </ul></nav>
+    </div>
+    {% endif %}
   </div>
 </div>
+
+<!-- Modais de ajuste de créditos -->
+{% for u in users.items %}
+<div class="modal fade" id="creditos{{ u.id }}" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700">Ajustar créditos — {{ u.nome.split()[0] }}</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('admin.ajustar_creditos', id=u.id) }}" method="post">
+        <div class="modal-body">
+          <p class="text-muted small mb-3">
+            Saldo atual: <strong class="text-warning">{{ u.creditos }} créditos</strong>
+          </p>
+          <div class="mb-2">
+            <label class="form-label small fw-600">Quantidade (positivo para adicionar, negativo para remover)</label>
+            <input type="number" name="quantidade" class="form-control" placeholder="Ex: 50 ou -20" required>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-warning btn-sm fw-700">Aplicar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
 {% endblock %}

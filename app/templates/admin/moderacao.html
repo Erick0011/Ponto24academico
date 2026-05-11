@@ -46,7 +46,12 @@
           </td>
           <td class="text-center">
             <div class="d-flex gap-2 justify-content-center">
-              <!-- Aprovar -->
+              <!-- Rever (preview completo) -->
+              <a href="{{ url_for('admin.rever_material', id=m.id) }}"
+                 class="btn btn-primary btn-sm fw-600" title="Ver ficheiro e decidir">
+                <i class="bi bi-eye me-1"></i>Rever
+              </a>
+              <!-- Aprovar rápido -->
               <form action="{{ url_for('admin.aprovar', id=m.id) }}" method="post" class="d-inline">
                 <button type="submit" class="btn btn-success btn-sm fw-600" title="Aprovar">
                   <i class="bi bi-check-lg"></i>
@@ -81,7 +86,7 @@
 
     {% else %}
     <div class="text-center py-5">
-      <div style="font-size:3rem">✅</div>
+      <i class="bi bi-check-circle text-success" style="font-size:3rem"></i>
       <h5 class="mt-3 fw-700">Tudo em dia!</h5>
       <p class="text-muted">Não há materiais pendentes de aprovação.</p>
     </div>
