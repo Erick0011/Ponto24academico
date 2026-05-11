@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Erro interno — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height:75vh;padding:3rem 1rem">
+  <div class="text-center" style="max-width:480px">
+
+    <div class="mb-4 position-relative d-inline-block">
+      <span class="fw-800 d-block lh-1"
+            style="font-size:7rem;color:#e9ecef;letter-spacing:-.02em;user-select:none">500</span>
+      <i class="bi bi-exclamation-triangle-fill position-absolute"
+         style="font-size:2.8rem;color:#ffc107;top:50%;left:50%;transform:translate(-50%,-50%)"></i>
+    </div>
+
+    <h2 class="fw-800 mb-2">Algo correu mal</h2>
+    <p class="text-muted mb-4">
+      Ocorreu um erro interno no servidor.<br>
+      Já fomos notificados e estamos a resolver. Tenta novamente dentro de momentos.
+    </p>
+
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="{{ url_for('main.index') }}" class="btn btn-primary fw-700 px-4">
+        <i class="bi bi-house me-2"></i>Página inicial
+      </a>
+      <button onclick="history.back()" class="btn btn-outline-secondary fw-600 px-4">
+        <i class="bi bi-arrow-left me-2"></i>Voltar
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

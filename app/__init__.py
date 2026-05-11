@@ -1,13 +1,15 @@
 import os
 from urllib.parse import urlencode
-from flask import Flask, request as flask_request
+from flask import Flask, request as flask_request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+csrf = CSRFProtect()
 
 
 def create_app(config_name: str = None):
@@ -26,6 +28,7 @@ def create_app(config_name: str = None):
     # Extensões
     db.init_app(app)
     migrate.init_app(app, db)
+    csrf.init_app(app)
 
     login_manager.init_app(app)
     login_manager.login_view = "auth.entrar"
@@ -76,13 +79,17 @@ def create_app(config_name: str = None):
         args["page"] = str(page)
         return "?" + urlencode(args)
 
-    # Handler de erros
+    # Handlers de erros
     @app.errorhandler(403)
     def forbidden(e):
-        return "Acesso negado.", 403
+        return render_template("errors/403.html"), 403
 
     @app.errorhandler(404)
     def not_found(e):
-        return "Página não encontrada.", 404
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        return render_template("errors/500.html"), 500
 
     return app

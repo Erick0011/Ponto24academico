@@ -67,6 +67,7 @@
               </button>
               <!-- Toggle admin -->
               <form action="{{ url_for('admin.toggle_admin', id=u.id) }}" method="post" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {% if u.is_admin %}btn-warning{% else %}btn-outline-warning{% endif %}"
                         title="{% if u.is_admin %}Remover admin{% else %}Tornar admin{% endif %}">
                   <i class="bi bi-shield{% if u.is_admin %}-fill{% endif %}"></i>
@@ -74,6 +75,7 @@
               </form>
               <!-- Toggle ativo -->
               <form action="{{ url_for('admin.toggle_ativo', id=u.id) }}" method="post" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-success{% endif %}"
                         title="{% if u.is_active %}Desativar conta{% else %}Ativar conta{% endif %}">
                   <i class="bi bi-{% if u.is_active %}slash-circle{% else %}check-circle{% endif %}"></i>
@@ -115,6 +117,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form action="{{ url_for('admin.ajustar_creditos', id=u.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <p class="text-muted small mb-3">
             Saldo atual: <strong class="text-warning">{{ u.creditos }} créditos</strong>

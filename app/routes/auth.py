@@ -82,7 +82,10 @@ def entrar():
         login_user(user, remember=lembrar)
         flash(f"Bem-vindo(a) de volta, {user.nome}!", "sucesso")
 
-        proximo = request.args.get("next")
+        from urllib.parse import urlparse
+        proximo = request.args.get("next", "")
+        if proximo and urlparse(proximo).netloc:
+            proximo = ""
         return redirect(proximo or url_for("main.dashboard"))
 
     return render_template("auth/entrar.html")
