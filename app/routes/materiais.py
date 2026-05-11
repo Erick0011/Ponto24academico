@@ -7,7 +7,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from app import db
-from app.models.material import Material, Categoria, Avaliacao
+from app.models.material import Material, Categoria, Avaliacao, Favorito
 from app.services.upload_service import guardar_ficheiro
 from app.services.creditos_service import dar_creditos_upload, cobrar_creditos_download
 
@@ -26,6 +26,7 @@ def listar():
     instituicao = request.args.get("instituicao", "").strip()
     disciplina = request.args.get("disciplina", "").strip()
     categoria_id = request.args.get("categoria", type=int)
+    ano_letivo = request.args.get("ano_letivo", "").strip()
     ordenar = request.args.get("ordenar", "recente")
 
     if busca:
@@ -43,6 +44,8 @@ def listar():
         query = query.filter(Material.disciplina.ilike(f"%{disciplina}%"))
     if categoria_id:
         query = query.filter(Material.categoria_id == categoria_id)
+    if ano_letivo:
+        query = query.filter(Material.ano_letivo.ilike(f"%{ano_letivo}%"))
 
     # Deduplicar grupos: só mostrar o primeiro material de cada grupo
     lider_ids = (
@@ -64,6 +67,18 @@ def listar():
 
     materiais = query.paginate(page=page, per_page=12, error_out=False)
     categorias = Categoria.query.all()
+
+    # Listas dinâmicas para os dropdowns de filtro
+    _aprovado = Material.STATUS_APROVADO
+    instituicoes = [r[0] for r in db.session.query(Material.instituicao)
+        .filter(Material.status == _aprovado, Material.instituicao.isnot(None), Material.instituicao != "")
+        .distinct().order_by(Material.instituicao).all()]
+    anos = [r[0] for r in db.session.query(Material.ano_letivo)
+        .filter(Material.status == _aprovado, Material.ano_letivo.isnot(None), Material.ano_letivo != "")
+        .distinct().order_by(Material.ano_letivo.desc()).all()]
+
+    # Parâmetros de URL para preservar filtros na paginação e ordenação
+    url_params = {k: v for k, v in request.args.items() if k != "page"}
 
     # Pré-carregar contagens e thumbnails de grupos visíveis na página
     grupos_ids = [m.grupo_upload for m in materiais.items if m.grupo_upload]
@@ -92,10 +107,18 @@ def listar():
         materiais=materiais,
         categorias=categorias,
         busca=busca,
-        filtros={"instituicao": instituicao, "disciplina": disciplina, "categoria_id": categoria_id},
+        filtros={
+            "instituicao": instituicao,
+            "disciplina": disciplina,
+            "categoria_id": categoria_id,
+            "ano_letivo": ano_letivo,
+        },
         ordenar=ordenar,
         grupo_counts=grupo_counts,
         grupo_thumbs=grupo_thumbs,
+        instituicoes=instituicoes,
+        anos=anos,
+        url_params=url_params,
     )
 
 
@@ -114,11 +137,16 @@ def detalhe(id):
     db.session.commit()
 
     avaliacao_user = None
+    favorito_ativo = False
     if current_user.is_authenticated:
         avaliacao_user = Avaliacao.query.filter_by(
             utilizador_id=current_user.id,
             material_id=id
         ).first()
+        favorito_ativo = Favorito.query.filter_by(
+            utilizador_id=current_user.id,
+            material_id=id
+        ).first() is not None
 
     grupo_materiais = []
     if material.grupo_upload:
@@ -134,6 +162,7 @@ def detalhe(id):
         material=material,
         avaliacao_user=avaliacao_user,
         grupo_materiais=grupo_materiais,
+        favorito_ativo=favorito_ativo,
     )
 
 
@@ -284,6 +313,22 @@ def download(id):
         as_attachment=True,
         download_name=material.ficheiro_nome,
     )
+
+
+@materiais_bp.route("/<int:id>/guardar", methods=["POST"])
+@login_required
+def guardar(id):
+    """Adiciona ou remove um material dos favoritos do utilizador."""
+    material = Material.query.get_or_404(id)
+    fav = Favorito.query.filter_by(utilizador_id=current_user.id, material_id=id).first()
+    if fav:
+        db.session.delete(fav)
+        db.session.commit()
+        return jsonify({"guardado": False})
+    else:
+        db.session.add(Favorito(utilizador_id=current_user.id, material_id=material.id))
+        db.session.commit()
+        return jsonify({"guardado": True})
 
 
 @materiais_bp.route("/<int:id>/avaliar", methods=["POST"])

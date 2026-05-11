@@ -16,12 +16,15 @@
 
           <!-- Tipo de material -->
           <h6>Tipo de material</h6>
-          {% set tipos = [('','Todos'),('prova','Provas'),('resumo','Resumos'),('exercicios','Exercícios'),('gabarito','Gabaritos'),('apontamentos','Apontamentos')] %}
-          {% set icons = ['bi-grid','bi-file-earmark-text','bi-book','bi-pencil','bi-check-circle','bi-journal'] %}
-          {% for val,label in tipos %}
-          <button type="button" class="p24-filter-item {% if filtros.get('categoria_id')|string == val or (not filtros.get('categoria_id') and val == '') %}active{% endif %}"
-                  onclick="setFiltro('q','{{ val }}');this.form.submit()">
-            <i class="bi {{ icons[loop.index0] }}"></i> {{ label }}
+          <input type="hidden" name="categoria" value="{{ filtros.get('categoria_id') or '' }}">
+          <button type="button" class="p24-filter-item {% if not filtros.get('categoria_id') %}active{% endif %}"
+                  onclick="setFiltro('categoria','');this.form.submit()">
+            <i class="bi bi-grid"></i> Todos
+          </button>
+          {% for cat in categorias %}
+          <button type="button" class="p24-filter-item {% if filtros.get('categoria_id') == cat.id %}active{% endif %}"
+                  onclick="setFiltro('categoria','{{ cat.id }}');this.form.submit()">
+            {{ cat.icone }} {{ cat.nome }}
           </button>
           {% endfor %}
 
@@ -31,9 +34,9 @@
           <h6>Instituição</h6>
           <select class="form-select form-select-sm mb-3" name="instituicao" onchange="this.form.submit()">
             <option value="">Todas as instituições</option>
-            <option value="Complexo Escolar 123" {% if filtros.get('instituicao') == 'Complexo Escolar 123' %}selected{% endif %}>Complexo Escolar 123</option>
-            <option value="Instituto Médio Técnico" {% if filtros.get('instituicao') == 'Instituto Médio Técnico' %}selected{% endif %}>Instituto Médio Técnico</option>
-            <option value="Universidade Agostinho Neto" {% if filtros.get('instituicao') == 'Universidade Agostinho Neto' %}selected{% endif %}>Universidade Agostinho Neto</option>
+            {% for inst in instituicoes %}
+            <option value="{{ inst }}" {% if filtros.get('instituicao') == inst %}selected{% endif %}>{{ inst }}</option>
+            {% endfor %}
           </select>
 
           <!-- Disciplina -->
@@ -43,10 +46,10 @@
 
           <!-- Ano letivo -->
           <h6>Ano</h6>
-          <select class="form-select form-select-sm mb-4" name="ano">
+          <select class="form-select form-select-sm mb-4" name="ano_letivo" onchange="this.form.submit()">
             <option value="">Todos os anos</option>
-            {% for ano in ['2024','2023','2022','2021','2020'] %}
-            <option value="{{ ano }}">{{ ano }}</option>
+            {% for ano in anos %}
+            <option value="{{ ano }}" {% if filtros.get('ano_letivo') == ano %}selected{% endif %}>{{ ano }}</option>
             {% endfor %}
           </select>
 
@@ -99,20 +102,45 @@
           <span class="text-muted small fw-600">Filtros ativos:</span>
           {% if busca %}
           <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
-            {{ busca }} <a href="{{ url_for('materiais.listar') }}" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
+            <i class="bi bi-search me-1"></i>{{ busca }}
+            <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('q');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
           </span>
           {% endif %}
           {% if filtros.get('disciplina') %}
-          <span class="badge bg-p24-light text-p24 fw-600">{{ filtros.disciplina }} <i class="bi bi-x"></i></span>
+          <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
+            <i class="bi bi-book me-1"></i>{{ filtros.disciplina }}
+            <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('disciplina');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
+          </span>
           {% endif %}
-          {% if not busca and not filtros.get('disciplina') %}
+          {% if filtros.get('instituicao') %}
+          <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
+            <i class="bi bi-building me-1"></i>{{ filtros.instituicao }}
+            <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('instituicao');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
+          </span>
+          {% endif %}
+          {% if filtros.get('categoria_id') %}
+          {% set cat_ativa = categorias | selectattr('id', 'equalto', filtros.categoria_id) | first %}
+          {% if cat_ativa %}
+          <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
+            {{ cat_ativa.icone }} {{ cat_ativa.nome }}
+            <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('categoria');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
+          </span>
+          {% endif %}
+          {% endif %}
+          {% if filtros.get('ano_letivo') %}
+          <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
+            <i class="bi bi-calendar me-1"></i>{{ filtros.ano_letivo }}
+            <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('ano_letivo');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
+          </span>
+          {% endif %}
+          {% if not busca and not filtros.get('disciplina') and not filtros.get('instituicao') and not filtros.get('categoria_id') and not filtros.get('ano_letivo') %}
           <span class="text-muted small">Nenhum filtro activo</span>
           {% endif %}
         </div>
         <div class="d-flex align-items-center gap-2">
           <span class="text-muted small">Ordenar por:</span>
           <select class="form-select form-select-sm" style="width:auto"
-                  onchange="window.location='{{ url_for('materiais.listar') }}?ordenar='+this.value+'&q={{ busca }}'">
+                  onchange="(function(v){var p=new URLSearchParams(window.location.search);p.set('ordenar',v);p.delete('page');window.location='?'+p.toString();})(this.value)">
             <option value="recente" {% if ordenar=='recente' %}selected{% endif %}>Mais recentes</option>
             <option value="popular" {% if ordenar=='popular' %}selected{% endif %}>Mais baixados</option>
             <option value="avaliado" {% if ordenar=='avaliado' %}selected{% endif %}>Melhor avaliados</option>
@@ -202,21 +230,21 @@
       <nav>
         <ul class="pagination justify-content-center">
           <li class="page-item {% if not materiais.has_prev %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ materiais.prev_num }}&q={{ busca }}&ordenar={{ ordenar }}">
+            <a class="page-link" href="{{ paginate_url(materiais.prev_num) }}">
               <i class="bi bi-chevron-left"></i> Anterior
             </a>
           </li>
           {% for p in materiais.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
             {% if p %}
             <li class="page-item {% if p == materiais.page %}active{% endif %}">
-              <a class="page-link" href="?page={{ p }}&q={{ busca }}&ordenar={{ ordenar }}">{{ p }}</a>
+              <a class="page-link" href="{{ paginate_url(p) }}">{{ p }}</a>
             </li>
             {% else %}
             <li class="page-item disabled"><span class="page-link">…</span></li>
             {% endif %}
           {% endfor %}
           <li class="page-item {% if not materiais.has_next %}disabled{% endif %}">
-            <a class="page-link" href="?page={{ materiais.next_num }}&q={{ busca }}&ordenar={{ ordenar }}">
+            <a class="page-link" href="{{ paginate_url(materiais.next_num) }}">
               Próximo <i class="bi bi-chevron-right"></i>
             </a>
           </li>

@@ -501,6 +501,7 @@ body {
 .bg-p24       { background: var(--p24-blue) !important; }
 .bg-p24-light { background: var(--p24-blue-light) !important; }
 .rounded-p24  { border-radius: var(--p24-radius) !important; }
+.min-width-0  { min-width: 0; }                    /* permite truncar texto em filhos flex */
 
 /* Animate in */
 @keyframes fadeUp {
@@ -516,3 +517,67 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--p24-border); border-radius: 99px; }
+
+/* ════════════════════════════════════════════════════════
+   RESPONSIVE
+   ════════════════════════════════════════════════════════ */
+
+/* Tablet + Mobile  (< 992px) */
+@media (max-width: 991.98px) {
+  /* Navbar: search bar passa a full-width no menu expandido */
+  .p24-search-bar {
+    width: 100%;
+    margin: .5rem 0 0;
+    order: 10;
+  }
+  .p24-search-bar.me-3 { margin-right: 0 !important; }
+
+  /* Remover sticky nas sidebars — evita bloquear o scroll */
+  .p24-sidebar,
+  .p24-profile-sidebar { position: static; }
+
+  /* Formulário de submissão: menos padding */
+  .p24-form-card { padding: 1.25rem; }
+}
+
+/* Mobile  (< 576px) */
+@media (max-width: 575.98px) {
+  /* Hero mais compacto */
+  .p24-hero { padding: 2rem 0 1.5rem; }
+  .p24-hero h1 { font-size: 1.75rem; }
+
+  /* Cards com menos padding */
+  .p24-card { padding: 1rem; }
+  .p24-form-card { padding: 1rem; }
+  .p24-credits-card { padding: 1.25rem; }
+
+  /* Upload zone: padding reduzido */
+  .p24-upload-zone { padding: 1.5rem .75rem; }
+
+  /* Auth card mais compacto */
+  .p24-auth-card { padding: 1.5rem 1.25rem; border-radius: 16px; }
+
+  /* Info table: coluna de label mais estreita */
+  .p24-info-table td:first-child { width: 100px; font-size: .8rem; }
+  .p24-info-table td { font-size: .82rem; padding: .4rem 0; }
+
+  /* Stat chips: valor menor */
+  .p24-stat-chip .val { font-size: 1.25rem; }
+  .p24-stat-chip { padding: .75rem .5rem; }
+
+  /* Créditos */
+  .p24-credits-card .amount { font-size: 2rem; }
+  .p24-coin { font-size: 1.8rem; }
+
+  /* Perfil sidebar: sem sticky + padding */
+  .p24-profile-sidebar { margin-bottom: 1rem; }
+
+  /* Tabelas em mobile: scroll horizontal */
+  .p24-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Badges no filtro ativo não transbordam */
+  .p24-type-badge { font-size: .65rem; }
+
+  /* Section header em mobile */
+  .p24-section-header { flex-wrap: wrap; gap: .5rem; }
+}

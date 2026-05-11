@@ -1,5 +1,6 @@
 import os
-from flask import Flask
+from urllib.parse import urlencode
+from flask import Flask, request as flask_request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -48,6 +49,13 @@ def create_app(config_name: str = None):
     app.register_blueprint(main_bp)
     app.register_blueprint(materiais_bp)
     app.register_blueprint(admin_bp)
+
+    # Jinja2 global: constrói URL da página atual com `page` substituído
+    @app.template_global()
+    def paginate_url(page):
+        args = flask_request.args.to_dict()
+        args["page"] = str(page)
+        return "?" + urlencode(args)
 
     # Handler de erros
     @app.errorhandler(403)

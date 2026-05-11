@@ -137,8 +137,9 @@
           ('bi-check2-circle','Gabaritos','Gabaritos e resoluções','551','text-p24','bg-p24-light','gabarito')
         ] %}
         {% for icon,name,desc,count,tc,bg,slug in cat_data %}
+        {% set cat_id = cat_ids.get(slug) %}
         <div class="col-6 col-md-3">
-          <a href="{{ url_for('materiais.listar') }}?q={{ slug }}" class="p24-cat-card h-100">
+          <a href="{{ url_for('materiais.listar', categoria=cat_id) if cat_id else url_for('materiais.listar', q=slug) }}" class="p24-cat-card h-100">
             <div class="p24-cat-icon {{ bg }} mb-3">
               <i class="bi {{ icon }} {{ tc }} fs-4"></i>
             </div>
