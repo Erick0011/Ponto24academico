@@ -1,5 +1,8 @@
 import os
 import uuid
+import hashlib
+import unicodedata
+import re
 from pathlib import Path
 from PIL import Image
 from flask import current_app
@@ -48,6 +51,7 @@ def guardar_ficheiro(file_obj, subfolder: str = "") -> dict:
 
     tamanho = os.path.getsize(caminho_completo)
     tipo = Path(nome_guardado).suffix.lstrip(".")
+    hash_ficheiro = calcular_hash(caminho_completo)
 
     # Gera thumbnail para imagens
     if tipo in {"png", "jpg", "jpeg", "gif", "webp"}:
@@ -61,6 +65,7 @@ def guardar_ficheiro(file_obj, subfolder: str = "") -> dict:
         "path_relativo": path_relativo,
         "tipo": tipo,
         "tamanho": tamanho,
+        "hash": hash_ficheiro,
     }
 
 
@@ -76,6 +81,25 @@ def _gerar_thumbnail(caminho_original: str, destino_dir: str, nome: str):
             img.save(thumb_path)
     except Exception:
         pass  # Thumbnail opcional, não bloqueia o upload
+
+
+def calcular_hash(caminho_completo: str) -> str:
+    """Calcula SHA-256 do conteúdo do ficheiro."""
+    sha256 = hashlib.sha256()
+    with open(caminho_completo, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+
+def nome_download(titulo: str, tipo: str) -> str:
+    """Gera nome de ficheiro seguro para download a partir do título do material."""
+    s = unicodedata.normalize("NFD", titulo.lower())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    s = re.sub(r"[^\w\s-]", "", s)
+    s = re.sub(r"[\s_]+", "_", s.strip())
+    s = s.strip("_-")[:80] or "material"
+    return f"{s}.{tipo}"
 
 
 def apagar_ficheiro(path_relativo: str):

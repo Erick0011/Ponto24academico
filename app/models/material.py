@@ -38,10 +38,11 @@ class Material(db.Model):
     semestre = db.Column(db.String(10))           # ex: "1", "2"
 
     # Ficheiro
-    ficheiro_nome = db.Column(db.String(300), nullable=False)
-    ficheiro_path = db.Column(db.String(500), nullable=False)
-    ficheiro_tipo = db.Column(db.String(10))      # pdf, png, jpg, docx
-    ficheiro_tamanho = db.Column(db.Integer)      # bytes
+    ficheiro_nome = db.Column(db.String(300), nullable=False)  # nome original (interno, nunca exposto)
+    ficheiro_path = db.Column(db.String(500), nullable=False)  # caminho UUID no disco
+    ficheiro_tipo = db.Column(db.String(10))                   # pdf, png, jpg, docx
+    ficheiro_tamanho = db.Column(db.Integer)                   # bytes
+    ficheiro_hash = db.Column(db.String(64), index=True)       # SHA-256 para detecção de duplicados
 
     # Estado de moderação
     STATUS_PENDENTE = "pendente"
