@@ -256,58 +256,30 @@
       </div>
 
       <!-- Nível -->
+      {% set nv = current_user.nivel %}
       <div class="p24-card">
         <h6 class="fw-700 mb-3"><i class="bi bi-trophy text-warning me-2"></i>Meu nível</h6>
-        <div class="fw-700 mb-1">Colaborador Bronze 🥉</div>
-        <div class="text-muted small mb-2">250 créditos para o próximo nível</div>
-        <div class="progress mb-1" style="height:8px">
-          <div class="progress-bar bg-warning"
-               style="width:{{ [(current_user.creditos / 400 * 100)|round, 100]|min }}%"></div>
+        <div class="fw-700 mb-1">
+          <i class="bi {{ nv.icone }} {{ nv.cor_icone }} me-1"></i>{{ nv.nome }}
         </div>
-        <div class="text-muted small">{{ current_user.creditos }} / 400 créditos</div>
+        {% if nv.proximo %}
+        <div class="text-muted small mb-2">{{ nv.proximo_em - current_user.creditos }} créditos para {{ nv.proximo }}</div>
+        <div class="progress mb-1" style="height:8px">
+          <div class="progress-bar {{ nv.bg }}" style="width:{{ nv.pct }}%"></div>
+        </div>
+        <div class="text-muted small">{{ current_user.creditos }} / {{ nv.proximo_em }} créditos</div>
+        {% else %}
+        <div class="text-muted small mb-2">Nível máximo atingido</div>
+        <div class="progress mb-1" style="height:8px">
+          <div class="progress-bar {{ nv.bg }}" style="width:100%"></div>
+        </div>
+        <div class="text-muted small">{{ current_user.creditos }} créditos</div>
+        {% endif %}
       </div>
     </div>
 
   </div>
 </div>
-
-{% block extra_js %}
-<script>
-const CURSOS = {
-  'ISAF': [
-    'Informática de Gestão Financeira',
-    'Contabilidade e Finanças',
-    'Gestão Bancária e de Seguros'
-  ]
-};
-
-const CURSO_ATUAL = "{{ current_user.curso or '' }}";
-
-function popularCursos(instSelect, cursoSelect) {
-  const cursos = CURSOS[instSelect.value] || [];
-  cursoSelect.innerHTML = '<option value="">Seleciona o curso...</option>';
-  cursos.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    if (c === CURSO_ATUAL) opt.selected = true;
-    cursoSelect.appendChild(opt);
-  });
-  cursoSelect.disabled = cursos.length === 0;
-}
-
-const editInst = document.getElementById('edit-instituicao');
-const editCurso = document.getElementById('edit-curso');
-
-document.getElementById('editModal').addEventListener('show.bs.modal', function () {
-  popularCursos(editInst, editCurso);
-});
-
-editInst.addEventListener('change', function () {
-  popularCursos(this, editCurso);
-});
-</script>
-{% endblock %}
 
 <!-- Modal: Editar perfil -->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -334,8 +306,14 @@ editInst.addEventListener('change', function () {
           </div>
           <div class="mb-3">
             <label class="form-label">Curso</label>
+            {% set cursos_isaf = ['Informática de Gestão Financeira', 'Contabilidade e Finanças', 'Gestão Bancária e de Seguros'] %}
             <select name="curso" id="edit-curso" class="form-select">
               <option value="">Seleciona o curso...</option>
+              {% if current_user.instituicao == 'ISAF' %}
+                {% for c in cursos_isaf %}
+                <option value="{{ c }}" {% if current_user.curso == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+              {% endif %}
             </select>
           </div>
           <div class="mb-3">
@@ -352,4 +330,35 @@ editInst.addEventListener('change', function () {
     </div>
   </div>
 </div>
+
+{% block extra_js %}
+<script>
+const CURSOS_EDIT = {
+  'ISAF': [
+    'Informática de Gestão Financeira',
+    'Contabilidade e Finanças',
+    'Gestão Bancária e de Seguros'
+  ]
+};
+
+(function () {
+  var instSel = document.getElementById('edit-instituicao');
+  var cursoSel = document.getElementById('edit-curso');
+  if (!instSel || !cursoSel) return;
+
+  instSel.addEventListener('change', function () {
+    var cursoAtual = cursoSel.value;
+    var cursos = CURSOS_EDIT[instSel.value] || [];
+    cursoSel.innerHTML = '<option value="">Seleciona o curso...</option>';
+    cursos.forEach(function (c) {
+      var opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      if (c === cursoAtual) opt.selected = true;
+      cursoSel.appendChild(opt);
+    });
+  });
+}());
+</script>
+{% endblock %}
 {% endblock %}

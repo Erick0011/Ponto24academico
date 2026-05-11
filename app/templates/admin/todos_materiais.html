@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Todos os materiais — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-800 mb-1">Todos os materiais</h4>
+      <p class="text-muted small mb-0">Gestão completa de materiais submetidos</p>
+    </div>
+    <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar ao painel
+    </a>
+  </div>
+
+  <!-- Filtros de status (tabs) -->
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    <a href="{{ url_for('admin.todos_materiais', q=q) }}"
+       class="btn btn-sm fw-600 {% if not status %}btn-dark{% else %}btn-light{% endif %}">
+      Todos <span class="badge bg-secondary ms-1">{{ counts.todos }}</span>
+    </a>
+    <a href="{{ url_for('admin.todos_materiais', status='pendente', q=q) }}"
+       class="btn btn-sm fw-600 {% if status == 'pendente' %}btn-warning text-dark{% else %}btn-light{% endif %}">
+      Pendentes <span class="badge bg-warning text-dark ms-1">{{ counts.pendente }}</span>
+    </a>
+    <a href="{{ url_for('admin.todos_materiais', status='aprovado', q=q) }}"
+       class="btn btn-sm fw-600 {% if status == 'aprovado' %}btn-success{% else %}btn-light{% endif %}">
+      Aprovados <span class="badge bg-success ms-1">{{ counts.aprovado }}</span>
+    </a>
+    <a href="{{ url_for('admin.todos_materiais', status='rejeitado', q=q) }}"
+       class="btn btn-sm fw-600 {% if status == 'rejeitado' %}btn-danger{% else %}btn-light{% endif %}">
+      Rejeitados <span class="badge bg-danger ms-1">{{ counts.rejeitado }}</span>
+    </a>
+  </div>
+
+  <!-- Barra de pesquisa -->
+  <form method="get" class="mb-3 d-flex gap-2">
+    <input type="hidden" name="status" value="{{ status }}">
+    <input type="text" name="q" class="form-control" placeholder="Pesquisar por título ou disciplina..."
+           value="{{ q }}" style="max-width:380px">
+    <button type="submit" class="btn btn-primary fw-600">
+      <i class="bi bi-search"></i>
+    </button>
+    {% if q %}
+    <a href="{{ url_for('admin.todos_materiais', status=status) }}" class="btn btn-light fw-600">
+      <i class="bi bi-x"></i>
+    </a>
+    {% endif %}
+  </form>
+
+  <div class="p24-card p-0 overflow-hidden">
+    {% if materiais.items %}
+    <table class="p24-table w-100">
+      <thead>
+        <tr>
+          <th style="width:40px">ID</th>
+          <th>Material</th>
+          <th class="d-none d-md-table-cell">Autor</th>
+          <th>Estado</th>
+          <th class="d-none d-lg-table-cell">Data</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in materiais.items %}
+        <tr>
+          <td class="text-muted small">{{ m.id }}</td>
+          <td>
+            <div class="fw-600 small">{{ m.titulo|truncate(60) }}</div>
+            <div class="text-muted" style="font-size:.72rem">{{ m.disciplina }} • {{ m.instituicao }}</div>
+          </td>
+          <td class="d-none d-md-table-cell small fw-600">{{ m.autor.nome }}</td>
+          <td>
+            {% if m.status == 'aprovado' %}
+            <span class="badge bg-success fw-600">Aprovado</span>
+            {% elif m.status == 'pendente' %}
+            <span class="badge bg-warning text-dark fw-600">Pendente</span>
+            {% else %}
+            <span class="badge bg-danger fw-600">Rejeitado</span>
+            {% endif %}
+          </td>
+          <td class="d-none d-lg-table-cell text-muted small">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
+          <td class="text-center">
+            <div class="d-flex gap-1 justify-content-center">
+              <!-- Ver detalhe -->
+              <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
+                 class="btn btn-light btn-sm" title="Ver detalhe" target="_blank">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if m.status == 'pendente' %}
+              <!-- Rever (preview de moderação) -->
+              <a href="{{ url_for('admin.rever_material', id=m.id) }}"
+                 class="btn btn-warning btn-sm fw-600" title="Rever para moderação">
+                <i class="bi bi-clipboard-check"></i>
+              </a>
+              {% endif %}
+              <!-- Eliminar -->
+              <button type="button" class="btn btn-outline-danger btn-sm" title="Eliminar"
+                      data-bs-toggle="modal" data-bs-target="#eliminar{{ m.id }}">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Paginação -->
+    {% if materiais.pages > 1 %}
+    <div class="p-3 border-top">
+      <nav><ul class="pagination justify-content-center mb-0">
+        {% for p in materiais.iter_pages() %}
+          {% if p %}
+          <li class="page-item {% if p == materiais.page %}active{% endif %}">
+            <a class="page-link" href="{{ paginate_url(p) }}">{{ p }}</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+          {% endif %}
+        {% endfor %}
+      </ul></nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-inbox text-muted" style="font-size:3rem"></i>
+      <h6 class="mt-3 fw-700">Sem resultados</h6>
+      <p class="text-muted small">Nenhum material corresponde aos critérios.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modais de confirmação de eliminação -->
+{% for m in materiais.items %}
+<div class="modal fade" id="eliminar{{ m.id }}" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700 text-danger">Eliminar material</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-0">
+          Tens a certeza que queres eliminar permanentemente <strong>{{ m.titulo|truncate(50) }}</strong>?
+          Esta ação não pode ser desfeita.
+        </p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <form action="{{ url_for('admin.eliminar_material', id=m.id) }}" method="post" class="d-inline">
+          <button type="submit" class="btn btn-danger btn-sm fw-700">Eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

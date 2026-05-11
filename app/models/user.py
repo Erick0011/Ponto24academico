@@ -54,5 +54,19 @@ class User(UserMixin, db.Model):
     def ganhar_creditos(self, quantidade: int):
         self.creditos += quantidade
 
+    @property
+    def nivel(self):
+        c = self.creditos
+        if c >= 1000:
+            return {"nome": "Expert", "icone": "bi-trophy-fill", "cor_icone": "text-danger", "bg": "bg-danger", "proximo": None, "proximo_em": 1000, "pct": 100}
+        elif c >= 500:
+            return {"nome": "Colaborador Ouro", "icone": "bi-award-fill", "cor_icone": "text-warning", "bg": "bg-warning", "proximo": "Expert", "proximo_em": 1000, "pct": int((c - 500) / 500 * 100)}
+        elif c >= 200:
+            return {"nome": "Colaborador Prata", "icone": "bi-award-fill", "cor_icone": "text-secondary", "bg": "bg-secondary", "proximo": "Colaborador Ouro", "proximo_em": 500, "pct": int((c - 200) / 300 * 100)}
+        elif c >= 50:
+            return {"nome": "Colaborador Bronze", "icone": "bi-award", "cor_icone": "text-warning", "bg": "bg-warning", "proximo": "Colaborador Prata", "proximo_em": 200, "pct": int((c - 50) / 150 * 100)}
+        else:
+            return {"nome": "Novato", "icone": "bi-person-fill", "cor_icone": "text-muted", "bg": "bg-secondary", "proximo": "Colaborador Bronze", "proximo_em": 50, "pct": int(c / 50 * 100) if c > 0 else 0}
+
     def __repr__(self):
         return f"<User {self.email}>"

@@ -271,7 +271,7 @@ def preview(id):
     """Serve o ficheiro inline para previsualização (sem cobrar créditos)."""
     material = Material.query.get_or_404(id)
     e_autor = current_user.is_authenticated and current_user.id == material.autor_id
-    if not material.esta_aprovado and not e_autor:
+    if not material.esta_aprovado and not e_autor and not current_user.is_admin:
         abort(403)
 
     upload_folder = current_app.config["UPLOAD_FOLDER"]

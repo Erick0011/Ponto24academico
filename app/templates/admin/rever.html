@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Rever material — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <!-- Header de navegação -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <a href="{{ url_for('admin.moderacao') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Moderação
+    </a>
+
+    <div class="d-flex align-items-center gap-2">
+      {% if prev_id %}
+      <a href="{{ url_for('admin.rever_material', id=prev_id) }}" class="btn btn-light btn-sm fw-600">
+        <i class="bi bi-chevron-left"></i>
+      </a>
+      {% else %}
+      <button class="btn btn-light btn-sm" disabled><i class="bi bi-chevron-left"></i></button>
+      {% endif %}
+
+      {% if pos > 0 %}
+      <span class="text-muted small fw-600">{{ pos }} / {{ total }} pendentes</span>
+      {% else %}
+      <span class="text-muted small">— / {{ total }} pendentes</span>
+      {% endif %}
+
+      {% if next_id %}
+      <a href="{{ url_for('admin.rever_material', id=next_id) }}" class="btn btn-light btn-sm fw-600">
+        <i class="bi bi-chevron-right"></i>
+      </a>
+      {% else %}
+      <button class="btn btn-light btn-sm" disabled><i class="bi bi-chevron-right"></i></button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Coluna esquerda: preview do ficheiro -->
+    <div class="col-lg-8">
+      <div class="p24-card p-0 overflow-hidden" style="min-height:520px">
+        {% if material.e_imagem %}
+          <img src="{{ url_for('static', filename=material.ficheiro_path) }}"
+               alt="{{ material.titulo }}"
+               style="width:100%;max-height:680px;object-fit:contain;background:#f1f3f5;display:block">
+        {% elif material.ficheiro_tipo == 'pdf' %}
+          <iframe src="{{ url_for('materiais.preview', id=material.id) }}"
+                  style="width:100%;height:680px;border:0"
+                  title="{{ material.titulo }}"></iframe>
+        {% else %}
+          <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center"
+               style="min-height:400px;background:#f8f9fa">
+            <i class="bi bi-file-earmark-word text-primary" style="font-size:5rem;opacity:.5"></i>
+            <h6 class="mt-3 fw-700">Documento Word</h6>
+            <p class="text-muted small">Não é possível pré-visualizar ficheiros .docx no browser.</p>
+            <a href="{{ url_for('materiais.download', id=material.id) }}"
+               class="btn btn-primary fw-700 mt-2">
+              <i class="bi bi-download me-2"></i>Descarregar para ver
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Coluna direita: metadados + ações -->
+    <div class="col-lg-4">
+      <!-- Status do material -->
+      <div class="p24-card mb-3">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-warning text-dark fw-700 px-3 py-2">
+            <i class="bi bi-hourglass me-1"></i>Pendente de aprovação
+          </span>
+        </div>
+        <div class="fw-800 mb-1" style="font-size:1.05rem;line-height:1.3">{{ material.titulo }}</div>
+        {% if material.categoria %}
+        <span class="p24-type-badge badge-{{ material.categoria.nome|lower }}">
+          {{ material.categoria.nome }}
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Informações do material -->
+      <div class="p24-card mb-3">
+        <h6 class="fw-700 mb-3">Detalhes do material</h6>
+        <table class="w-100" style="font-size:.85rem;border-collapse:collapse">
+          <tr>
+            <td class="text-muted py-1" style="width:40%"><i class="bi bi-person me-1"></i>Autor</td>
+            <td class="fw-600 py-1">
+              <a href="{{ url_for('main.ver_perfil', id=material.autor_id) }}"
+                 class="text-decoration-none text-p24" target="_blank">
+                {{ material.autor.nome }}
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-bank me-1"></i>Instituição</td>
+            <td class="fw-600 py-1">{{ material.instituicao }}</td>
+          </tr>
+          {% if material.curso %}
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-mortarboard me-1"></i>Curso</td>
+            <td class="fw-600 py-1">{{ material.curso }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-book me-1"></i>Disciplina</td>
+            <td class="fw-600 py-1">{{ material.disciplina }}</td>
+          </tr>
+          {% if material.ano_letivo %}
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-calendar me-1"></i>Ano letivo</td>
+            <td class="fw-600 py-1">{{ material.ano_letivo }}</td>
+          </tr>
+          {% endif %}
+          {% if material.semestre %}
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-list-ol me-1"></i>Semestre</td>
+            <td class="fw-600 py-1">{{ material.semestre }}</td>
+          </tr>
+          {% endif %}
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-file-earmark me-1"></i>Ficheiro</td>
+            <td class="fw-600 py-1">{{ material.ficheiro_tipo|upper }}
+              <span class="text-muted fw-400">
+                ({{ (material.ficheiro_tamanho / 1024)|round(0)|int }} KB)
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-muted py-1"><i class="bi bi-clock me-1"></i>Submetido</td>
+            <td class="fw-600 py-1">{{ material.criado_em.strftime('%d/%m/%Y %H:%M') }}</td>
+          </tr>
+        </table>
+        {% if material.descricao %}
+        <div class="border-top mt-3 pt-3">
+          <div class="text-muted small mb-1">Descrição</div>
+          <p class="small mb-0">{{ material.descricao }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Ações de moderação -->
+      <div class="p24-card">
+        <h6 class="fw-700 mb-3">Decisão de moderação</h6>
+
+        <!-- Aprovar -->
+        <form action="{{ url_for('admin.aprovar', id=material.id) }}" method="post" class="mb-2">
+          <button type="submit" class="btn btn-success fw-700 w-100">
+            <i class="bi bi-check-circle me-2"></i>Aprovar material
+          </button>
+        </form>
+
+        <!-- Rejeitar (expand ao clicar) -->
+        <button class="btn btn-outline-danger fw-700 w-100" type="button"
+                data-bs-toggle="collapse" data-bs-target="#formRejeitar">
+          <i class="bi bi-x-circle me-2"></i>Rejeitar material
+        </button>
+        <div class="collapse mt-3" id="formRejeitar">
+          <form action="{{ url_for('admin.rejeitar', id=material.id) }}" method="post">
+            <div class="mb-2">
+              <label class="form-label small fw-600">Motivo da rejeição</label>
+              <textarea name="motivo" class="form-control form-control-sm" rows="3"
+                        placeholder="Ex: Ficheiro ilegível, conteúdo incorreto..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger fw-700 w-100">Confirmar rejeição</button>
+          </form>
+        </div>
+
+        {% if next_id %}
+        <div class="border-top mt-3 pt-3">
+          <a href="{{ url_for('admin.rever_material', id=next_id) }}"
+             class="btn btn-light fw-600 w-100">
+            Próximo pendente <i class="bi bi-chevron-right ms-1"></i>
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
