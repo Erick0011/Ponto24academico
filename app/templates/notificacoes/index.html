@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Notificações — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:680px" class="py-4">
+<div class="py-4">
+
+  <!-- Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-800 mb-1"><i class="bi bi-bell me-2 text-p24"></i>Notificações</h4>
+      <p class="text-muted small mb-0">{{ notificacoes.total }} notificação{% if notificacoes.total != 1 %}ões{% endif %} no total</p>
+    </div>
+    {% if notificacoes.total > 0 %}
+    <form action="{{ url_for('notificacoes.marcar_todas_lidas') }}" method="post">
+      <button type="submit" class="btn btn-light btn-sm fw-600">
+        <i class="bi bi-check2-all me-1"></i>Marcar todas como lidas
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if notificacoes.items %}
+  <div class="d-flex flex-column gap-2">
+    {% for n in notificacoes.items %}
+    <div class="p24-card d-flex align-items-start gap-3 {% if not n.lida %}border-start border-4 border-primary{% endif %}"
+         style="padding:16px 20px">
+
+      <!-- Ícone por tipo -->
+      <div class="flex-shrink-0 mt-1">
+        {% if n.tipo == 'material_aprovado' %}
+        <div style="width:40px;height:40px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <i class="bi bi-check-circle-fill text-success"></i>
+        </div>
+        {% elif n.tipo == 'material_rejeitado' %}
+        <div style="width:40px;height:40px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <i class="bi bi-x-circle-fill text-danger"></i>
+        </div>
+        {% else %}
+        <div style="width:40px;height:40px;background:#dbeafe;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <i class="bi bi-info-circle-fill text-primary"></i>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="flex-grow-1 min-width-0">
+        <div class="d-flex align-items-start justify-content-between gap-2">
+          <div class="fw-700 small {% if not n.lida %}text-dark{% else %}text-muted{% endif %}">
+            {{ n.titulo }}
+          </div>
+          {% if not n.lida %}
+          <span class="badge bg-primary rounded-pill flex-shrink-0" style="font-size:.6rem">Nova</span>
+          {% endif %}
+        </div>
+        {% if n.mensagem %}
+        <div class="text-muted small mt-1" style="line-height:1.4">{{ n.mensagem }}</div>
+        {% endif %}
+        <div class="d-flex align-items-center gap-3 mt-2">
+          <span class="text-muted" style="font-size:.72rem">
+            <i class="bi bi-clock me-1"></i>{{ n.criado_em.strftime('%d/%m/%Y %H:%M') }}
+          </span>
+          {% if n.url %}
+          <a href="{{ n.url }}" class="text-p24 fw-600" style="font-size:.78rem">
+            Ver <i class="bi bi-arrow-right ms-1"></i>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginação -->
+  {% if notificacoes.pages > 1 %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center mb-0">
+      {% for p in notificacoes.iter_pages() %}
+        {% if p %}
+        <li class="page-item {% if p == notificacoes.page %}active{% endif %}">
+          <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+        </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <div style="width:72px;height:72px;background:#f1f5f9;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;">
+      <i class="bi bi-bell-slash text-muted" style="font-size:2rem"></i>
+    </div>
+    <h6 class="fw-700 mb-1">Sem notificações</h6>
+    <p class="text-muted small mb-0">Quando alguém aprovar ou rejeitar os teus materiais, aparece aqui.</p>
+  </div>
+  {% endif %}
+
+</div>
+</div>
+{% endblock %}

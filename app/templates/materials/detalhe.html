@@ -38,10 +38,18 @@
               {% if material.instituicao %} • {{ material.instituicao }}{% endif %}
             </div>
             <div class="d-flex gap-2 mt-2 flex-wrap">
-              <span class="p24-type-badge badge-{{ material.categoria.nome|lower if material.categoria else 'outro' }}">
-                {{ material.categoria.nome if material.categoria else 'Outro' }}
+              {% if material.categoria %}
+              <span class="p24-type-badge badge-{{ material.categoria.nome|lower }}">
+                {{ material.categoria.nome }}
               </span>
-              <span class="badge-aprovado">✓ Aprovado</span>
+              {% endif %}
+              {% if material.esta_aprovado %}
+              <span class="badge-aprovado"><i class="bi bi-check-circle me-1"></i>Aprovado</span>
+              {% elif material.status == 'pendente' %}
+              <span class="badge-pendente"><i class="bi bi-hourglass me-1"></i>Pendente de aprovação</span>
+              {% else %}
+              <span class="badge-rejeitado"><i class="bi bi-x-circle me-1"></i>Rejeitado</span>
+              {% endif %}
             </div>
           </div>
         </div>

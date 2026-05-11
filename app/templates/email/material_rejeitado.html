@@ -1,0 +1,80 @@
+{% extends "email/base.html" %}
+{% block subject %}Material rejeitado — {{ material.titulo_base }}{% endblock %}
+
+{% block body %}
+<!-- Badge -->
+<table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+  <tr>
+    <td style="background:#fee2e2;border-radius:6px;padding:6px 14px;">
+      <span style="color:#dc2626;font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;">
+        Material Rejeitado
+      </span>
+    </td>
+  </tr>
+</table>
+
+<h1 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;color:#1a1a2e;line-height:1.3;">
+  O teu material não foi aprovado
+</h1>
+<p style="margin:0 0 28px;color:#6b7280;font-size:.92rem;">
+  Olá {{ user.nome.split()[0] }}, o teu material foi revisto mas não pôde ser publicado na plataforma.
+</p>
+
+<!-- Caixa do material -->
+<table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:{% if motivo %}20px{% else %}28px{% endif %};">
+  <tr>
+    <td style="background:#f8fafc;border:1px solid #e5e7eb;border-left:4px solid #dc2626;border-radius:8px;padding:18px 22px;">
+      <div style="font-weight:700;color:#1a1a2e;font-size:.95rem;">{{ material.titulo_base }}</div>
+      <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">{{ material.disciplina }}{% if material.ano_letivo %} &bull; {{ material.ano_letivo }}{% endif %}</div>
+    </td>
+  </tr>
+</table>
+
+{% if motivo %}
+<!-- Motivo da rejeição -->
+<table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:28px;">
+  <tr>
+    <td style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:16px 20px;">
+      <div style="font-size:.78rem;color:#c2410c;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">
+        Motivo indicado pelo moderador
+      </div>
+      <div style="color:#7c2d12;font-size:.9rem;line-height:1.5;">{{ motivo }}</div>
+    </td>
+  </tr>
+</table>
+{% endif %}
+
+<!-- O que podes fazer -->
+<p style="margin:0 0 12px;font-weight:700;color:#374151;font-size:.9rem;">O que podes fazer:</p>
+<table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:28px;">
+  <tr>
+    <td style="padding:7px 0;border-bottom:1px solid #f3f4f6;">
+      <span style="color:#0055cc;font-weight:600;">1.</span>
+      <span style="margin-left:8px;color:#374151;font-size:.88rem;">Verifica se o ficheiro está legível e bem digitalizado</span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:7px 0;border-bottom:1px solid #f3f4f6;">
+      <span style="color:#0055cc;font-weight:600;">2.</span>
+      <span style="margin-left:8px;color:#374151;font-size:.88rem;">Confirma que o título e a disciplina estão corretos</span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:7px 0;">
+      <span style="color:#0055cc;font-weight:600;">3.</span>
+      <span style="margin-left:8px;color:#374151;font-size:.88rem;">Submete novamente com um ficheiro de melhor qualidade</span>
+    </td>
+  </tr>
+</table>
+
+<!-- CTA -->
+<table cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td align="center">
+      <a href="#" style="display:inline-block;background:#0055cc;color:#ffffff;text-decoration:none;font-weight:700;font-size:.92rem;padding:13px 36px;border-radius:8px;">
+        Submeter novamente
+      </a>
+    </td>
+  </tr>
+</table>
+{% endblock %}

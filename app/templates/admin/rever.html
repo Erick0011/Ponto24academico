@@ -41,7 +41,7 @@
     <div class="col-lg-8">
       <div class="p24-card p-0 overflow-hidden" style="min-height:520px">
         {% if material.e_imagem %}
-          <img src="{{ url_for('static', filename=material.ficheiro_path) }}"
+          <img src="{{ url_for('materiais.preview', id=material.id) }}"
                alt="{{ material.titulo }}"
                style="width:100%;max-height:680px;object-fit:contain;background:#f1f3f5;display:block">
         {% elif material.ficheiro_tipo == 'pdf' %}
@@ -146,6 +146,7 @@
 
         <!-- Aprovar -->
         <form action="{{ url_for('admin.aprovar', id=material.id) }}" method="post" class="mb-2">
+          <input type="hidden" name="next_url" value="{{ url_for('admin.rever_material', id=next_id) if next_id else url_for('admin.moderacao') }}">
           <button type="submit" class="btn btn-success fw-700 w-100">
             <i class="bi bi-check-circle me-2"></i>Aprovar material
           </button>
@@ -158,10 +159,32 @@
         </button>
         <div class="collapse mt-3" id="formRejeitar">
           <form action="{{ url_for('admin.rejeitar', id=material.id) }}" method="post">
+            <input type="hidden" name="next_url" value="{{ url_for('admin.rever_material', id=next_id) if next_id else url_for('admin.moderacao') }}">
+            <div class="mb-2">
+              <label class="form-label small fw-600">Motivo rápido</label>
+              <div class="d-flex flex-wrap gap-1 mb-2">
+                {% set motivos = [
+                  "Ficheiro ilegível ou de baixa qualidade",
+                  "Conteúdo não corresponde ao título",
+                  "Ficheiro duplicado — já existe na plataforma",
+                  "Ficheiro incompleto ou corrompido",
+                  "Resolução demasiado baixa para leitura",
+                  "Conteúdo incorreto ou com erros graves"
+                ] %}
+                {% for m in motivos %}
+                <button type="button"
+                        class="btn btn-light btn-sm fw-600"
+                        style="font-size:.72rem"
+                        onclick="document.getElementById('motivo-texto').value='{{ m }}'">
+                  {{ m }}
+                </button>
+                {% endfor %}
+              </div>
+            </div>
             <div class="mb-2">
               <label class="form-label small fw-600">Motivo da rejeição</label>
-              <textarea name="motivo" class="form-control form-control-sm" rows="3"
-                        placeholder="Ex: Ficheiro ilegível, conteúdo incorreto..." required></textarea>
+              <textarea id="motivo-texto" name="motivo" class="form-control form-control-sm" rows="3"
+                        placeholder="Seleciona um motivo acima ou escreve aqui..." required></textarea>
             </div>
             <button type="submit" class="btn btn-danger fw-700 w-100">Confirmar rejeição</button>
           </form>

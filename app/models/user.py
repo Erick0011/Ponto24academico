@@ -33,9 +33,10 @@ class User(UserMixin, db.Model):
     ultimo_login = db.Column(db.DateTime)
 
     # Relações
-    materiais = db.relationship("Material", back_populates="autor", foreign_keys="Material.autor_id", lazy="dynamic")
-    avaliacoes = db.relationship("Avaliacao", back_populates="utilizador", lazy="dynamic")
-    favoritos = db.relationship("Favorito", backref="utilizador", lazy="dynamic", foreign_keys="Favorito.utilizador_id")
+    materiais      = db.relationship("Material",      back_populates="autor",     foreign_keys="Material.autor_id",        lazy="dynamic")
+    avaliacoes     = db.relationship("Avaliacao",     back_populates="utilizador", lazy="dynamic")
+    favoritos      = db.relationship("Favorito",      backref="utilizador",        lazy="dynamic", foreign_keys="Favorito.utilizador_id")
+    notificacoes   = db.relationship("Notificacao",   backref="utilizador",        lazy="dynamic", foreign_keys="Notificacao.utilizador_id")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)

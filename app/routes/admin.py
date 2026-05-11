@@ -6,6 +6,8 @@ from app.models.material import Material, Categoria
 from app.models.user import User
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro
+from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
+from app.services.mail_service import email_material_aprovado, email_material_rejeitado
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -63,13 +65,16 @@ def aprovar(id):
     material = Material.query.get_or_404(id)
     material.status = Material.STATUS_APROVADO
     material.moderado_por_id = current_user.id
+
+    dar_creditos_upload(material.autor)
+    notificar_aprovacao(material)
     db.session.commit()
 
-    # Recompensa o autor
-    dar_creditos_upload(material.autor)
+    email_material_aprovado(material)
 
-    flash(f"Material '{material.titulo}' aprovado. Autor recebeu créditos.", "sucesso")
-    return redirect(url_for("admin.moderacao"))
+    flash(f"Material '{material.titulo_base}' aprovado. Autor notificado.", "sucesso")
+    next_url = request.form.get("next_url") or url_for("admin.moderacao")
+    return redirect(next_url)
 
 
 @admin_bp.route("/materiais/<int:id>/rejeitar", methods=["POST"])
@@ -82,10 +87,15 @@ def rejeitar(id):
     material.status = Material.STATUS_REJEITADO
     material.motivo_rejeicao = motivo
     material.moderado_por_id = current_user.id
+
+    notificar_rejeicao(material, motivo)
     db.session.commit()
 
-    flash(f"Material '{material.titulo}' rejeitado.", "aviso")
-    return redirect(url_for("admin.moderacao"))
+    email_material_rejeitado(material, motivo)
+
+    flash(f"Material '{material.titulo_base}' rejeitado. Autor notificado.", "aviso")
+    next_url = request.form.get("next_url") or url_for("admin.moderacao")
+    return redirect(next_url)
 
 
 @admin_bp.route("/utilizadores")

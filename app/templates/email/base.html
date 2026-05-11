@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block subject %}Ponto 24 Académico{% endblock %}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f6f9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1a2e;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#0055cc;border-radius:12px 12px 0 0;padding:28px 40px;text-align:center;">
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td style="background:#ffffff;border-radius:10px;padding:6px 14px;display:inline-block;">
+                    <span style="font-size:1.4rem;font-weight:900;color:#0055cc;letter-spacing:-1px;">P<span style="color:#f59e0b;">24</span></span>
+                  </td>
+                  <td style="padding-left:12px;vertical-align:middle;">
+                    <div style="color:#ffffff;font-weight:800;font-size:1rem;letter-spacing:.5px;">PONTO 24</div>
+                    <div style="color:#93c5fd;font-size:.7rem;letter-spacing:2px;text-transform:uppercase;">ACADÉMICO</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background:#ffffff;padding:40px;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;">
+              {% block body %}{% endblock %}
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 12px 12px;padding:24px 40px;text-align:center;">
+              <p style="margin:0 0 8px;font-size:.8rem;color:#6b7280;">
+                Este email foi enviado pelo <strong>Ponto 24 Académico</strong>, a plataforma de materiais académicos dos estudantes angolanos.
+              </p>
+              <p style="margin:0;font-size:.75rem;color:#9ca3af;">
+                Se não criaste uma conta, podes ignorar este email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
