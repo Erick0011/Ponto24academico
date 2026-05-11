@@ -132,6 +132,23 @@ def rever_material(id):
     total = len(pendentes_ids)
     pos = idx + 1 if idx >= 0 else 0
 
+    similares = (
+        Material.query
+        .filter(
+            Material.status == Material.STATUS_APROVADO,
+            Material.id != material.id,
+            Material.disciplina.ilike(f"%{material.disciplina}%"),
+            db.or_(
+                Material.instituicao.ilike(f"%{material.instituicao}%"),
+                Material.categoria_id == material.categoria_id,
+                Material.ano_letivo == material.ano_letivo,
+            ),
+        )
+        .order_by(Material.criado_em.desc())
+        .limit(6)
+        .all()
+    )
+
     return render_template(
         "admin/rever.html",
         material=material,
@@ -139,6 +156,7 @@ def rever_material(id):
         next_id=next_id,
         total=total,
         pos=pos,
+        similares=similares,
     )
 
 

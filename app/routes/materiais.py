@@ -8,7 +8,7 @@ from flask import (
 from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria, Avaliacao, Favorito
-from app.services.upload_service import guardar_ficheiro
+from app.services.upload_service import guardar_ficheiro, apagar_ficheiro, nome_download
 from app.services.creditos_service import dar_creditos_upload, cobrar_creditos_download
 from app.services.notificacoes_service import criar_notificacao
 from app.models.notificacao import Notificacao
@@ -224,10 +224,32 @@ def submeter():
             for f in ficheiros:
                 guardados.append(guardar_ficheiro(f, subfolder="materiais"))
         except ValueError as e:
-            from app.services.upload_service import apagar_ficheiro
             for info in guardados:
                 apagar_ficheiro(info["path_relativo"])
             flash(str(e), "erro")
+            return render_template("materials/submeter.html", categorias=categorias)
+
+        # Verificar duplicados exactos por hash SHA-256
+        duplicados_encontrados = []
+        for info in guardados:
+            existente = Material.query.filter_by(ficheiro_hash=info["hash"]).first()
+            if existente:
+                duplicados_encontrados.append((info, existente))
+
+        if duplicados_encontrados:
+            for info, _ in duplicados_encontrados:
+                apagar_ficheiro(info["path_relativo"])
+            # Se só 1 ficheiro, limpa tudo; se múltiplos, só os duplicados
+            nao_duplicados = [i for i in guardados if i not in [d[0] for d in duplicados_encontrados]]
+            for info in nao_duplicados:
+                apagar_ficheiro(info["path_relativo"])
+            dup = duplicados_encontrados[0][1]
+            flash(
+                f"Este ficheiro já existe na plataforma: \"{dup.titulo_base}\" "
+                f"(submetido em {dup.criado_em.strftime('%d/%m/%Y')}). "
+                "Se tens uma versão diferente, envia como novo material.",
+                "aviso",
+            )
             return render_template("materials/submeter.html", categorias=categorias)
 
         primeiro_id = None
@@ -247,6 +269,7 @@ def submeter():
                 ficheiro_path=info["path_relativo"],
                 ficheiro_tipo=info["tipo"],
                 ficheiro_tamanho=info["tamanho"],
+                ficheiro_hash=info["hash"],
                 autor_id=current_user.id,
                 status=Material.STATUS_PENDENTE,
                 grupo_upload=grupo_id,
@@ -313,7 +336,7 @@ def download(id):
         directory=os.path.join(upload_folder, "materiais"),
         path=nome_ficheiro,
         as_attachment=True,
-        download_name=material.ficheiro_nome,
+        download_name=nome_download(material.titulo_base, material.ficheiro_tipo),
     )
 
 
