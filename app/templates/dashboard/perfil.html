@@ -26,13 +26,10 @@
           <a href="{{ url_for('materiais.submeter') }}" class="p24-profile-nav-item">
             <i class="bi bi-cloud-upload"></i> Enviar material
           </a>
-          <a href="{{ url_for('materiais.listar') }}" class="p24-profile-nav-item">
-            <i class="bi bi-heart"></i> Materiais favoritos
+          <a href="#favoritos" class="p24-profile-nav-item">
+            <i class="bi bi-bookmark-fill"></i> Materiais guardados
           </a>
-          <a href="#" class="p24-profile-nav-item">
-            <i class="bi bi-download"></i> Downloads
-          </a>
-          <a href="#" class="p24-profile-nav-item">
+          <a href="#creditos" class="p24-profile-nav-item">
             <i class="bi bi-coin"></i> Meus créditos
           </a>
           <hr class="mx-3 my-1">
@@ -120,40 +117,64 @@
       </div>
 
       <!-- Meus materiais -->
-      <div class="p24-card">
-        <div class="p24-section-header">
+      <div class="p24-card mb-4">
+        <div class="p24-section-header mb-3">
           <h5>Meus materiais</h5>
+          <span class="text-muted small">{{ materiais|length }} no total</span>
         </div>
         {% if materiais %}
-        <table class="p24-table w-100">
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Disciplina</th>
-              <th>Tipo</th>
-              <th>Status</th>
-              <th>Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for m in materiais %}
-            <tr>
-              <td>
-                <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
-                   class="text-decoration-none fw-600 text-dark small">{{ m.titulo }}</a>
-              </td>
-              <td class="text-muted small">{{ m.disciplina }}</td>
-              <td>
-                <span class="p24-type-badge badge-{{ m.categoria.nome|lower if m.categoria else 'outro' }}">
-                  {{ m.categoria.nome if m.categoria else '—' }}
-                </span>
-              </td>
-              <td><span class="badge-{{ m.status }}">{{ m.status|capitalize }}</span></td>
-              <td class="text-muted small">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        {% for m in materiais %}
+        <div class="d-flex align-items-center gap-3 py-2 {% if not loop.last %}border-bottom{% endif %}">
+
+          <!-- Ícone de status -->
+          <div class="flex-shrink-0 rounded-2 d-flex align-items-center justify-content-center"
+               style="width:36px;height:36px;flex-basis:36px;
+               background:{% if m.status == 'aprovado' %}var(--p24-green-lt){% elif m.status == 'pendente' %}#fff8e1{% else %}#fef2f2{% endif %}">
+            {% if m.status == 'aprovado' %}
+              <i class="bi bi-check-circle-fill text-success" style="font-size:.9rem"></i>
+            {% elif m.status == 'pendente' %}
+              <i class="bi bi-clock-fill text-warning" style="font-size:.9rem"></i>
+            {% else %}
+              <i class="bi bi-x-circle-fill text-danger" style="font-size:.9rem"></i>
+            {% endif %}
+          </div>
+
+          <!-- Título + meta + tipo -->
+          <div class="flex-grow-1 min-width-0">
+            <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
+               class="text-decoration-none fw-600 text-dark small d-block text-truncate">
+              {{ m.titulo_base }}{% if m.grupo_upload %} <span class="text-muted fw-400">(grupo)</span>{% endif %}
+            </a>
+            <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+              {% if m.categoria %}
+              <span class="p24-type-badge badge-{{ m.categoria.nome|lower }}">{{ m.categoria.nome }}</span>
+              {% endif %}
+              <span class="text-muted" style="font-size:.75rem">
+                {{ m.disciplina }}{% if m.ano_letivo %} · {{ m.ano_letivo }}{% endif %}
+              </span>
+            </div>
+            {% if m.status == 'rejeitado' and m.motivo_rejeicao %}
+            <div class="text-danger mt-1" style="font-size:.72rem">
+              <i class="bi bi-exclamation-circle me-1"></i>{{ m.motivo_rejeicao }}
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Estado (só texto compacto) -->
+          <div class="flex-shrink-0 text-end" style="min-width:64px">
+            <span class="fw-700" style="font-size:.72rem;
+              color:{% if m.status == 'aprovado' %}var(--p24-green){% elif m.status == 'pendente' %}#d97706{% else %}#dc2626{% endif %}">
+              {% if m.status == 'aprovado' %}✓ Aprovado
+              {% elif m.status == 'pendente' %}⏳ Pendente
+              {% else %}✗ Rejeitado{% endif %}
+            </span>
+            <div class="text-muted d-none d-sm-block" style="font-size:.68rem">
+              {{ m.criado_em.strftime('%d/%m/%Y') }}
+            </div>
+          </div>
+
+        </div>
+        {% endfor %}
         {% else %}
         <div class="text-center py-4">
           <div style="font-size:2.5rem">📄</div>
@@ -162,11 +183,55 @@
         </div>
         {% endif %}
       </div>
+
+      <!-- Favoritos -->
+      <div class="p24-card" id="favoritos">
+        <div class="p24-section-header mb-3">
+          <h5><i class="bi bi-bookmark-fill text-warning me-2"></i>Guardados</h5>
+          <span class="text-muted small">{{ favoritos|length }}</span>
+        </div>
+        {% if favoritos %}
+        <div class="row g-3">
+          {% for m in favoritos %}
+          <div class="col-sm-6">
+            <div class="d-flex gap-3 p-2 rounded-3 border">
+              <a href="{{ url_for('materiais.detalhe', id=m.id) }}" class="flex-shrink-0">
+                {% if m.e_imagem and m.thumbnail_path %}
+                  <img src="{{ url_for('static', filename=m.thumbnail_path) }}"
+                       style="width:54px;height:54px;object-fit:cover;border-radius:6px;">
+                {% elif m.ficheiro_tipo == 'pdf' %}
+                  <div style="width:54px;height:54px;border-radius:6px;background:#fff0f0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">
+                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                  </div>
+                {% else %}
+                  <div style="width:54px;height:54px;border-radius:6px;background:#f0f4ff;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">
+                    <i class="bi bi-file-earmark-word text-primary"></i>
+                  </div>
+                {% endif %}
+              </a>
+              <div class="flex-grow-1 min-width-0">
+                <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
+                   class="text-decoration-none fw-600 text-dark small d-block text-truncate">{{ m.titulo_base }}</a>
+                <div class="text-muted" style="font-size:.75rem">{{ m.disciplina }}</div>
+                <div class="text-muted" style="font-size:.72rem">{{ m.instituicao }}</div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-3">
+          <i class="bi bi-bookmark text-muted" style="font-size:2rem"></i>
+          <p class="text-muted small mt-2 mb-0">Ainda não guardaste nenhum material.</p>
+          <a href="{{ url_for('materiais.listar') }}" class="btn btn-light btn-sm fw-600 mt-2">Explorar materiais</a>
+        </div>
+        {% endif %}
+      </div>
     </div>
 
     <!-- Sidebar direita: créditos + nível -->
     <div class="col-lg-3">
-      <div class="p24-credits-card mb-4">
+      <div class="p24-credits-card mb-4" id="creditos">
         <div class="d-flex justify-content-between align-items-start mb-2">
           <div>
             <div class="small opacity-75">Meu saldo</div>
@@ -175,9 +240,18 @@
           </div>
           <div class="p24-coin"><i class="bi bi-coin me-1"></i></div>
         </div>
-        <div class="d-flex gap-2 mt-3">
-          <a href="#" class="btn btn-warning btn-sm fw-700 flex-grow-1">Comprar</a>
-          <a href="#" class="btn btn-outline-light btn-sm fw-600 flex-grow-1">Histórico</a>
+        <div class="mt-3 small opacity-75">
+          <div class="d-flex justify-content-between mb-1">
+            <span><i class="bi bi-upload me-1"></i>Ganhos por uploads</span>
+            <strong>+{{ current_user.total_uploads * 5 }}</strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span><i class="bi bi-download me-1"></i>Gastos em downloads</span>
+            <strong>-{{ current_user.total_downloads * 2 }}</strong>
+          </div>
+        </div>
+        <div class="mt-3 small opacity-75 border-top pt-2">
+          Envia materiais para ganhar mais créditos. Cada material aprovado vale <strong>+5 créditos</strong>.
         </div>
       </div>
 
@@ -197,6 +271,44 @@
   </div>
 </div>
 
+{% block extra_js %}
+<script>
+const CURSOS = {
+  'ISAF': [
+    'Informática de Gestão Financeira',
+    'Contabilidade e Finanças',
+    'Gestão Bancária e de Seguros'
+  ]
+};
+
+const CURSO_ATUAL = "{{ current_user.curso or '' }}";
+
+function popularCursos(instSelect, cursoSelect) {
+  const cursos = CURSOS[instSelect.value] || [];
+  cursoSelect.innerHTML = '<option value="">Seleciona o curso...</option>';
+  cursos.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    if (c === CURSO_ATUAL) opt.selected = true;
+    cursoSelect.appendChild(opt);
+  });
+  cursoSelect.disabled = cursos.length === 0;
+}
+
+const editInst = document.getElementById('edit-instituicao');
+const editCurso = document.getElementById('edit-curso');
+
+document.getElementById('editModal').addEventListener('show.bs.modal', function () {
+  popularCursos(editInst, editCurso);
+});
+
+editInst.addEventListener('change', function () {
+  popularCursos(this, editCurso);
+});
+</script>
+{% endblock %}
+
 <!-- Modal: Editar perfil -->
 <div class="modal fade" id="editModal" tabindex="-1">
   <div class="modal-dialog">
@@ -213,13 +325,18 @@
           </div>
           <div class="mb-3">
             <label class="form-label">Instituição</label>
-            <input type="text" name="instituicao" class="form-control"
-                   value="{{ current_user.instituicao or '' }}" placeholder="Ex: Universidade Agostinho Neto" />
+            <select name="instituicao" id="edit-instituicao" class="form-select">
+              <option value="">Seleciona...</option>
+              <option value="ISAF" {% if current_user.instituicao == 'ISAF' %}selected{% endif %}>
+                ISAF — Instituto Superior de Administração e Finanças
+              </option>
+            </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Curso / Classe</label>
-            <input type="text" name="curso" class="form-control"
-                   value="{{ current_user.curso or '' }}" placeholder="Ex: Engenharia Informática" />
+            <label class="form-label">Curso</label>
+            <select name="curso" id="edit-curso" class="form-select">
+              <option value="">Seleciona o curso...</option>
+            </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Bio</label>

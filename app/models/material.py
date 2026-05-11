@@ -77,6 +77,7 @@ class Material(db.Model):
     autor = db.relationship("User", back_populates="materiais", foreign_keys=[autor_id])
     categoria = db.relationship("Categoria", back_populates="materiais")
     avaliacoes = db.relationship("Avaliacao", back_populates="material", lazy="dynamic", cascade="all, delete-orphan")
+    favoritos = db.relationship("Favorito", backref="material", lazy="dynamic", cascade="all, delete-orphan")
 
     @property
     def esta_aprovado(self) -> bool:
@@ -121,6 +122,21 @@ class Material(db.Model):
 
     def __repr__(self):
         return f"<Material '{self.titulo}' [{self.status}]>"
+
+
+class Favorito(db.Model):
+    """Material guardado/favorito por um utilizador."""
+
+    __tablename__ = "favoritos"
+
+    id = db.Column(db.Integer, primary_key=True)
+    utilizador_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    material_id = db.Column(db.Integer, db.ForeignKey("materiais.id"), nullable=False)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("utilizador_id", "material_id", name="uq_favorito_user_material"),
+    )
 
 
 class Avaliacao(db.Model):

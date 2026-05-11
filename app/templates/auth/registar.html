@@ -17,7 +17,7 @@
 
     <!-- Boas-vindas créditos -->
     <div class="alert border-0 mb-4 d-flex align-items-center gap-2"
-         style="background:var(--p24-orange-lt);border-radius:var(--p24-radius)">
+        style="background:var(--p24-orange-lt);border-radius:var(--p24-radius)">
       <span style="font-size:1.5rem">🎁</span>
       <span class="small fw-600" style="color:var(--p24-orange)">
         Ganhas <strong>10 créditos</strong> de boas-vindas ao registares!
@@ -44,11 +44,16 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Instituição</label>
-          <input type="text" name="instituicao" class="form-control" placeholder="Ex: Complexo Escolar 123" />
+          <select name="instituicao" id="reg-instituicao" class="form-select">
+            <option value="">Seleciona...</option>
+            <option value="ISAF">ISAF — Instituto Superior de Administração e Finanças</option>
+          </select>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Curso / Classe</label>
-          <input type="text" name="curso" class="form-control" placeholder="Ex: 12ª Classe, Eng. Informática" />
+          <label class="form-label">Curso</label>
+          <select name="curso" id="reg-curso" class="form-select" disabled>
+            <option value="">Seleciona primeiro a instituição</option>
+          </select>
         </div>
         <div class="col-12 mt-2">
           <button type="submit" class="btn btn-primary w-100 fw-700 py-2">
@@ -65,4 +70,35 @@
     </p>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CURSOS = {
+  'ISAF': [
+    'Informática de Gestão Financeira',
+    'Contabilidade e Finanças',
+    'Gestão Bancária e de Seguros'
+  ]
+};
+
+document.getElementById('reg-instituicao').addEventListener('change', function () {
+  const select = document.getElementById('reg-curso');
+  const cursos = CURSOS[this.value] || [];
+  select.innerHTML = '';
+  if (cursos.length === 0) {
+    select.disabled = true;
+    select.innerHTML = '<option value="">Seleciona primeiro a instituição</option>';
+  } else {
+    select.disabled = false;
+    select.innerHTML = '<option value="">Seleciona o curso...</option>';
+    cursos.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      select.appendChild(opt);
+    });
+  }
+});
+</script>
 {% endblock %}

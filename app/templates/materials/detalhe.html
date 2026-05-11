@@ -24,14 +24,14 @@
 
       <!-- Title card -->
       <div class="p24-card mb-4">
+        <!-- Linha 1: ícone + título -->
         <div class="d-flex align-items-start gap-3 mb-3">
-          <!-- File icon -->
           <div class="rounded-3 p-3 text-white d-flex align-items-center justify-content-center flex-shrink-0"
-               style="background:var(--p24-blue);width:60px;height:60px">
-            <i class="bi bi-file-earmark-pdf fs-4"></i>
+               style="background:var(--p24-blue);width:56px;height:56px">
+            <i class="bi bi-file-earmark-pdf fs-5"></i>
           </div>
-          <div class="flex-grow-1">
-            <h4 class="fw-800 mb-1">{{ material.titulo }}</h4>
+          <div class="flex-grow-1 min-width-0">
+            <h4 class="fw-800 mb-1" style="font-size:clamp(1rem,3vw,1.4rem)">{{ material.titulo }}</h4>
             <div class="text-muted small">
               {% if material.ano_letivo %}{{ material.ano_letivo }}{% endif %}
               {% if material.semestre %} • {{ material.semestre }}º Semestre{% endif %}
@@ -44,21 +44,29 @@
               <span class="badge-aprovado">✓ Aprovado</span>
             </div>
           </div>
-          <!-- Actions -->
-          <div class="d-flex gap-2 flex-shrink-0">
-            <button class="btn btn-sm btn-light" title="Guardar"><i class="bi bi-bookmark"></i></button>
-            <button class="btn btn-sm btn-light" title="Partilhar"><i class="bi bi-share me-1"></i>Partilhar</button>
-            {% if current_user.is_authenticated %}
-            <a href="{{ url_for('materiais.download', id=material.id) }}"
-               class="btn btn-primary fw-700 btn-sm">
-              <i class="bi bi-download me-1"></i>Download
-            </a>
-            {% else %}
-            <a href="{{ url_for('auth.entrar') }}" class="btn btn-primary fw-700 btn-sm">
-              <i class="bi bi-download me-1"></i>Download
-            </a>
-            {% endif %}
-          </div>
+        </div>
+        <!-- Linha 2: ações (full-width em mobile, alinhadas à direita em desktop) -->
+        <div class="d-flex gap-2 flex-wrap justify-content-end">
+          {% if current_user.is_authenticated %}
+          <button id="btnGuardar" class="btn btn-sm btn-light" title="Guardar nos favoritos"
+                  onclick="toggleFavorito(this)">
+            <i class="bi bi-bookmark{% if favorito_ativo %}-fill text-warning{% endif %}"></i>
+            <span class="d-none d-sm-inline ms-1">{% if favorito_ativo %}Guardado{% else %}Guardar{% endif %}</span>
+          </button>
+          {% endif %}
+          <button class="btn btn-sm btn-light" id="btnPartilhar">
+            <i class="bi bi-share"></i><span class="d-none d-sm-inline ms-1">Partilhar</span>
+          </button>
+          {% if current_user.is_authenticated %}
+          <a href="{{ url_for('materiais.download', id=material.id) }}"
+             class="btn btn-primary fw-700 btn-sm">
+            <i class="bi bi-download me-1"></i>Download
+          </a>
+          {% else %}
+          <a href="{{ url_for('auth.entrar') }}" class="btn btn-primary fw-700 btn-sm">
+            <i class="bi bi-download me-1"></i>Download
+          </a>
+          {% endif %}
         </div>
       </div>
 
@@ -280,7 +288,7 @@
             <div class="text-muted" style="font-size:.7rem">Aprovados</div>
           </div>
         </div>
-        <a href="#" class="btn btn-light w-100 btn-sm fw-600">Ver perfil</a>
+        <a href="{{ url_for('main.ver_perfil', id=material.autor_id) }}" class="btn btn-light w-100 btn-sm fw-600">Ver perfil</a>
       </div>
 
       <!-- Estatísticas -->
@@ -352,6 +360,41 @@
 
 {% block extra_js %}
 <script>
+// Botão Guardar (favoritos)
+const GUARDAR_URL = "{{ url_for('materiais.guardar', id=material.id) }}";
+
+async function toggleFavorito(btn) {
+  const res = await fetch(GUARDAR_URL, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+  if (!res.ok) return;
+  const { guardado } = await res.json();
+  const icon = btn.querySelector('i');
+  icon.className = guardado ? 'bi bi-bookmark-fill text-warning' : 'bi bi-bookmark';
+  // mini toast
+  mostrarToast(guardado ? 'Material guardado nos favoritos!' : 'Removido dos favoritos.');
+}
+
+// Botão Partilhar
+document.getElementById('btnPartilhar').addEventListener('click', async function () {
+  const url = window.location.href;
+  const titulo = "{{ material.titulo_base }}";
+  if (navigator.share) {
+    try { await navigator.share({ title: titulo, url }); } catch (_) {}
+  } else {
+    await navigator.clipboard.writeText(url);
+    mostrarToast('Link copiado para a área de transferência!');
+  }
+});
+
+function mostrarToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast show align-items-center text-white bg-success border-0 position-fixed';
+  el.style.cssText = 'bottom:1.5rem;right:1.5rem;z-index:9999;min-width:260px';
+  el.innerHTML = `<div class="d-flex"><div class="toast-body fw-600"><i class="bi bi-check-circle me-2"></i>${msg}</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button></div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
 // Star rating UI
 document.querySelectorAll('.star-icon').forEach(star => {
   star.addEventListener('click', function() {

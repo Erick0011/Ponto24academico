@@ -86,11 +86,17 @@
           <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">3</span>Classificação académica</h6>
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label">Universidade *</label>
-              <input type="text" name="instituicao" id="instituicao" class="form-control"
-                     placeholder="Ex: ISAF, ISPTEC, UCAN, ISPAJ, UniPiaget"
-                     autocomplete="off" list="list-instituicao" required />
-              <datalist id="list-instituicao"></datalist>
+              <label class="form-label">Instituição *</label>
+              <select name="instituicao" id="instituicao" class="form-select" required>
+                <option value="">Seleciona a instituição...</option>
+                <option value="ISAF">ISAF — Instituto Superior de Administração e Finanças</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Curso</label>
+              <select name="curso" id="curso" class="form-select" disabled>
+                <option value="">Seleciona primeiro a instituição</option>
+              </select>
             </div>
             <div class="col-md-6">
               <label class="form-label">Disciplina *</label>
@@ -98,13 +104,6 @@
                      placeholder="Ex: Cálculo I, Álgebra Linear, Programação"
                      autocomplete="off" list="list-disciplina" required />
               <datalist id="list-disciplina"></datalist>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Curso</label>
-              <input type="text" name="curso" id="curso" class="form-control"
-                     placeholder="Ex: Informática de Gestão Financeira, Contabilidade, Medicina"
-                     autocomplete="off" list="list-curso" />
-              <datalist id="list-curso"></datalist>
             </div>
             <div class="col-md-4">
               <label class="form-label">Ano do curso</label>
@@ -121,8 +120,8 @@
               <label class="form-label">Ano letivo</label>
               <select name="ano_letivo" class="form-select">
                 <option value="">Seleciona...</option>
-                {% for ano in ['2026','2025','2024','2023','2022','2021'] %}
-                <option value="{{ ano }}">{{ ano }}</option>
+                {% for par in [('2025/2026','2025/2026'),('2024/2025','2024/2025'),('2023/2024','2023/2024'),('2022/2023','2022/2023'),('2021/2022','2021/2022')] %}
+                <option value="{{ par[0] }}">{{ par[1] }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -225,41 +224,56 @@ zone.addEventListener('drop', e => {
   mostrarFicheiros(input);
 });
 
-// Autocomplete com sugestões da base de dados
-const SUGESTOES_URL = "{{ url_for('materiais.sugestoes') }}";
-let timers = {};
+// Cursos por instituição
+const CURSOS = {
+  'ISAF': [
+    'Informática de Gestão Financeira',
+    'Contabilidade e Finanças',
+    'Gestão Bancária e de Seguros'
+  ]
+};
 
-function preencherDatalist(listId, resultados) {
-  const dl = document.getElementById(listId);
-  dl.innerHTML = resultados.map(v => `<option value="${v}">`).join('');
-}
+const selectInstituicao = document.getElementById('instituicao');
+const selectCurso = document.getElementById('curso');
 
-function pedirSugestoes(campo, listId, q, instituicao = '') {
-  clearTimeout(timers[campo]);
-  timers[campo] = setTimeout(async () => {
-    if (q.length < 1) return;
-    const params = new URLSearchParams({ campo, q });
-    if (instituicao) params.append('instituicao', instituicao);
-    const res = await fetch(`${SUGESTOES_URL}?${params}`);
-    preencherDatalist(listId, await res.json());
-  }, 200);
-}
+selectInstituicao.addEventListener('change', function () {
+  const cursos = CURSOS[this.value] || [];
+  selectCurso.innerHTML = '';
 
-document.getElementById('instituicao').addEventListener('input', function () {
-  pedirSugestoes('instituicao', 'list-instituicao', this.value);
-  // Ao mudar universidade, recarrega sugestões de disciplina e curso
+  if (cursos.length === 0) {
+    selectCurso.disabled = true;
+    selectCurso.innerHTML = '<option value="">Seleciona primeiro a instituição</option>';
+  } else {
+    selectCurso.disabled = false;
+    selectCurso.innerHTML = '<option value="">Seleciona o curso...</option>';
+    cursos.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      selectCurso.appendChild(opt);
+    });
+  }
+
+  // Limpa sugestões de disciplina ao trocar de instituição
   document.getElementById('list-disciplina').innerHTML = '';
-  document.getElementById('list-curso').innerHTML = '';
 });
+
+// Autocomplete de disciplina filtrado pela instituição selecionada
+const SUGESTOES_URL = "{{ url_for('materiais.sugestoes') }}";
+let timer;
 
 document.getElementById('disciplina').addEventListener('input', function () {
-  const univ = document.getElementById('instituicao').value;
-  pedirSugestoes('disciplina', 'list-disciplina', this.value, univ);
-});
-
-document.getElementById('curso').addEventListener('input', function () {
-  const univ = document.getElementById('instituicao').value;
-  pedirSugestoes('curso', 'list-curso', this.value, univ);
+  clearTimeout(timer);
+  const q = this.value;
+  const inst = selectInstituicao.value;
+  if (q.length < 1) return;
+  timer = setTimeout(async () => {
+    const params = new URLSearchParams({ campo: 'disciplina', q });
+    if (inst) params.append('instituicao', inst);
+    const res = await fetch(`${SUGESTOES_URL}?${params}`);
+    const dl = document.getElementById('list-disciplina');
+    dl.innerHTML = (await res.json()).map(v => `<option value="${v}">`).join('');
+  }, 200);
 });
 </script>
 {% endblock %}
