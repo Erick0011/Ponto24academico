@@ -83,6 +83,24 @@ def email_material_aprovado(material):
     )
 
 
+def email_confirmacao(user, url_confirmacao):
+    enviar_email(
+        destinatario=user.email,
+        assunto="Confirma o teu email — Ponto 24 Académico",
+        template_html="email/confirmar_email.html",
+        contexto={"user": user, "url": url_confirmacao},
+    )
+
+
+def email_recuperar_senha(user, url_recuperacao):
+    enviar_email(
+        destinatario=user.email,
+        assunto="Recuperação de palavra-passe — Ponto 24 Académico",
+        template_html="email/recuperar_senha.html",
+        contexto={"user": user, "url": url_recuperacao},
+    )
+
+
 def email_material_rejeitado(material, motivo=None):
     enviar_email(
         destinatario=material.autor.email,
