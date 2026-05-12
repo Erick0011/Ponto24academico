@@ -114,5 +114,6 @@ def testar_email(destinatario):
         click.echo("Alguns emails falharam. Verifica os logs acima.")
 
 
+
 if __name__ == "__main__":
     app.run()

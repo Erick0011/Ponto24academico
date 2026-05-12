@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 from sqlalchemy import func
 from flask import (
@@ -219,10 +220,23 @@ def submeter():
         total = len(ficheiros)
         grupo_id = str(uuid.uuid4()) if total > 1 else None
 
+        from datetime import datetime
+        import unicodedata as _ud
+        _ano = datetime.now().strftime("%Y")
+        _mes = datetime.now().strftime("%m")
+        if categoria_id:
+            _cat = Categoria.query.get(categoria_id)
+            _slug = _cat.nome.lower() if _cat else "geral"
+            _slug = "".join(c for c in _ud.normalize("NFD", _slug) if _ud.category(c) != "Mn")
+            _slug = re.sub(r"[^\w]", "_", _slug).strip("_") or "geral"
+        else:
+            _slug = "geral"
+        _subfolder = f"materiais/{_slug}/{_ano}/{_mes}"
+
         guardados = []
         try:
             for f in ficheiros:
-                guardados.append(guardar_ficheiro(f, subfolder="materiais"))
+                guardados.append(guardar_ficheiro(f, subfolder=_subfolder))
         except ValueError as e:
             for info in guardados:
                 apagar_ficheiro(info["path_relativo"])
@@ -300,11 +314,10 @@ def preview(id):
         abort(403)
 
     upload_folder = current_app.config["UPLOAD_FOLDER"]
-    nome_ficheiro = os.path.basename(material.ficheiro_path)
 
     return send_from_directory(
-        directory=os.path.join(upload_folder, "materiais"),
-        path=nome_ficheiro,
+        directory=upload_folder,
+        path=material.ficheiro_path.replace("\\", "/"),
         as_attachment=False,
     )
 
@@ -330,11 +343,10 @@ def download(id):
     db.session.commit()
 
     upload_folder = current_app.config["UPLOAD_FOLDER"]
-    nome_ficheiro = os.path.basename(material.ficheiro_path)
 
     return send_from_directory(
-        directory=os.path.join(upload_folder, "materiais"),
-        path=nome_ficheiro,
+        directory=upload_folder,
+        path=material.ficheiro_path.replace("\\", "/"),
         as_attachment=True,
         download_name=nome_download(material.titulo_base, material.ficheiro_tipo),
     )
