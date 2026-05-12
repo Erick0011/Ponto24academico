@@ -152,12 +152,19 @@
 {% endwith %}
 
 <!-- ═══════════════════════════════════════ BANNER EMAIL ═══════════════════════════════════════ -->
-{% if current_user.is_authenticated and not current_user.email_verificado %}
+{% if current_user.is_authenticated and not current_user.email_verificado and dias_confirmacao is not none %}
 <div class="alert alert-warning mb-0 rounded-0 border-0 border-bottom py-2 text-center"
      style="font-size:.85rem">
   <i class="bi bi-envelope-exclamation me-2"></i>
-  <strong>Confirma o teu email</strong> para garantires o acesso à tua conta.
-  <form action="{{ url_for('auth.reenviar_confirmacao') }}" method="post" class="d-inline ms-2">
+  <strong>Confirma o teu email.</strong>
+  {% if dias_confirmacao == 0 %}
+    O prazo expira hoje —
+  {% elif dias_confirmacao == 1 %}
+    Falta 1 dia —
+  {% else %}
+    Faltam {{ dias_confirmacao }} dias —
+  {% endif %}
+  <form action="{{ url_for('auth.reenviar_confirmacao') }}" method="post" class="d-inline">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button type="submit" class="btn btn-warning btn-sm fw-700 py-0 px-2" style="font-size:.8rem">
       Reenviar email

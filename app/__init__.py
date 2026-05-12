@@ -58,19 +58,45 @@ def create_app(config_name: str = None):
     app.register_blueprint(admin_bp)
     app.register_blueprint(notificacoes_bp)
 
-    # Context processor: injeta contagem de notificações não lidas em todos os templates
+    # Bloqueio de conta após 7 dias sem confirmação de email
     from flask_login import current_user as _cu
+    from datetime import datetime, timedelta
 
+    PRAZO_CONFIRMACAO = 7  # dias
+
+    @app.before_request
+    def verificar_email_confirmado():
+        if not _cu.is_authenticated:
+            return
+        if _cu.email_verificado:
+            return
+        # Endpoints sempre permitidos (confirmação, logout, static)
+        endpoint = flask_request.endpoint or ""
+        permitidos = {"auth.confirmar_email", "auth.reenviar_confirmacao",
+                      "auth.sair", "auth.email_nao_confirmado", "static"}
+        if endpoint in permitidos:
+            return
+        # Verifica se já passaram 7 dias
+        limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
+        if datetime.utcnow() > limite:
+            from flask import redirect, url_for
+            return redirect(url_for("auth.email_nao_confirmado"))
+
+    # Context processor: injeta contagem de notificações e dias restantes
     @app.context_processor
     def inject_notif_count():
         try:
             if _cu.is_authenticated:
                 from app.models.notificacao import Notificacao as N
                 count = N.query.filter_by(utilizador_id=_cu.id, lida=False).count()
-                return {"notif_nao_lidas": count}
+                dias_restantes = None
+                if not _cu.email_verificado:
+                    limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
+                    dias_restantes = max(0, (limite - datetime.utcnow()).days)
+                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes}
         except Exception:
             pass
-        return {"notif_nao_lidas": 0}
+        return {"notif_nao_lidas": 0, "dias_confirmacao": None}
 
     # Jinja2 global: constrói URL da página atual com `page` substituído
     @app.template_global()
