@@ -104,8 +104,11 @@
             </li>
             <li><a class="dropdown-item" href="{{ url_for('main.perfil') }}"><i class="bi bi-person me-2 text-primary"></i>Meu perfil</a></li>
             <li><a class="dropdown-item" href="{{ url_for('materiais.submeter') }}"><i class="bi bi-cloud-upload me-2 text-success"></i>Enviar material</a></li>
-            {% if current_user.is_admin %}
-            <li><a class="dropdown-item" href="{{ url_for('admin.painel') }}"><i class="bi bi-shield-check me-2 text-warning"></i>Admin</a></li>
+            {% if current_user.is_admin or current_user.is_moderador %}
+            <li><a class="dropdown-item" href="{{ url_for('admin.painel') }}">
+              <i class="bi bi-shield-check me-2 {% if current_user.is_admin %}text-warning{% else %}text-info{% endif %}"></i>
+              {% if current_user.is_admin %}Admin{% else %}Moderação{% endif %}
+            </a></li>
             {% endif %}
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="{{ url_for('auth.sair') }}"><i class="bi bi-box-arrow-right me-2"></i>Sair</a></li>

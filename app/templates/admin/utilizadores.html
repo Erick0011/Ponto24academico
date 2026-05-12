@@ -66,6 +66,14 @@
                 <i class="bi bi-coin"></i>
               </button>
               <!-- Toggle admin -->
+              <form action="{{ url_for('admin.toggle_moderador', id=u.id) }}" method="post" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm {% if u.is_moderador %}btn-info{% else %}btn-outline-info{% endif %}"
+                        title="{% if u.is_moderador %}Remover moderador{% else %}Tornar moderador{% endif %}"
+                        {% if u.is_admin %}disabled{% endif %}>
+                  <i class="bi bi-person-badge{% if u.is_moderador %}-fill{% endif %}"></i>
+                </button>
+              </form>
               <form action="{{ url_for('admin.toggle_admin', id=u.id) }}" method="post" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {% if u.is_admin %}btn-warning{% else %}btn-outline-warning{% endif %}"
