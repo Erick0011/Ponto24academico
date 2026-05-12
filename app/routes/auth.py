@@ -128,6 +128,14 @@ def confirmar_email(token):
     return redirect(url_for("main.dashboard") if current_user.is_authenticated else url_for("auth.entrar"))
 
 
+@auth_bp.route("/email-nao-confirmado")
+@login_required
+def email_nao_confirmado():
+    if current_user.email_verificado:
+        return redirect(url_for("main.dashboard"))
+    return render_template("auth/email_nao_confirmado.html")
+
+
 @auth_bp.route("/reenviar-confirmacao", methods=["POST"])
 @login_required
 def reenviar_confirmacao():
