@@ -104,8 +104,8 @@ class Material(db.Model):
         """Caminho relativo para usar em url_for('static', filename=...)."""
         if not self.e_imagem:
             return None
-        p = Path(self.ficheiro_path)
-        return f"uploads/materiais/thumbs/{p.name}"
+        p = Path(self.ficheiro_path.replace("\\", "/"))
+        return f"uploads/{p.parent.as_posix()}/thumbs/{p.name}"
 
     def incrementar_visualizacoes(self):
         self.visualizacoes += 1

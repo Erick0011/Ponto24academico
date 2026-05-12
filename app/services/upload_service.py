@@ -57,7 +57,7 @@ def guardar_ficheiro(file_obj, subfolder: str = "") -> dict:
     if tipo in {"png", "jpg", "jpeg", "gif", "webp"}:
         _gerar_thumbnail(caminho_completo, destino_dir, nome_guardado)
 
-    path_relativo = os.path.join(subfolder, nome_guardado) if subfolder else nome_guardado
+    path_relativo = f"{subfolder}/{nome_guardado}" if subfolder else nome_guardado
 
     return {
         "nome_original": nome_original,
