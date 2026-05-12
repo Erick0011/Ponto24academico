@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}KPIs — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3">
+      <div class="p24-cat-icon bg-primary-subtle" style="width:48px;height:48px">
+        <i class="bi bi-graph-up-arrow text-primary fs-4"></i>
+      </div>
+      <div>
+        <h4 class="fw-800 mb-0">Indicadores de desempenho</h4>
+        <p class="text-muted small mb-0">Últimos 30 dias · atualizado em tempo real</p>
+      </div>
+    </div>
+    <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600 btn-sm">
+      <i class="bi bi-arrow-left me-2"></i>Painel
+    </a>
+  </div>
+
+  <!-- ── Stats rápidos ── -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="p24-admin-stat">
+        <div class="icon-box bg-primary-subtle"><i class="bi bi-search text-primary"></i></div>
+        <div>
+          <div class="val text-primary">{{ total_pesquisas }}</div>
+          <div class="lbl">Pesquisas (30d)</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="p24-admin-stat">
+        <div class="icon-box bg-danger-subtle"><i class="bi bi-search text-danger"></i></div>
+        <div>
+          <div class="val text-danger">{{ sem_resultados|length }}</div>
+          <div class="lbl">Termos sem resultado</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="p24-admin-stat">
+        <div class="icon-box bg-success-subtle"><i class="bi bi-people text-success"></i></div>
+        <div>
+          <div class="val text-success">+{{ novos_users_semana }}</div>
+          <div class="lbl">Novos utilizadores (7d)</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="p24-admin-stat">
+        <div class="icon-box bg-warning-subtle"><i class="bi bi-file-earmark-check text-warning"></i></div>
+        <div>
+          <div class="val text-warning">+{{ novos_materiais_semana }}</div>
+          <div class="lbl">Materiais aprovados (7d)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+
+    <!-- ── Pesquisas sem resultado (o mais valioso) ── -->
+    <div class="col-lg-6">
+      <div class="p24-card h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:32px;height:32px;background:#fee2e2">
+            <i class="bi bi-exclamation-circle-fill text-danger" style="font-size:.85rem"></i>
+          </div>
+          <div>
+            <div class="fw-800" style="font-size:.95rem">O que falta na plataforma</div>
+            <div class="text-muted" style="font-size:.72rem">Pesquisas sem nenhum resultado — mostra os gaps de conteúdo</div>
+          </div>
+        </div>
+        {% if sem_resultados %}
+        <div class="d-flex flex-column gap-2">
+          {% for termo, n in sem_resultados %}
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+              <i class="bi bi-dash-circle text-danger flex-shrink-0" style="font-size:.75rem"></i>
+              <span class="fw-600 text-truncate" style="font-size:.85rem">{{ termo }}</span>
+            </div>
+            <span class="badge rounded-pill flex-shrink-0"
+                  style="background:#fee2e2;color:#dc3545;font-size:.72rem">
+              {{ n }}x
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-2"></i>
+          Todas as pesquisas encontraram resultados.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Top pesquisas ── -->
+    <div class="col-lg-6">
+      <div class="p24-card h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:32px;height:32px;background:var(--p24-blue-lt)">
+            <i class="bi bi-search text-p24" style="font-size:.85rem"></i>
+          </div>
+          <div>
+            <div class="fw-800" style="font-size:.95rem">Pesquisas mais frequentes</div>
+            <div class="text-muted" style="font-size:.72rem">O que os utilizadores mais procuram</div>
+          </div>
+        </div>
+        {% if top_termos %}
+        {% set max_n = top_termos[0][1] %}
+        <div class="d-flex flex-column gap-2">
+          {% for termo, n in top_termos %}
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-600 text-truncate" style="font-size:.82rem;max-width:75%">{{ termo }}</span>
+              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
+            </div>
+            <div class="progress" style="height:4px;border-radius:2px">
+              <div class="progress-bar" style="width:{{ (n / max_n * 100)|int }}%;background:var(--p24-blue)"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-search fs-3 d-block mb-2"></i>
+          Ainda não há pesquisas registadas.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- ── Top downloads ── -->
+    <div class="col-lg-7">
+      <div class="p24-card">
+        <div class="fw-800 mb-3" style="font-size:.95rem">
+          <i class="bi bi-download me-2 text-success"></i>Materiais mais descarregados
+        </div>
+        {% if top_downloads %}
+        <div class="d-flex flex-column gap-2">
+          {% for m in top_downloads %}
+          <div class="d-flex align-items-center gap-3">
+            <span class="fw-800 text-muted flex-shrink-0" style="width:20px;font-size:.8rem">{{ loop.index }}</span>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-600 text-truncate" style="font-size:.82rem">{{ m.titulo_base }}</div>
+              <div class="text-muted" style="font-size:.7rem">{{ m.disciplina }} · {{ m.instituicao }}</div>
+            </div>
+            <span class="badge bg-success-subtle text-success fw-700 flex-shrink-0" style="font-size:.72rem">
+              {{ m.downloads }} downloads
+            </span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">Nenhum download ainda.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Por categoria ── -->
+    <div class="col-lg-5">
+      <div class="p24-card h-100">
+        <div class="fw-800 mb-3" style="font-size:.95rem">
+          <i class="bi bi-tags me-2 text-info"></i>Materiais por categoria
+        </div>
+        {% if por_categoria %}
+        {% set max_cat = por_categoria[0][1] %}
+        <div class="d-flex flex-column gap-3">
+          {% for nome, n in por_categoria %}
+          <div>
+            <div class="d-flex justify-content-between mb-1">
+              <span class="fw-600" style="font-size:.82rem">{{ nome }}</span>
+              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
+            </div>
+            <div class="progress" style="height:6px;border-radius:3px">
+              <div class="progress-bar bg-info" style="width:{{ (n / max_cat * 100)|int }}%"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">Sem materiais aprovados ainda.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

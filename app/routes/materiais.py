@@ -69,6 +69,17 @@ def listar():
         query = query.order_by(Material.criado_em.desc())
 
     materiais = query.paginate(page=page, per_page=12, error_out=False)
+
+    # Registar pesquisa (só na primeira página, só quando há termo)
+    if busca and page == 1:
+        from app.models.kpi import PesquisaLog
+        db.session.add(PesquisaLog(
+            termo=busca[:300],
+            n_resultados=materiais.total,
+            utilizador_id=current_user.id if current_user.is_authenticated else None,
+        ))
+        db.session.commit()
+
     categorias = Categoria.query.all()
 
     # Listas dinâmicas para os dropdowns de filtro
