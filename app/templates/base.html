@@ -151,6 +151,21 @@
   {% endif %}
 {% endwith %}
 
+<!-- ═══════════════════════════════════════ BANNER EMAIL ═══════════════════════════════════════ -->
+{% if current_user.is_authenticated and not current_user.email_verificado %}
+<div class="alert alert-warning mb-0 rounded-0 border-0 border-bottom py-2 text-center"
+     style="font-size:.85rem">
+  <i class="bi bi-envelope-exclamation me-2"></i>
+  <strong>Confirma o teu email</strong> para garantires o acesso à tua conta.
+  <form action="{{ url_for('auth.reenviar_confirmacao') }}" method="post" class="d-inline ms-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-warning btn-sm fw-700 py-0 px-2" style="font-size:.8rem">
+      Reenviar email
+    </button>
+  </form>
+</div>
+{% endif %}
+
 <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->
 {% block content %}{% endblock %}
 

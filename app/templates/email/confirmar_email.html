@@ -1,0 +1,26 @@
+{% extends "email/base.html" %}
+{% block body %}
+<h2 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;color:#1a1a2e">Confirma o teu email</h2>
+<p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+  Olá <strong>{{ user.nome.split()[0] }}</strong>, obrigado por te juntares ao Ponto 24 Académico!
+  Clica no botão abaixo para confirmar o teu endereço de email.
+</p>
+
+<table cellpadding="0" cellspacing="0" style="margin:0 0 28px">
+  <tr>
+    <td style="background:#0055cc;border-radius:8px;padding:14px 32px">
+      <a href="{{ url }}" style="color:#ffffff;font-weight:700;font-size:1rem;text-decoration:none">
+        Confirmar email
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 8px;color:#6b7280;font-size:.85rem;line-height:1.6">
+  Este link é válido por <strong>24 horas</strong>. Se não criaste uma conta, ignora este email.
+</p>
+<p style="margin:0;font-size:.8rem;color:#9ca3af">
+  Ou copia este link para o browser:<br>
+  <span style="color:#0055cc;word-break:break-all">{{ url }}</span>
+</p>
+{% endblock %}

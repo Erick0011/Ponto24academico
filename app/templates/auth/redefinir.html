@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Nova palavra-passe — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="p24-auth-page">
+  <div class="p24-auth-card">
+    <div class="text-center mb-4">
+      <a href="{{ url_for('main.index') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
+        <div class="p24-logo-badge">P<span>24</span></div>
+        <div class="p24-logo-text">
+          <span class="fw-800">PONTO 24</span><br><small>ACADÉMICO</small>
+        </div>
+      </a>
+      <div class="mt-3 mb-1 d-inline-flex align-items-center justify-content-center rounded-circle"
+           style="width:52px;height:52px;background:#dcfce7;margin:0 auto;display:block!important">
+        <i class="bi bi-lock-fill text-success fs-4"></i>
+      </div>
+      <h5 class="fw-800 mt-2 mb-1">Nova palavra-passe</h5>
+      <p class="text-muted small">Escolhe uma palavra-passe segura com pelo menos 6 caracteres.</p>
+    </div>
+
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3">
+        <label class="form-label">Nova palavra-passe</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-lock text-muted"></i></span>
+          <input type="password" name="password" id="pw1" class="form-control border-start-0 ps-0"
+                 placeholder="Mín. 6 caracteres" required autofocus />
+          <button type="button" class="input-group-text bg-white border-start-0" onclick="toggle('pw1','ic1')">
+            <i class="bi bi-eye text-muted" id="ic1"></i>
+          </button>
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label">Confirmar palavra-passe</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-lock-fill text-muted"></i></span>
+          <input type="password" name="confirmacao" id="pw2" class="form-control border-start-0 ps-0"
+                 placeholder="Repete a palavra-passe" required />
+          <button type="button" class="input-group-text bg-white border-start-0" onclick="toggle('pw2','ic2')">
+            <i class="bi bi-eye text-muted" id="ic2"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success w-100 fw-700 py-2">
+        <i class="bi bi-check-lg me-2"></i>Guardar nova palavra-passe
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggle(inputId, iconId) {
+  const el = document.getElementById(inputId);
+  const ic = document.getElementById(iconId);
+  el.type = el.type === 'password' ? 'text' : 'password';
+  ic.className = el.type === 'password' ? 'bi bi-eye text-muted' : 'bi bi-eye-slash text-muted';
+}
+</script>
+{% endblock %}

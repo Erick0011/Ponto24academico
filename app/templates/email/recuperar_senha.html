@@ -1,0 +1,26 @@
+{% extends "email/base.html" %}
+{% block body %}
+<h2 style="margin:0 0 8px;font-size:1.4rem;font-weight:800;color:#1a1a2e">Recuperação de palavra-passe</h2>
+<p style="margin:0 0 24px;color:#4b5563;line-height:1.6">
+  Olá <strong>{{ user.nome.split()[0] }}</strong>, recebemos um pedido para redefinir
+  a palavra-passe da tua conta. Clica no botão abaixo para continuar.
+</p>
+
+<table cellpadding="0" cellspacing="0" style="margin:0 0 28px">
+  <tr>
+    <td style="background:#dc2626;border-radius:8px;padding:14px 32px">
+      <a href="{{ url }}" style="color:#ffffff;font-weight:700;font-size:1rem;text-decoration:none">
+        Redefinir palavra-passe
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:0 0 8px;color:#6b7280;font-size:.85rem;line-height:1.6">
+  Este link é válido por <strong>1 hora</strong>. Se não fizeste este pedido, ignora este email — a tua conta está segura.
+</p>
+<p style="margin:0;font-size:.8rem;color:#9ca3af">
+  Ou copia este link para o browser:<br>
+  <span style="color:#dc2626;word-break:break-all">{{ url }}</span>
+</p>
+{% endblock %}
