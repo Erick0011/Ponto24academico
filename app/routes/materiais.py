@@ -321,7 +321,8 @@ def preview(id):
     """Serve o ficheiro inline para previsualização (sem cobrar créditos)."""
     material = Material.query.get_or_404(id)
     e_autor = current_user.is_authenticated and current_user.id == material.autor_id
-    if not material.esta_aprovado and not e_autor and not current_user.is_admin:
+    pode_moderar = current_user.is_admin or getattr(current_user, "is_moderador", False)
+    if not material.esta_aprovado and not e_autor and not pode_moderar:
         abort(403)
 
     upload_folder = current_app.config["UPLOAD_FOLDER"]
@@ -340,7 +341,8 @@ def download(id):
     material = Material.query.get_or_404(id)
 
     e_autor = current_user.id == material.autor_id
-    if not material.esta_aprovado and not e_autor:
+    pode_moderar = current_user.is_admin or getattr(current_user, "is_moderador", False)
+    if not material.esta_aprovado and not e_autor and not pode_moderar:
         abort(403)
 
     # Não cobra créditos ao próprio autor
