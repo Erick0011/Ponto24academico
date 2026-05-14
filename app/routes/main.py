@@ -173,3 +173,5 @@ def editar_perfil():
     db.session.commit()
     flash("Perfil atualizado!", "sucesso")
     return redirect(url_for("main.perfil"))
+
+
