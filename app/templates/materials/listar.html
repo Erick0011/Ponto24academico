@@ -24,7 +24,7 @@
           {% for cat in categorias %}
           <button type="button" class="p24-filter-item {% if filtros.get('categoria_id') == cat.id %}active{% endif %}"
                   onclick="setFiltro('categoria','{{ cat.id }}');this.form.submit()">
-            {{ cat.icone }} {{ cat.nome }}
+            <i class="bi {{ cat.icone }} me-1"></i>{{ cat.nome }}
           </button>
           {% endfor %}
 
@@ -122,7 +122,7 @@
           {% set cat_ativa = categorias | selectattr('id', 'equalto', filtros.categoria_id) | first %}
           {% if cat_ativa %}
           <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
-            {{ cat_ativa.icone }} {{ cat_ativa.nome }}
+            <i class="bi {{ cat_ativa.icone }} me-1"></i>{{ cat_ativa.nome }}
             <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('categoria');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
           </span>
           {% endif %}
