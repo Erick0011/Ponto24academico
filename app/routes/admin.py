@@ -360,12 +360,21 @@ def ajustar_creditos(id):
 @admin_required
 def categorias():
     if request.method == "POST":
-        nome     = request.form.get("nome", "").strip()
-        icone    = request.form.get("icone", "bi-file-earmark").strip()
+        cat_id    = request.form.get("id", "").strip()
+        nome      = request.form.get("nome", "").strip()
+        icone     = request.form.get("icone", "bi-file-earmark").strip() or "bi-file-earmark"
         descricao = request.form.get("descricao", "").strip()
 
         if not nome:
             flash("Nome da categoria é obrigatório.", "erro")
+        elif cat_id:
+            # Editar existente
+            cat = Categoria.query.get_or_404(int(cat_id))
+            cat.nome = nome
+            cat.icone = icone
+            cat.descricao = descricao
+            db.session.commit()
+            flash(f"Categoria '{nome}' atualizada.", "sucesso")
         elif Categoria.query.filter_by(nome=nome).first():
             flash("Já existe uma categoria com esse nome.", "erro")
         else:
@@ -375,3 +384,18 @@ def categorias():
 
     todas = Categoria.query.all()
     return render_template("admin/categorias.html", categorias=todas)
+
+
+@admin_bp.route("/categorias/<int:id>/eliminar", methods=["POST"])
+@login_required
+@admin_required
+def eliminar_categoria(id):
+    cat = Categoria.query.get_or_404(id)
+    if cat.materiais.count() > 0:
+        flash("Não é possível eliminar uma categoria com materiais associados.", "erro")
+    else:
+        nome = cat.nome
+        db.session.delete(cat)
+        db.session.commit()
+        flash(f"Categoria '{nome}' eliminada.", "aviso")
+    return redirect(url_for("admin.categorias"))
