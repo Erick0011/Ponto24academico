@@ -1,6 +1,7 @@
 import os
 import unicodedata
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from datetime import datetime
+from flask import Blueprint, render_template, redirect, url_for, flash, request, Response
 from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria, Favorito
@@ -238,5 +239,59 @@ def acesso_antecipado():
 
     total_espera = ListaEspera.query.count()
     return render_template("main/acesso_antecipado.html", total_espera=total_espera)
+
+
+@main_bp.route("/robots.txt")
+def robots_txt():
+    linhas = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /auth/",
+        "Disallow: /notificacoes/",
+        "Disallow: /materiais/submeter",
+        "",
+        f"Sitemap: {url_for('main.sitemap_xml', _external=True)}",
+    ]
+    return Response("\n".join(linhas), mimetype="text/plain")
+
+
+@main_bp.route("/sitemap.xml")
+def sitemap_xml():
+    now = datetime.utcnow().strftime("%Y-%m-%d")
+    paginas_estaticas = [
+        (url_for("main.index",          _external=True), now, "weekly",  "1.0"),
+        (url_for("main.sobre_nos",       _external=True), now, "monthly", "0.8"),
+        (url_for("main.como_funciona",   _external=True), now, "monthly", "0.7"),
+        (url_for("main.provas_simuladas",_external=True), now, "weekly",  "0.8"),
+        (url_for("materiais.listar",     _external=True), now, "daily",   "0.9"),
+    ]
+    materiais = (
+        Material.query
+        .filter_by(status=Material.STATUS_APROVADO)
+        .order_by(Material.criado_em.desc())
+        .limit(1000)
+        .all()
+    )
+    urls = paginas_estaticas + [
+        (
+            url_for("materiais.detalhe", id=m.id, _external=True),
+            m.criado_em.strftime("%Y-%m-%d"),
+            "monthly",
+            "0.6",
+        )
+        for m in materiais
+    ]
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    for loc, lastmod, changefreq, priority in urls:
+        xml.append(f"""  <url>
+    <loc>{loc}</loc>
+    <lastmod>{lastmod}</lastmod>
+    <changefreq>{changefreq}</changefreq>
+    <priority>{priority}</priority>
+  </url>""")
+    xml.append("</urlset>")
+    return Response("\n".join(xml), mimetype="application/xml")
 
 
