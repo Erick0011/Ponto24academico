@@ -196,8 +196,8 @@
           <div class="col-sm-6">
             <div class="d-flex gap-3 p-2 rounded-3 border">
               <a href="{{ url_for('materiais.detalhe', id=m.id) }}" class="flex-shrink-0">
-                {% if m.e_imagem and m.thumbnail_path %}
-                  <img src="{{ url_for('static', filename=m.thumbnail_path) }}"
+                {% if thumb_url(m) %}
+                  <img src="{{ thumb_url(m) }}"
                        style="width:54px;height:54px;object-fit:cover;border-radius:6px;">
                 {% elif m.ficheiro_tipo == 'pdf' %}
                   <div style="width:54px;height:54px;border-radius:6px;background:#fff0f0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;">

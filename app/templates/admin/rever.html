@@ -219,8 +219,8 @@
           <!-- Thumbnail ou ícone -->
           <div class="rounded overflow-hidden mb-2 d-flex align-items-center justify-content-center bg-light"
                style="height:80px">
-            {% if s.e_imagem and s.thumbnail_path %}
-              <img src="{{ url_for('static', filename=s.thumbnail_path) }}"
+            {% if thumb_url(s) %}
+              <img src="{{ thumb_url(s) }}"
                    alt="{{ s.titulo_base }}"
                    style="max-height:80px;max-width:100%;object-fit:cover">
             {% elif s.ficheiro_tipo == 'pdf' %}
