@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Acesso Antecipado — Ponto 24 Académico{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-early {
+  background: linear-gradient(135deg, #0f1b35 0%, #1a2f5a 60%, #ff6b00 100%);
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-early::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: rgba(255,107,0,.08);
+  top: -200px; right: -200px;
+}
+.countdown-box {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  min-width: 80px;
+  text-align: center;
+}
+.countdown-num { font-size: 2.5rem; font-weight: 800; line-height: 1; }
+.badge-slot {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(255,107,0,.15);
+  border: 1px solid rgba(255,107,0,.3);
+  border-radius: 50px;
+  padding: .35rem .9rem;
+  font-size: .8rem; font-weight: 700; color: #ff8533;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero-early d-flex align-items-center">
+  <div class="container py-5">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 text-white">
+        <div class="badge-slot mb-3">
+          <span class="rounded-circle bg-warning" style="width:8px;height:8px;display:inline-block"></span>
+          Lançamento a 1 de Junho
+        </div>
+        <h1 class="fw-800 mb-3" style="font-size:clamp(2rem,5vw,3rem);line-height:1.15">
+          O acervo académico<br>que Angola precisava.
+        </h1>
+        <p class="text-white-75 mb-4" style="font-size:1.1rem;opacity:.8">
+          Provas, resumos, exercícios e apontamentos organizados por universidade e disciplina.
+          Entra antes de toda a gente e começa a partilhar já.
+        </p>
+
+        <!-- Countdown -->
+        <div class="d-flex gap-3 mb-4 flex-wrap" id="countdown">
+          <div class="countdown-box text-white">
+            <div class="countdown-num" id="cd-days">--</div>
+            <div style="font-size:.7rem;opacity:.6;text-transform:uppercase;letter-spacing:.1em">Dias</div>
+          </div>
+          <div class="countdown-box text-white">
+            <div class="countdown-num" id="cd-hours">--</div>
+            <div style="font-size:.7rem;opacity:.6;text-transform:uppercase;letter-spacing:.1em">Horas</div>
+          </div>
+          <div class="countdown-box text-white">
+            <div class="countdown-num" id="cd-mins">--</div>
+            <div style="font-size:.7rem;opacity:.6;text-transform:uppercase;letter-spacing:.1em">Minutos</div>
+          </div>
+          <div class="countdown-box text-white">
+            <div class="countdown-num" id="cd-secs">--</div>
+            <div style="font-size:.7rem;opacity:.6;text-transform:uppercase;letter-spacing:.1em">Segundos</div>
+          </div>
+        </div>
+
+        <div class="text-white-50 small">
+          <i class="bi bi-people-fill me-1"></i>
+          <strong class="text-white">{{ total_espera }}</strong> pessoa{% if total_espera != 1 %}s{% endif %} na lista de espera
+        </div>
+      </div>
+
+      <!-- Formulário -->
+      <div class="col-lg-5 offset-lg-1">
+        <div class="p24-card">
+          <h5 class="fw-800 mb-1">Quero acesso antecipado</h5>
+          <p class="text-muted small mb-4">Pede o teu lugar agora e sê um dos primeiros a entrar.</p>
+
+          <form method="post" id="waitlistForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-3">
+              <label class="form-label fw-600">Nome</label>
+              <input type="text" name="nome" class="form-control" placeholder="O teu nome">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600">Email *</label>
+              <input type="email" name="email" class="form-control" placeholder="o@teu.email" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-600">Universidade</label>
+              <input type="text" name="instituicao" class="form-control" placeholder="Ex: UCAN, UAN, UPRA...">
+            </div>
+            <div class="mb-4">
+              <label class="form-label fw-600">Por que queres entrar antes? <span class="text-muted fw-400">(opcional)</span></label>
+              <textarea name="mensagem" class="form-control" rows="2"
+                        placeholder="Tens provas antigas que queres partilhar? Precisas de materiais de uma disciplina específica?"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary fw-700 w-100 py-3">
+              <i class="bi bi-rocket-takeoff me-2"></i>Quero acesso antecipado
+            </button>
+          </form>
+          <p class="text-center text-muted small mt-3 mb-0">
+            Já tens convite? <a href="{{ url_for('auth.registar') }}" class="text-p24 fw-600">Registar agora</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- O que vais encontrar -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h3 class="fw-800">O que encontras na plataforma</h3>
+      <p class="text-muted">Tudo o que um estudante angolano precisa, num único lugar.</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      {% set features = [
+        ('bi-file-earmark-text', 'text-danger', 'Provas antigas', 'Exames de anos anteriores organizados por universidade e disciplina.'),
+        ('bi-journal-text', 'text-primary', 'Resumos', 'Apontamentos e resumos feitos por estudantes e professores.'),
+        ('bi-pencil-square', 'text-success', 'Exercícios', 'Listas de exercícios resolvidos com gabaritos.'),
+        ('bi-stopwatch', 'text-warning', 'Provas Simuladas', 'Pratica com tempo real e recebe a correção automática.'),
+        ('bi-star-fill', 'text-info', 'Avaliações', 'Cada material tem notas e comentários da comunidade.'),
+        ('bi-coin', 'text-p24', 'Sistema de créditos', 'Partilha materiais e ganha créditos para descarregar mais.'),
+      ] %}
+      {% for icone, cor, titulo, desc in features %}
+      <div class="col-6 col-md-4 col-lg-2">
+        <div class="text-center p-3">
+          <i class="bi {{ icone }} {{ cor }} fs-2 mb-2 d-block"></i>
+          <div class="fw-700 small">{{ titulo }}</div>
+          <div class="text-muted" style="font-size:.75rem">{{ desc }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Como funciona o acesso antecipado -->
+<section class="py-5">
+  <div class="container" style="max-width:700px">
+    <div class="text-center mb-4">
+      <h3 class="fw-800">Como funciona o acesso antecipado</h3>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-4 text-center">
+        <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center fw-800 text-white"
+             style="width:48px;height:48px;background:var(--p24-orange)">1</div>
+        <strong>Inscreve-te na lista</strong>
+        <p class="text-muted small mt-1">Preenche o formulário acima com o teu email.</p>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center fw-800 text-white"
+             style="width:48px;height:48px;background:var(--p24-orange)">2</div>
+        <strong>Recebe o convite</strong>
+        <p class="text-muted small mt-1">Enviamos um email com um link de convite antes do lançamento.</p>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center fw-800 text-white"
+             style="width:48px;height:48px;background:var(--p24-orange)">3</div>
+        <strong>Começa a partilhar</strong>
+        <p class="text-muted small mt-1">Cria a tua conta e começa a enviar materiais antes de toda a gente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const target = new Date("2026-06-01T00:00:00");
+function tick() {
+  const now = new Date();
+  const diff = target - now;
+  if (diff <= 0) {
+    document.getElementById('countdown').innerHTML =
+      '<div class="text-white fw-700 fs-4">A plataforma está no ar!</div>';
+    return;
+  }
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000)  / 60000);
+  const secs  = Math.floor((diff % 60000)    / 1000);
+  document.getElementById('cd-days').textContent  = String(days).padStart(2,'0');
+  document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
+  document.getElementById('cd-mins').textContent  = String(mins).padStart(2,'0');
+  document.getElementById('cd-secs').textContent  = String(secs).padStart(2,'0');
+}
+tick(); setInterval(tick, 1000);
+</script>
+{% endblock %}

@@ -36,7 +36,9 @@ def create_app(config_name: str = None):
     login_manager.login_message_category = "aviso"
 
     # Importar modelos para garantir que as tabelas são criadas
-    from app.models.notificacao import Notificacao  # noqa: F401
+    from app.models.notificacao import Notificacao       # noqa: F401
+    from app.models.configuracao import Configuracao     # noqa: F401
+    from app.models.lista_espera import ListaEspera, RelatorioMaterial  # noqa: F401
 
     # User loader para Flask-Login
     from app.models.user import User
@@ -82,9 +84,16 @@ def create_app(config_name: str = None):
             from flask import redirect, url_for
             return redirect(url_for("auth.email_nao_confirmado"))
 
-    # Context processor: injeta contagem de notificações e dias restantes
+    # Context processor: injeta contagem de notificações, dias restantes e config pública
     @app.context_processor
     def inject_notif_count():
+        from app.models.configuracao import Configuracao as Cfg
+        cfg = {
+            "email_suporte": Cfg.get("email_suporte", "suporte@ponto24academico.com"),
+            "whatsapp":      Cfg.get("whatsapp", ""),
+            "instagram":     Cfg.get("instagram", ""),
+            "modo_pre_lancamento": Cfg.get("modo_pre_lancamento", "0"),
+        }
         try:
             if _cu.is_authenticated:
                 from app.models.notificacao import Notificacao as N
@@ -93,10 +102,10 @@ def create_app(config_name: str = None):
                 if not _cu.email_verificado:
                     limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
                     dias_restantes = max(0, (limite - datetime.utcnow()).days)
-                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes}
+                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg}
         except Exception:
             pass
-        return {"notif_nao_lidas": 0, "dias_confirmacao": None}
+        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg}
 
     # Jinja2 global: constrói URL da página atual com `page` substituído
     @app.template_global()

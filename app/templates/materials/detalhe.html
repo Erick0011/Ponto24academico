@@ -65,6 +65,12 @@
           <button class="btn btn-sm btn-light" id="btnPartilhar">
             <i class="bi bi-share"></i><span class="d-none d-sm-inline ms-1">Partilhar</span>
           </button>
+          {% if current_user.is_authenticated and material.esta_aprovado %}
+          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalReportar"
+                  title="Reportar material">
+            <i class="bi bi-flag"></i><span class="d-none d-sm-inline ms-1">Reportar</span>
+          </button>
+          {% endif %}
           {% if current_user.is_authenticated %}
           <a href="{{ url_for('materiais.download', id=material.id) }}"
              class="btn btn-primary fw-700 btn-sm">
@@ -358,6 +364,47 @@
         <div class="modal-footer border-0">
           <button type="button" class="btn btn-light fw-600" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-primary fw-700">Guardar avaliação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Modal: Reportar material -->
+{% if current_user.is_authenticated and material.esta_aprovado %}
+<div class="modal fade" id="modalReportar" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-700"><i class="bi bi-flag me-2 text-danger"></i>Reportar material</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('materiais.reportar', id=material.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <p class="text-muted small mb-3">Ajuda-nos a manter a qualidade. Seleciona o motivo do reporte.</p>
+          <div class="mb-3">
+            <label class="form-label fw-600">Motivo *</label>
+            <select name="motivo" class="form-select" required>
+              <option value="">Seleciona o motivo...</option>
+              <option value="duplicado">Material duplicado</option>
+              <option value="errado">Conteúdo errado ou enganoso</option>
+              <option value="qualidade">Má qualidade / ilegível</option>
+              <option value="direitos">Violação de direitos de autor</option>
+              <option value="inapropriado">Conteúdo inapropriado</option>
+              <option value="outro">Outro motivo</option>
+            </select>
+          </div>
+          <div class="mb-1">
+            <label class="form-label fw-600">Descrição adicional <span class="text-muted fw-400">(opcional)</span></label>
+            <textarea name="descricao" class="form-control" rows="3"
+                      placeholder="Explica com mais detalhe..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light fw-600" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger fw-700">Enviar reporte</button>
         </div>
       </form>
     </div>
