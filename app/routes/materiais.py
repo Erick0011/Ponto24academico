@@ -9,6 +9,7 @@ from flask import (
 from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria, Avaliacao, Favorito
+from app.models.lista_espera import RelatorioMaterial
 from app.services.upload_service import guardar_ficheiro, apagar_ficheiro, nome_download
 from app.services.creditos_service import dar_creditos_upload, cobrar_creditos_download
 from app.services.notificacoes_service import criar_notificacao
@@ -432,4 +433,37 @@ def avaliar(id):
     db.session.commit()
 
     flash("Avaliação guardada!", "sucesso")
+    return redirect(url_for("materiais.detalhe", id=id))
+
+
+@materiais_bp.route("/<int:id>/reportar", methods=["POST"])
+@login_required
+def reportar(id):
+    """Reporta um material como inadequado."""
+    material = Material.query.get_or_404(id)
+
+    motivo    = request.form.get("motivo", "").strip()
+    descricao = request.form.get("descricao", "").strip()
+
+    if not motivo:
+        flash("Seleciona o motivo do reporte.", "erro")
+        return redirect(url_for("materiais.detalhe", id=id))
+
+    # Impede reportes duplicados do mesmo utilizador
+    ja_reportou = RelatorioMaterial.query.filter_by(
+        material_id=id, autor_id=current_user.id, status=RelatorioMaterial.STATUS_PENDENTE
+    ).first()
+    if ja_reportou:
+        flash("Já reportaste este material. Estamos a analisá-lo.", "aviso")
+        return redirect(url_for("materiais.detalhe", id=id))
+
+    db.session.add(RelatorioMaterial(
+        material_id=id,
+        autor_id=current_user.id,
+        motivo=motivo,
+        descricao=descricao,
+    ))
+    db.session.commit()
+
+    flash("Reporte enviado. A equipa de moderação irá analisar em breve.", "sucesso")
     return redirect(url_for("materiais.detalhe", id=id))

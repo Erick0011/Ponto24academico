@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><title>O teu convite chegou!</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:40px 0">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08)">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0f1b35 0%,#1a2f5a 60%,#ff6b00 100%);padding:40px 48px;text-align:center">
+            <div style="background:rgba(255,107,0,.2);border:2px solid rgba(255,107,0,.4);border-radius:12px;display:inline-block;padding:8px 20px;margin-bottom:20px">
+              <span style="color:#ff8533;font-weight:800;font-size:1.1rem;letter-spacing:.08em">PONTO 24</span>
+            </div>
+            <h1 style="color:#fff;margin:0;font-size:1.8rem;font-weight:800">O teu convite chegou! 🎉</h1>
+            <p style="color:rgba(255,255,255,.7);margin:12px 0 0;font-size:1rem">Acesso antecipado ao Ponto 24 Académico</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px 48px">
+            <p style="font-size:1rem;color:#444;margin-bottom:16px">
+              Olá{% if entrada.nome %} <strong>{{ entrada.nome }}</strong>{% endif %},
+            </p>
+            <p style="font-size:1rem;color:#444;margin-bottom:24px">
+              A tua inscrição na lista de espera foi aprovada! Estás convidado(a) a criar a tua conta
+              no <strong>Ponto 24 Académico</strong> antes do lançamento oficial.
+            </p>
+
+            <div style="background:#fff7f0;border:1px solid #ffd0a8;border-radius:12px;padding:20px 24px;margin-bottom:28px">
+              <p style="margin:0;font-size:.9rem;color:#c45b00;font-weight:700">
+                <span style="font-size:1.2rem">⏳</span> Este link expira em 7 dias
+              </p>
+              <p style="margin:8px 0 0;font-size:.85rem;color:#c45b00">
+                Cria a tua conta antes de {{ deadline }} para não perder o acesso antecipado.
+              </p>
+            </div>
+
+            <div style="text-align:center;margin:32px 0">
+              <a href="{{ url }}"
+                 style="background:#ff6b00;color:#fff;text-decoration:none;padding:16px 40px;border-radius:50px;font-weight:800;font-size:1.05rem;display:inline-block">
+                Criar a minha conta →
+              </a>
+            </div>
+
+            <p style="font-size:.85rem;color:#888;text-align:center;margin-bottom:0">
+              Ou copia este link para o browser:<br>
+              <span style="color:#ff6b00;word-break:break-all">{{ url }}</span>
+            </p>
+          </td>
+        </tr>
+
+        <!-- What you get -->
+        <tr>
+          <td style="padding:0 48px 40px">
+            <h3 style="font-size:1rem;font-weight:700;color:#222;margin-bottom:16px">O que podes fazer desde já:</h3>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              {% for icon, text in [
+                ('📥', 'Submeter os teus materiais e ganhar créditos'),
+                ('📖', 'Explorar o acervo em construção'),
+                ('⭐', 'Avaliar e comentar materiais'),
+                ('🎓', 'Ser reconhecido como colaborador fundador'),
+              ] %}
+              <tr>
+                <td style="padding:8px 0;vertical-align:top;font-size:1.2rem;width:32px">{{ icon }}</td>
+                <td style="padding:8px 0;font-size:.9rem;color:#444">{{ text }}</td>
+              </tr>
+              {% endfor %}
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8f9fa;padding:24px 48px;text-align:center;border-top:1px solid #eee">
+            <p style="margin:0;font-size:.8rem;color:#aaa">
+              Ponto 24 Académico · O acervo académico de Angola
+            </p>
+            <p style="margin:8px 0 0;font-size:.75rem;color:#bbb">
+              Recebeste este email porque te inscreveste na lista de espera.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

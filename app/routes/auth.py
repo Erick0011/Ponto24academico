@@ -2,13 +2,15 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models.user import User
+from app.models.configuracao import Configuracao
+from app.models.lista_espera import ListaEspera
 from app.services.creditos_service import creditos_ao_registar
 from app.services.mail_service import (
     email_boas_vindas, email_confirmacao, email_recuperar_senha,
 )
 from app.services.tokens_service import (
     gerar_token, verificar_token,
-    SALT_CONFIRMACAO, SALT_RECUPERACAO,
+    SALT_CONFIRMACAO, SALT_RECUPERACAO, SALT_CONVITE,
 )
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -19,6 +21,20 @@ def registar():
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
 
+    # Modo pré-lançamento: só quem tem convite pode registar
+    modo_pre = Configuracao.get("modo_pre_lancamento", "0") == "1"
+    invite_token = request.args.get("token", "").strip()
+    email_convite = None
+
+    if modo_pre:
+        if invite_token:
+            email_convite = verificar_token(invite_token, SALT_CONVITE, max_age=604800)  # 7 dias
+            if not email_convite:
+                flash("Este link de convite é inválido ou expirou.", "erro")
+                return redirect(url_for("main.acesso_antecipado"))
+        else:
+            return redirect(url_for("main.acesso_antecipado"))
+
     if request.method == "POST":
         nome        = request.form.get("nome", "").strip()
         email       = request.form.get("email", "").strip().lower()
@@ -27,27 +43,43 @@ def registar():
         instituicao = request.form.get("instituicao", "").strip()
         curso       = request.form.get("curso", "").strip()
 
+        # Em modo pré-lançamento, o email deve coincidir com o do convite
+        if modo_pre and email_convite and email != email_convite:
+            flash("Usa o email para o qual recebeste o convite.", "erro")
+            return render_template("auth/registar.html",
+                                   email_convite=email_convite, invite_token=invite_token)
+
         if not nome or not email or not password:
             flash("Preenche todos os campos obrigatórios.", "erro")
-            return render_template("auth/registar.html")
+            return render_template("auth/registar.html",
+                                   email_convite=email_convite, invite_token=invite_token)
 
         if password != confirmacao:
             flash("As palavras-passe não coincidem.", "erro")
-            return render_template("auth/registar.html")
+            return render_template("auth/registar.html",
+                                   email_convite=email_convite, invite_token=invite_token)
 
         if len(password) < 6:
             flash("A palavra-passe deve ter pelo menos 6 caracteres.", "erro")
-            return render_template("auth/registar.html")
+            return render_template("auth/registar.html",
+                                   email_convite=email_convite, invite_token=invite_token)
 
         if User.query.filter_by(email=email).first():
             flash("Este email já está registado.", "erro")
-            return render_template("auth/registar.html")
+            return render_template("auth/registar.html",
+                                   email_convite=email_convite, invite_token=invite_token)
 
         user = User(nome=nome, email=email, instituicao=instituicao, curso=curso)
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
         creditos_ao_registar(user)
+
+        # Marca como registado na lista de espera
+        entrada = ListaEspera.query.filter_by(email=email).first()
+        if entrada:
+            entrada.status = ListaEspera.STATUS_REGISTADO
+
         db.session.commit()
 
         login_user(user)
@@ -61,7 +93,8 @@ def registar():
         flash(f"Bem-vindo(a), {user.nome}! Tens {user.creditos} créditos de boas-vindas.", "sucesso")
         return redirect(url_for("main.dashboard"))
 
-    return render_template("auth/registar.html")
+    return render_template("auth/registar.html",
+                           email_convite=email_convite, invite_token=invite_token)
 
 
 @auth_bp.route("/entrar", methods=["GET", "POST"])

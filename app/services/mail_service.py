@@ -108,3 +108,12 @@ def email_material_rejeitado(material, motivo=None):
         template_html="email/material_rejeitado.html",
         contexto={"material": material, "user": material.autor, "motivo": motivo},
     )
+
+
+def email_convite_acesso(entrada, url_convite):
+    enviar_email(
+        destinatario=entrada.email,
+        assunto="O teu acesso antecipado ao Ponto 24 Académico chegou!",
+        template_html="email/convite_acesso.html",
+        contexto={"entrada": entrada, "url": url_convite},
+    )

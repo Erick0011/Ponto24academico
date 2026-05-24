@@ -1,16 +1,19 @@
 from functools import wraps
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria
 from app.models.user import User
 from app.models.kpi import PesquisaLog
+from app.models.configuracao import Configuracao
+from app.models.lista_espera import ListaEspera, RelatorioMaterial
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
-from app.services.mail_service import email_material_aprovado, email_material_rejeitado
+from app.services.mail_service import email_material_aprovado, email_material_rejeitado, email_convite_acesso
+from app.services.tokens_service import gerar_token, SALT_CONVITE
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -48,6 +51,8 @@ def painel():
     total_materiais  = Material.query.filter_by(status=Material.STATUS_APROVADO).count()
     total_rejeitados = Material.query.filter_by(status=Material.STATUS_REJEITADO).count()
     total_categorias = Categoria.query.count()
+    total_espera     = ListaEspera.query.filter_by(status=ListaEspera.STATUS_PENDENTE).count()
+    total_relatorios = RelatorioMaterial.query.filter_by(status=RelatorioMaterial.STATUS_PENDENTE).count()
 
     return render_template(
         "admin/painel.html",
@@ -56,6 +61,8 @@ def painel():
         total_materiais=total_materiais,
         total_rejeitados=total_rejeitados,
         total_categorias=total_categorias,
+        total_espera=total_espera,
+        total_relatorios=total_relatorios,
     )
 
 
@@ -399,3 +406,140 @@ def eliminar_categoria(id):
         db.session.commit()
         flash(f"Categoria '{nome}' eliminada.", "aviso")
     return redirect(url_for("admin.categorias"))
+
+
+# ── Configurações da plataforma (só admin) ────────────────────────────────────
+
+@admin_bp.route("/configuracoes", methods=["GET", "POST"])
+@login_required
+@admin_required
+def configuracoes():
+    if request.method == "POST":
+        campos = [
+            "email_suporte", "whatsapp", "instagram", "telegram",
+            "facebook", "endereco", "texto_suporte",
+            "modo_pre_lancamento",
+        ]
+        for campo in campos:
+            Configuracao.set(campo, request.form.get(campo, "").strip())
+        db.session.commit()
+        flash("Configurações guardadas com sucesso.", "sucesso")
+        return redirect(url_for("admin.configuracoes"))
+
+    from app.models.lista_espera import ListaEspera as LE
+    cfg = Configuracao.get_all_dict()
+    stats = {
+        "espera":    LE.query.filter_by(status=LE.STATUS_PENDENTE).count(),
+        "pendentes": Material.query.filter_by(status=Material.STATUS_PENDENTE).count(),
+        "users":     User.query.count(),
+    }
+    return render_template("admin/configuracoes.html", cfg=cfg, stats=stats)
+
+
+# ── Lista de espera / Acesso antecipado (só admin) ────────────────────────────
+
+@admin_bp.route("/lista-espera")
+@login_required
+@admin_required
+def lista_espera():
+    status = request.args.get("status", "")
+    q = request.args.get("q", "").strip()
+    page = request.args.get("page", 1, type=int)
+
+    query = ListaEspera.query
+    if status:
+        query = query.filter_by(status=status)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            db.or_(ListaEspera.email.ilike(like), ListaEspera.nome.ilike(like),
+                   ListaEspera.instituicao.ilike(like))
+        )
+    entradas = query.order_by(ListaEspera.criado_em.desc()).paginate(
+        page=page, per_page=25, error_out=False
+    )
+
+    counts = {
+        "todos":     ListaEspera.query.count(),
+        "pendente":  ListaEspera.query.filter_by(status=ListaEspera.STATUS_PENDENTE).count(),
+        "convidado": ListaEspera.query.filter_by(status=ListaEspera.STATUS_CONVIDADO).count(),
+        "registado": ListaEspera.query.filter_by(status=ListaEspera.STATUS_REGISTADO).count(),
+    }
+
+    return render_template(
+        "admin/lista_espera.html",
+        entradas=entradas, counts=counts, status=status, q=q,
+    )
+
+
+@admin_bp.route("/lista-espera/<int:id>/convidar", methods=["POST"])
+@login_required
+@admin_required
+def convidar_lista_espera(id):
+    entrada = ListaEspera.query.get_or_404(id)
+    if entrada.status == ListaEspera.STATUS_REGISTADO:
+        flash("Este utilizador já está registado.", "aviso")
+        return redirect(url_for("admin.lista_espera"))
+
+    token = gerar_token(entrada.email, SALT_CONVITE)
+    url_convite = url_for("auth.registar", token=token, _external=True)
+
+    entrada.status = ListaEspera.STATUS_CONVIDADO
+    db.session.commit()
+
+    email_convite_acesso(entrada, url_convite)
+    flash(f"Convite enviado para {entrada.email}.", "sucesso")
+    return redirect(url_for("admin.lista_espera"))
+
+
+@admin_bp.route("/lista-espera/<int:id>/eliminar", methods=["POST"])
+@login_required
+@admin_required
+def eliminar_lista_espera(id):
+    entrada = ListaEspera.query.get_or_404(id)
+    db.session.delete(entrada)
+    db.session.commit()
+    flash("Entrada removida da lista.", "aviso")
+    return redirect(url_for("admin.lista_espera"))
+
+
+# ── Relatórios de materiais (moderadores e admins) ────────────────────────────
+
+@admin_bp.route("/relatorios")
+@login_required
+@moderador_required
+def relatorios():
+    status = request.args.get("status", "pendente")
+    page = request.args.get("page", 1, type=int)
+
+    query = RelatorioMaterial.query
+    if status and status != "todos":
+        query = query.filter_by(status=status)
+
+    relatorios_pag = query.order_by(RelatorioMaterial.criado_em.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+
+    counts = {
+        "todos":     RelatorioMaterial.query.count(),
+        "pendente":  RelatorioMaterial.query.filter_by(status=RelatorioMaterial.STATUS_PENDENTE).count(),
+        "resolvido": RelatorioMaterial.query.filter_by(status=RelatorioMaterial.STATUS_RESOLVIDO).count(),
+        "ignorado":  RelatorioMaterial.query.filter_by(status=RelatorioMaterial.STATUS_IGNORADO).count(),
+    }
+
+    return render_template(
+        "admin/relatorios.html",
+        relatorios=relatorios_pag, counts=counts, status=status,
+    )
+
+
+@admin_bp.route("/relatorios/<int:id>/resolver", methods=["POST"])
+@login_required
+@moderador_required
+def resolver_relatorio(id):
+    relatorio = RelatorioMaterial.query.get_or_404(id)
+    acao = request.form.get("acao", "resolvido")
+    relatorio.status = acao
+    db.session.commit()
+    flash("Relatório atualizado.", "sucesso")
+    return redirect(request.referrer or url_for("admin.relatorios"))

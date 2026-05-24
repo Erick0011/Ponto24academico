@@ -3,6 +3,7 @@ from flask import current_app
 
 SALT_CONFIRMACAO = "confirmar-email"
 SALT_RECUPERACAO = "recuperar-senha"
+SALT_CONVITE     = "convite-acesso-antecipado"
 
 
 def gerar_token(email: str, salt: str) -> str:

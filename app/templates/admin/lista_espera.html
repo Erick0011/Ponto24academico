@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Lista de Espera — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-800 mb-1">Lista de Espera</h4>
+      <p class="text-muted small mb-0">Acesso antecipado — gere convites</p>
+    </div>
+    <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+  </div>
+
+  <!-- Tabs de estado -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    {% for s, label, cor in [('', 'Todos', 'secondary'), ('pendente', 'Pendentes', 'warning'),
+                              ('convidado', 'Convidados', 'info'), ('registado', 'Registados', 'success')] %}
+    <a href="{{ url_for('admin.lista_espera', status=s, q=q) }}"
+       class="btn btn-sm {% if status == s %}btn-{{ cor }}{% else %}btn-outline-{{ cor }}{% endif %} fw-600">
+      {% if s == '' %}Todos <span class="badge bg-dark ms-1">{{ counts.todos }}</span>
+      {% elif s == 'pendente' %}Pendentes <span class="badge bg-dark ms-1">{{ counts.pendente }}</span>
+      {% elif s == 'convidado' %}Convidados <span class="badge bg-dark ms-1">{{ counts.convidado }}</span>
+      {% else %}Registados <span class="badge bg-dark ms-1">{{ counts.registado }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Pesquisa -->
+  <form method="get" class="mb-4">
+    <div class="input-group" style="max-width:400px">
+      <input type="text" name="q" class="form-control" placeholder="Pesquisar email, nome..." value="{{ q }}">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+      {% if q %}<a href="{{ url_for('admin.lista_espera', status=status) }}" class="btn btn-outline-danger"><i class="bi bi-x"></i></a>{% endif %}
+    </div>
+  </form>
+
+  <!-- Tabela -->
+  <div class="p24-card p-0 overflow-hidden">
+    <table class="p24-table w-100">
+      <thead>
+        <tr>
+          <th>Nome / Email</th>
+          <th>Universidade</th>
+          <th>Mensagem</th>
+          <th>Data</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in entradas.items %}
+        <tr>
+          <td>
+            <div class="fw-600">{{ e.nome or '—' }}</div>
+            <div class="text-muted small">{{ e.email }}</div>
+          </td>
+          <td class="text-muted small">{{ e.instituicao or '—' }}</td>
+          <td>
+            {% if e.mensagem %}
+            <span class="text-muted small" style="max-width:200px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                  title="{{ e.mensagem }}">{{ e.mensagem }}</span>
+            {% else %}<span class="text-muted small">—</span>{% endif %}
+          </td>
+          <td class="text-muted small">{{ e.criado_em.strftime('%d/%m/%Y') }}</td>
+          <td>
+            {% if e.status == 'pendente' %}
+              <span class="badge bg-warning text-dark">Pendente</span>
+            {% elif e.status == 'convidado' %}
+              <span class="badge bg-info text-dark">Convidado</span>
+            {% else %}
+              <span class="badge bg-success">Registado</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-flex gap-1 justify-content-end">
+              {% if e.status != 'registado' %}
+              <form action="{{ url_for('admin.convidar_lista_espera', id=e.id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-primary fw-600"
+                        title="Enviar convite por email">
+                  <i class="bi bi-send me-1"></i>Convidar
+                </button>
+              </form>
+              {% endif %}
+              <form action="{{ url_for('admin.eliminar_lista_espera', id=e.id) }}" method="post"
+                    onsubmit="return confirm('Remover {{ e.email }} da lista?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-5">
+          <i class="bi bi-inbox fs-2 d-block mb-2"></i>Nenhuma entrada encontrada.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginação -->
+  {% if entradas.pages > 1 %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item {% if not entradas.has_prev %}disabled{% endif %}">
+        <a class="page-link" href="{{ url_for('admin.lista_espera', status=status, q=q, page=entradas.prev_num) }}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% for p in entradas.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <li class="page-item {% if p == entradas.page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('admin.lista_espera', status=status, q=q, page=p) }}">{{ p }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {% if not entradas.has_next %}disabled{% endif %}">
+        <a class="page-link" href="{{ url_for('admin.lista_espera', status=status, q=q, page=entradas.next_num) }}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

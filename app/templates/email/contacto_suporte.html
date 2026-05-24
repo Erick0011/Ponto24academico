@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><title>Contacto do site</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:40px 0">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08)">
+        <tr>
+          <td style="background:#1a2f5a;padding:24px 40px">
+            <span style="color:#fff;font-weight:800;font-size:1rem">PONTO 24 — Mensagem de Suporte</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 40px">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:8px 0;font-size:.85rem;color:#888;width:100px">De:</td>
+                <td style="padding:8px 0;font-weight:600">{{ nome }} &lt;{{ email }}&gt;</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;font-size:.85rem;color:#888">Assunto:</td>
+                <td style="padding:8px 0;font-weight:600">{{ assunto or '(sem assunto)' }}</td>
+              </tr>
+            </table>
+            <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+            <p style="white-space:pre-wrap;color:#333;font-size:.95rem;line-height:1.6">{{ mensagem }}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f8f9fa;padding:16px 40px;text-align:center;border-top:1px solid #eee">
+            <p style="margin:0;font-size:.75rem;color:#aaa">Mensagem enviada via formulário de suporte do Ponto 24 Académico</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -5,6 +5,8 @@ from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria, Favorito
 from app.models.user import User
+from app.models.configuracao import Configuracao
+from app.models.lista_espera import ListaEspera
 
 
 def _slugify(s):
@@ -173,5 +175,59 @@ def editar_perfil():
     db.session.commit()
     flash("Perfil atualizado!", "sucesso")
     return redirect(url_for("main.perfil"))
+
+
+@main_bp.route("/suporte", methods=["GET", "POST"])
+def suporte():
+    """Página de suporte / contacto."""
+    if request.method == "POST":
+        nome    = request.form.get("nome", "").strip()
+        email   = request.form.get("email", "").strip()
+        assunto = request.form.get("assunto", "").strip()
+        mensagem = request.form.get("mensagem", "").strip()
+
+        if not nome or not email or not mensagem:
+            flash("Preenche todos os campos obrigatórios.", "erro")
+        else:
+            # Guarda internamente e tenta enviar por email ao suporte
+            from app.services.mail_service import enviar_email
+            email_suporte = Configuracao.get("email_suporte", "suporte@ponto24academico.com")
+            enviar_email(
+                destinatario=email_suporte,
+                assunto=f"[Suporte P24] {assunto or 'Contacto do site'}",
+                template_html="email/contacto_suporte.html",
+                contexto={"nome": nome, "email": email, "assunto": assunto, "mensagem": mensagem},
+            )
+            flash("Mensagem enviada! Respondemos em 24–48 horas.", "sucesso")
+            return redirect(url_for("main.suporte"))
+
+    cfg = Configuracao.get_all_dict()
+    return render_template("main/suporte.html", cfg=cfg)
+
+
+@main_bp.route("/acesso-antecipado", methods=["GET", "POST"])
+def acesso_antecipado():
+    """Página de captação de interesse / lista de espera."""
+    if request.method == "POST":
+        nome        = request.form.get("nome", "").strip()
+        email       = request.form.get("email", "").strip().lower()
+        instituicao = request.form.get("instituicao", "").strip()
+        mensagem    = request.form.get("mensagem", "").strip()
+
+        if not email:
+            flash("O email é obrigatório.", "erro")
+        elif ListaEspera.query.filter_by(email=email).first():
+            flash("Este email já está na lista de espera!", "aviso")
+        else:
+            db.session.add(ListaEspera(
+                nome=nome, email=email,
+                instituicao=instituicao, mensagem=mensagem,
+            ))
+            db.session.commit()
+            flash("Estás na lista! Avisamos quando o teu acesso estiver disponível.", "sucesso")
+            return redirect(url_for("main.acesso_antecipado"))
+
+    total_espera = ListaEspera.query.count()
+    return render_template("main/acesso_antecipado.html", total_espera=total_espera)
 
 
