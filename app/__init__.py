@@ -130,10 +130,22 @@ def create_app(config_name: str = None):
                 if not _cu.email_verificado:
                     limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
                     dias_restantes = max(0, (limite - datetime.utcnow()).days)
-                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg}
+                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url}
         except Exception:
             pass
-        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg}
+        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url}
+
+    # Função auxiliar para URL de thumbnail (local ou R2)
+    def _thumb_url(material):
+        if not getattr(material, "e_imagem", False) or not material.ficheiro_path:
+            return None
+        from pathlib import Path
+        p = Path(material.ficheiro_path.replace("\\", "/"))
+        if os.environ.get("R2_ENDPOINT"):
+            from app.services.r2_service import presigned_url
+            thumb_key = f"{p.parent.as_posix()}/thumbs/{p.name}"
+            return presigned_url(thumb_key, expires=7200)
+        return flask_request.url_root.rstrip("/") + "/static/uploads/" + p.parent.as_posix() + "/thumbs/" + p.name
 
     # Jinja2 global: constrói URL da página atual com `page` substituído
     @app.template_global()
