@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Ponto 24 Académico{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}O maior acervo digital de materiais académicos em Angola. Provas, resumos, exercícios e apontamentos organizados por universidade e disciplina.{% endblock %}">
+  <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+  <link rel="canonical" href="{{ request.url }}">
+
+  <!-- Open Graph (WhatsApp, Facebook, LinkedIn) -->
+  <meta property="og:title" content="{% block og_title %}Ponto 24 Académico{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}O maior acervo digital de materiais académicos em Angola. Provas, resumos, exercícios e apontamentos organizados por universidade e disciplina.{% endblock %}">
+  <meta property="og:image" content="{{ url_for('static', filename='img/P24.png', _external=True) }}">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Ponto 24 Académico">
+  <meta property="og:locale" content="pt_AO">
+
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/P24.png') }}">
 
   <!-- Bootstrap 5 -->
