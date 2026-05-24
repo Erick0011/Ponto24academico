@@ -100,7 +100,19 @@
             </div>
             <div class="mb-3">
               <label class="form-label fw-600">Universidade</label>
-              <input type="text" name="instituicao" class="form-control" placeholder="Ex: UCAN, UAN, UPRA...">
+              <input type="text" name="instituicao" class="form-control"
+                     placeholder="Ex: ISAF, ISPTEC, UAN..."
+                     list="list-inst" autocomplete="off">
+              <datalist id="list-inst">
+                <option value="ISAF">
+                <option value="ISPTEC">
+                <option value="UAN">
+                <option value="UCAN">
+                <option value="UPRA">
+                <option value="UAL">
+                <option value="Uni-Piaget">
+                <option value="ISCTE Angola">
+              </datalist>
             </div>
             <div class="mb-4">
               <label class="form-label fw-600">Por que queres entrar antes? <span class="text-muted fw-400">(opcional)</span></label>
