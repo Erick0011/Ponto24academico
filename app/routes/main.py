@@ -177,6 +177,15 @@ def editar_perfil():
     return redirect(url_for("main.perfil"))
 
 
+@main_bp.route("/sobre")
+def sobre_nos():
+    secao = request.args.get("secao", "sobre")
+    if secao not in ("sobre", "visao", "missao"):
+        secao = "sobre"
+    titulos = {"sobre": "Sobre Nós", "visao": "Visão", "missao": "Missão"}
+    return render_template("main/sobre.html", secao=secao, titulo=titulos[secao])
+
+
 @main_bp.route("/suporte", methods=["GET", "POST"])
 def suporte():
     """Página de suporte / contacto."""
