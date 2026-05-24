@@ -307,6 +307,16 @@ def submeter():
 
         db.session.commit()
 
+        # Notifica moderadores do novo material pendente
+        from app.services.notificacoes_service import notificar_moderadores_novo_material
+        primeiro_material = Material.query.get(primeiro_id)
+        if primeiro_material:
+            try:
+                notificar_moderadores_novo_material(primeiro_material)
+                db.session.commit()
+            except Exception:
+                pass
+
         if total == 1:
             flash("Material submetido com sucesso! Está a aguardar aprovação.", "sucesso")
         else:
