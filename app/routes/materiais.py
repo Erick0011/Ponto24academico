@@ -326,8 +326,11 @@ def preview(id):
     if not material.esta_aprovado and not e_autor and not pode_moderar:
         abort(403)
 
-    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    if os.environ.get("R2_ENDPOINT"):
+        from app.services.r2_service import presigned_url
+        return redirect(presigned_url(material.ficheiro_path, expires=3600))
 
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
     return send_from_directory(
         directory=upload_folder,
         path=material.ficheiro_path.replace("\\", "/"),
@@ -356,8 +359,12 @@ def download(id):
     material.incrementar_downloads()
     db.session.commit()
 
-    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    if os.environ.get("R2_ENDPOINT"):
+        from app.services.r2_service import presigned_url
+        dn = nome_download(material.titulo_base, material.ficheiro_tipo)
+        return redirect(presigned_url(material.ficheiro_path, expires=300, download_name=dn))
 
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
     return send_from_directory(
         directory=upload_folder,
         path=material.ficheiro_path.replace("\\", "/"),
