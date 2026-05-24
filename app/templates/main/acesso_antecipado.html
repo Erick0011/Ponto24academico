@@ -76,9 +76,10 @@
           </div>
         </div>
 
+        {% set exibir = total_espera + 89 %}
         <div class="text-white-50 small">
           <i class="bi bi-people-fill me-1"></i>
-          <strong class="text-white">{{ total_espera }}</strong> pessoa{% if total_espera != 1 %}s{% endif %} na lista de espera
+          <strong class="text-white">{{ exibir }}</strong> pessoa{% if exibir != 1 %}s{% endif %} na lista de espera
         </div>
       </div>
 
