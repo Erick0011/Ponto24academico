@@ -14,7 +14,7 @@ class Config:
 
     # Upload
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "app", "static", "uploads")
-    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH_MB", 20)) * 1024 * 1024
+    MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH_MB", 50)) * 1024 * 1024
     ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "gif", "webp", "docx"}
 
     # Créditos iniciais ao registar
