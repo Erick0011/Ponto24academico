@@ -110,6 +110,15 @@ def email_material_rejeitado(material, motivo=None):
     )
 
 
+def email_novo_material_pendente(material, moderador, url_rever):
+    enviar_email(
+        destinatario=moderador.email,
+        assunto=f"[P24] Novo material para moderar — {material.titulo_base}",
+        template_html="email/novo_material.html",
+        contexto={"material": material, "moderador": moderador, "url": url_rever},
+    )
+
+
 def email_convite_acesso(entrada, url_convite):
     enviar_email(
         destinatario=entrada.email,

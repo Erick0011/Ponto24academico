@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><style>
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+.container { max-width: 560px; margin: 32px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+.header { background: #0f1b35; padding: 28px 32px; text-align: center; }
+.logo { color: #ff6b00; font-size: 1.6rem; font-weight: 800; letter-spacing: .05em; }
+.logo span { color: #fff; }
+.body { padding: 32px; }
+.badge { display: inline-block; background: #fff3e0; color: #ff6b00; font-size: .8rem; font-weight: 700; padding: .25rem .75rem; border-radius: 50px; margin-bottom: 1rem; }
+h2 { color: #0f1b35; font-size: 1.3rem; margin: 0 0 1rem; }
+.info-box { background: #f8f9fa; border-radius: 8px; padding: 1rem 1.25rem; margin: 1.25rem 0; }
+.info-row { display: flex; gap: .5rem; margin-bottom: .4rem; font-size: .9rem; }
+.info-label { color: #888; min-width: 100px; }
+.info-value { color: #333; font-weight: 600; }
+.btn { display: inline-block; background: #ff6b00; color: #fff; text-decoration: none; padding: .75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: .95rem; margin-top: .5rem; }
+.footer { text-align: center; padding: 1.25rem; color: #aaa; font-size: .78rem; border-top: 1px solid #eee; }
+</style></head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">PONTO <span>24</span></div>
+  </div>
+  <div class="body">
+    <div class="badge">Moderação</div>
+    <h2>Novo material aguarda revisão</h2>
+    <p style="color:#555;font-size:.95rem">Olá {{ moderador.nome.split()[0] }}, há um novo material submetido que precisa da tua aprovação.</p>
+    <div class="info-box">
+      <div class="info-row"><span class="info-label">Título</span><span class="info-value">{{ material.titulo_base }}</span></div>
+      <div class="info-row"><span class="info-label">Autor</span><span class="info-value">{{ material.autor.nome }}</span></div>
+      <div class="info-row"><span class="info-label">Instituição</span><span class="info-value">{{ material.instituicao or '—' }}</span></div>
+      <div class="info-row"><span class="info-label">Disciplina</span><span class="info-value">{{ material.disciplina or '—' }}</span></div>
+      <div class="info-row"><span class="info-label">Tipo</span><span class="info-value">{{ material.ficheiro_tipo | upper }}</span></div>
+    </div>
+    <a href="{{ url }}" class="btn">Rever material agora</a>
+  </div>
+  <div class="footer">Ponto 24 Académico &mdash; Notificação automática</div>
+</div>
+</body>
+</html>

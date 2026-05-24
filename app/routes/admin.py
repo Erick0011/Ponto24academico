@@ -1,7 +1,7 @@
 from functools import wraps
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria
@@ -543,3 +543,22 @@ def resolver_relatorio(id):
     db.session.commit()
     flash("Relatório atualizado.", "sucesso")
     return redirect(request.referrer or url_for("admin.relatorios"))
+
+
+# ── Logs da aplicação ─────────────────────────────────────────────────────────
+
+@admin_bp.route("/logs")
+@login_required
+@admin_required
+def logs():
+    import os as _os
+    nivel = request.args.get("nivel", "")
+    log_path = _os.path.join(current_app.root_path, "..", "logs", "ponto24.log")
+    linhas = []
+    if _os.path.exists(log_path):
+        with open(log_path, "r", encoding="utf-8", errors="replace") as f:
+            todas = f.readlines()
+        if nivel:
+            todas = [l for l in todas if f" {nivel.upper()} " in l or f" {nivel.upper()}\t" in l]
+        linhas = list(reversed(todas[-1000:]))
+    return render_template("admin/logs.html", linhas=linhas, nivel=nivel)

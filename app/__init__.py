@@ -1,4 +1,6 @@
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 from urllib.parse import urlencode
 from flask import Flask, request as flask_request, render_template
 from flask_sqlalchemy import SQLAlchemy
@@ -22,8 +24,25 @@ def create_app(config_name: str = None):
     env = config_name or os.environ.get("FLASK_ENV", "development")
     app.config.from_object(config.get(env, config["default"]))
 
-    # Garante que a pasta de uploads existe
+    # Garante que a pasta de uploads e logs existe
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    logs_dir = os.path.join(app.root_path, "..", "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    handler = RotatingFileHandler(
+        os.path.join(logs_dir, "ponto24.log"),
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,
+        encoding="utf-8",
+    )
+    handler.setFormatter(logging.Formatter(
+        "[%(asctime)s] %(levelname)-8s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    ))
+    handler.setLevel(logging.INFO)
+    app.logger.setLevel(logging.INFO)
+    app.logger.addHandler(handler)
+    logging.getLogger("app").addHandler(handler)
+    logging.getLogger("app").setLevel(logging.INFO)
 
     # Extensões
     db.init_app(app)

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Logs — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+.log-line { font-family: monospace; font-size: .8rem; padding: .2rem .5rem; border-bottom: 1px solid rgba(0,0,0,.04); white-space: pre-wrap; word-break: break-all; }
+.log-line.ERROR   { background: #fff5f5; color: #c0392b; }
+.log-line.WARNING { background: #fffbf0; color: #e67e22; }
+.log-line.INFO    { color: #333; }
+.log-line.DEBUG   { color: #aaa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <h4 class="fw-800 mb-0">Logs da aplicação</h4>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('admin.logs') }}" class="btn btn-sm {% if not nivel %}btn-dark{% else %}btn-outline-secondary{% endif %}">Todos</a>
+      <a href="{{ url_for('admin.logs', nivel='ERROR') }}" class="btn btn-sm {% if nivel == 'ERROR' %}btn-danger{% else %}btn-outline-danger{% endif %}">Erros</a>
+      <a href="{{ url_for('admin.logs', nivel='WARNING') }}" class="btn btn-sm {% if nivel == 'WARNING' %}btn-warning{% else %}btn-outline-warning{% endif %}">Avisos</a>
+      <a href="{{ url_for('admin.logs', nivel='INFO') }}" class="btn btn-sm {% if nivel == 'INFO' %}btn-primary{% else %}btn-outline-primary{% endif %}">Info</a>
+      <a href="{{ url_for('admin.painel') }}" class="btn btn-sm btn-outline-secondary ms-2">
+        <i class="bi bi-arrow-left me-1"></i>Painel
+      </a>
+    </div>
+  </div>
+
+  <div class="p24-card p-0 overflow-hidden">
+    {% if linhas %}
+      <div style="max-height:75vh;overflow-y:auto;">
+        {% for linha in linhas %}
+          {% set nivel_linha = 'INFO' %}
+          {% if ' ERROR ' in linha %}{% set nivel_linha = 'ERROR' %}
+          {% elif ' WARNING ' in linha %}{% set nivel_linha = 'WARNING' %}
+          {% elif ' DEBUG ' in linha %}{% set nivel_linha = 'DEBUG' %}
+          {% endif %}
+          <div class="log-line {{ nivel_linha }}">{{ linha }}</div>
+        {% endfor %}
+      </div>
+      <div class="px-3 py-2 text-muted small border-top">
+        {{ linhas|length }} linha{% if linhas|length != 1 %}s{% endif %} (mais recentes primeiro)
+      </div>
+    {% else %}
+      <div class="text-center text-muted py-5">
+        <i class="bi bi-journal-text fs-2 d-block mb-2"></i>
+        Sem logs{% if nivel %} do nível {{ nivel }}{% endif %} registados.
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
