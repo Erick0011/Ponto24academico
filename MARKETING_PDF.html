@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Ponto 24 Académico — Documento de Marketing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    font-size: 10.5pt;
+    color: #1e293b;
+    line-height: 1.7;
+    background: #fff;
+  }
+
+  @media print {
+    body { font-size: 10pt; }
+    .no-print { display: none; }
+    .page-break { page-break-before: always; }
+    section { page-break-inside: avoid; }
+  }
+
+  .wrapper { max-width: 780px; margin: 0 auto; padding: 40px 48px; }
+
+  /* ── Capa ── */
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+    color: #fff;
+    padding: 60px 48px;
+    border-radius: 0;
+    margin: -40px -48px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(249,115,22,.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 56px;
+    background: #f97316; border-radius: 14px;
+    font-size: 1rem; font-weight: 800; color: #fff;
+    margin-bottom: 20px;
+  }
+  .cover .badge span { font-size: .7rem; vertical-align: super; }
+  .cover h1 { font-size: 26pt; font-weight: 800; line-height: 1.2; margin-bottom: 12px; }
+  .cover h1 span { color: #f97316; }
+  .cover .subtitle { font-size: 11pt; color: rgba(255,255,255,.65); margin-bottom: 32px; }
+  .cover .meta { font-size: 9pt; color: rgba(255,255,255,.4); border-top: 1px solid rgba(255,255,255,.1); padding-top: 16px; }
+
+  /* ── Secções ── */
+  h2 {
+    font-size: 14pt; font-weight: 800; color: #0f172a;
+    margin: 36px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f97316;
+  }
+  h3 {
+    font-size: 11pt; font-weight: 700; color: #1e293b;
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 10px; }
+  ul, ol { padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 4px; }
+  strong { font-weight: 700; color: #0f172a; }
+
+  /* ── Destaque das Provas Simuladas ── */
+  .feature-box {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border: 2px solid #f97316;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 16px 0 24px;
+  }
+  .feature-box .feature-title {
+    font-size: 13pt; font-weight: 800; color: #c2410c;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .feature-box .feature-title .dot {
+    width: 10px; height: 10px; background: #f97316; border-radius: 50%; display: inline-block;
+  }
+
+  /* ── Tabelas ── */
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 12px 0 20px; font-size: 9.5pt;
+  }
+  th {
+    background: #0f172a; color: #fff;
+    padding: 8px 12px; text-align: left;
+    font-weight: 700;
+  }
+  td { padding: 7px 12px; border-bottom: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  td.check-yes { color: #16a34a; font-weight: 700; }
+  td.check-no  { color: #dc2626; font-weight: 700; }
+
+  /* ── Citação ── */
+  blockquote {
+    border-left: 4px solid #f97316;
+    background: #f8fafc;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-style: italic;
+    color: #475569;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* ── Cards de fases ── */
+  .fase {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #f97316;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 12px 0;
+  }
+  .fase .fase-label {
+    font-size: 8.5pt; font-weight: 700; color: #f97316;
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px;
+  }
+  .fase h3 { margin: 0 0 6px; font-size: 10.5pt; }
+
+  /* ── Métricas ── */
+  .metrics { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 16px 0; }
+  .metric-card {
+    background: #0f172a; color: #fff;
+    border-radius: 10px; padding: 14px 16px; text-align: center;
+  }
+  .metric-card .num { font-size: 15pt; font-weight: 800; color: #f97316; }
+  .metric-card .lbl { font-size: 8pt; color: rgba(255,255,255,.6); margin-top: 2px; }
+
+  /* ── Tom da marca ── */
+  .brand-do, .brand-dont {
+    border-radius: 8px; padding: 14px 18px; margin: 8px 0;
+  }
+  .brand-do   { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .brand-dont { background: #fff1f2; border: 1px solid #fecdd3; }
+  .brand-do   h4 { color: #16a34a; font-size: 9pt; font-weight: 700; margin-bottom: 6px; }
+  .brand-dont h4 { color: #dc2626; font-size: 9pt; font-weight: 700; margin-bottom: 6px; }
+
+  /* ── Botão imprimir ── */
+  .print-btn {
+    position: fixed; bottom: 24px; right: 24px;
+    background: #f97316; color: #fff; border: none;
+    border-radius: 50px; padding: 12px 24px;
+    font-family: inherit; font-size: 10pt; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 16px rgba(249,115,22,.4);
+    z-index: 999;
+  }
+  .print-btn:hover { background: #ea6c0a; }
+</style>
+</head>
+<body>
+
+<button class="print-btn no-print" onclick="window.print()">⬇ Guardar como PDF</button>
+
+<div class="wrapper">
+
+  <!-- CAPA -->
+  <div class="cover">
+    <div class="badge">P<span>24</span></div>
+    <h1>Ponto 24 <span>Académico</span></h1>
+    <div class="subtitle">Documento de Marketing & Estratégia de Lançamento</div>
+    <div class="meta">ponto24academico.com &nbsp;·&nbsp; Maio de 2026 &nbsp;·&nbsp; Confidencial</div>
+  </div>
+
+  <!-- O QUE É -->
+  <h2>O que é o Ponto 24 Académico</h2>
+  <p>O <strong>Ponto 24 Académico</strong> é a maior plataforma digital de materiais académicos para estudantes angolanos. Num único lugar, os estudantes encontram e partilham provas, resumos, exercícios, apontamentos e gabaritos organizados por instituição, disciplina, curso e ano letivo.</p>
+  <p>A plataforma funciona com um sistema de <strong>créditos</strong>: para fazer download de materiais é necessário ter créditos, que se ganham fazendo upload de materiais próprios. Isto garante que a comunidade cresce de forma sustentável — quem dá, recebe.</p>
+
+  <!-- PROBLEMA -->
+  <h2>O Problema que Resolvemos</h2>
+  <p>Os estudantes angolanos enfrentam três grandes problemas na preparação académica:</p>
+  <ol>
+    <li><strong>Materiais dispersos</strong> — provas e resumos circulam em grupos de WhatsApp, perdem-se, chegam sem contexto</li>
+    <li><strong>Falta de acesso</strong> — quem não tem os contactos certos simplesmente não tem acesso</li>
+    <li><strong>Sem referência de qualidade</strong> — não há forma de saber se um material é bom antes de o usar</li>
+  </ol>
+  <p>O Ponto 24 resolve os três: centraliza, organiza e permite que a comunidade avalie cada material com estrelas e comentários.</p>
+
+  <!-- PRODUTO -->
+  <h2>Produto — O que a Plataforma Oferece</h2>
+  <h3>Para o Estudante</h3>
+  <ul>
+    <li><strong>Explorar materiais</strong> por universidade, disciplina, curso, ano letivo e tipo</li>
+    <li><strong>Preview online</strong> de PDFs e imagens antes de fazer download</li>
+    <li><strong>Download</strong> de ficheiros em PDF, Word e imagem</li>
+    <li><strong>Guardar favoritos</strong> para aceder rapidamente mais tarde</li>
+    <li><strong>Avaliar materiais</strong> com 1 a 5 estrelas</li>
+    <li><strong>Provas Simuladas</strong> — funcionalidade exclusiva descrita abaixo</li>
+  </ul>
+  <h3>Para Quem Partilha</h3>
+  <ul>
+    <li><strong>Submeter materiais</strong> facilmente, com suporte a múltiplos ficheiros de uma vez</li>
+    <li><strong>Ganhar créditos</strong> por cada material aprovado pela moderação</li>
+    <li><strong>Sistema de níveis:</strong> Novato → Colaborador → Contribuidor → Expert</li>
+  </ul>
+
+  <!-- PROVAS SIMULADAS -->
+  <div class="page-break"></div>
+  <h2>Funcionalidade em Destaque: Provas Simuladas</h2>
+
+  <div class="feature-box">
+    <div class="feature-title"><span class="dot"></span> Nova funcionalidade exclusiva</div>
+    <p>As <strong>Provas Simuladas</strong> transformam o acervo de provas antigas numa ferramenta de preparação ativa. O estudante faz a prova em ambiente simulado — com tempo contado — diretamente na plataforma, e recebe o resultado e gabarito no final.</p>
+  </div>
+
+  <h3>Como vai funcionar</h3>
+  <ol>
+    <li>O estudante escolhe a disciplina, a universidade e o ano letivo</li>
+    <li>A plataforma monta automaticamente uma prova simulada com perguntas retiradas das provas antigas do acervo</li>
+    <li>O estudante responde com tempo limite igual ao tempo real do exame</li>
+    <li>No final recebe o resultado, as respostas corretas e o gabarito completo</li>
+  </ol>
+
+  <h3>Porquê é diferente</h3>
+  <p>A maior parte dos estudantes prepara-se relendo provas antigas de forma passiva. As Provas Simuladas forçam a <strong>prática ativa</strong>: o estudante responde, erra, percebe onde falhou e corrige. Aprender fazendo é duas a três vezes mais eficaz do que aprender lendo.</p>
+
+  <h3>Impacto esperado</h3>
+  <ul>
+    <li>Aumenta o tempo médio que cada utilizador passa na plataforma</li>
+    <li>Cria um motivo para voltar regularmente — não só quando precisam de um PDF</li>
+    <li>Diferencia o Ponto 24 de qualquer repositório de ficheiros simples</li>
+    <li>Gera dados sobre quais os temas onde os estudantes têm mais dificuldades</li>
+  </ul>
+
+  <h3>Modelo de acesso</h3>
+  <ul>
+    <li><strong>Simulados básicos</strong> (até 10 perguntas): gratuitos para todos</li>
+    <li><strong>Simulados completos</strong> (prova inteira + histórico de resultados): conta Premium</li>
+  </ul>
+
+  <!-- PÚBLICO-ALVO -->
+  <h2>Público-Alvo</h2>
+  <h3>Primário</h3>
+  <ul>
+    <li>Estudantes universitários angolanos (18–28 anos)</li>
+    <li>Foco inicial: ensino superior em Luanda</li>
+    <li>Perfil: usam WhatsApp intensamente, partilham PDFs em grupos, têm smartphone Android</li>
+  </ul>
+  <h3>Secundário</h3>
+  <ul>
+    <li>Estudantes do ensino médio (11ª e 12ª classe) a preparar o exame de admissão</li>
+    <li>Professores que querem partilhar materiais com os seus alunos de forma organizada</li>
+  </ul>
+
+  <!-- CRÉDITOS -->
+  <h2>Sistema de Créditos</h2>
+  <table>
+    <thead><tr><th>Ação</th><th>Créditos</th></tr></thead>
+    <tbody>
+      <tr><td>Registo na plataforma</td><td>+10 créditos</td></tr>
+      <tr><td>Material aprovado pela moderação</td><td>+5 créditos</td></tr>
+      <tr><td>Fazer download de um material</td><td>-1 crédito</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Resultado:</strong> um estudante que envia 2 materiais aprovados já tem créditos suficientes para descarregar 20 materiais. O sistema recompensa quem contribui.</p>
+
+  <!-- DIFERENCIAIS -->
+  <div class="page-break"></div>
+  <h2>Diferenciais Competitivos</h2>
+  <table>
+    <thead><tr><th>Funcionalidade</th><th>Ponto 24</th><th>WhatsApp</th><th>Google Drive</th></tr></thead>
+    <tbody>
+      <tr><td>Organizado por disciplina</td><td class="check-yes">✅</td><td class="check-no">❌</td><td class="check-no">❌</td></tr>
+      <tr><td>Pesquisa por palavra-chave</td><td class="check-yes">✅</td><td class="check-no">❌</td><td>Parcial</td></tr>
+      <tr><td>Preview antes de download</td><td class="check-yes">✅</td><td class="check-no">❌</td><td class="check-no">❌</td></tr>
+      <tr><td>Avaliação de qualidade</td><td class="check-yes">✅</td><td class="check-no">❌</td><td class="check-no">❌</td></tr>
+      <tr><td>Moderação de conteúdo</td><td class="check-yes">✅</td><td class="check-no">❌</td><td class="check-no">❌</td></tr>
+      <tr><td>Recompensa por partilha</td><td class="check-yes">✅</td><td class="check-no">❌</td><td class="check-no">❌</td></tr>
+      <tr><td>Provas Simuladas</td><td class="check-yes">✅</td><td class="check-no">❌</td><td class="check-no">❌</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ESTRATÉGIA DE LANÇAMENTO -->
+  <h2>Estratégia de Lançamento</h2>
+
+  <div class="fase">
+    <div class="fase-label">Fase 0 — Agora</div>
+    <h3>Pré-lançamento: conteúdo antes de pessoas</h3>
+    <ul>
+      <li>Carregar 200–500 materiais da universidade de lançamento</li>
+      <li>Recrutar 5–10 estudantes como primeiros utilizadores para testar e dar feedback</li>
+      <li>Garantir que Provas, Resumos e Exercícios estão bem preenchidos</li>
+    </ul>
+  </div>
+
+  <div class="fase">
+    <div class="fase-label">Fase 1 — Semana 1–2</div>
+    <h3>Lançamento numa universidade via WhatsApp</h3>
+    <blockquote>"Estão a criar um site com provas e resumos da [universidade] organizados. Ainda está a começar mas já tem algumas coisas — ponto24academico.com"</blockquote>
+    <ul>
+      <li>Link direto para materiais da universidade (não homepage genérica)</li>
+      <li>Partilha coordenada pelos grupos das turmas com amigos de confiança</li>
+    </ul>
+    <p><strong>Meta:</strong> 100–200 registos, 500+ downloads</p>
+  </div>
+
+  <div class="fase">
+    <div class="fase-label">Fase 2 — Mês 2–3</div>
+    <h3>Expansão com Sistema de Embaixadores</h3>
+    <ul>
+      <li>1 embaixador por instituição que partilha, recruta e modera</li>
+      <li>Benefícios: créditos ilimitados, badge especial, acesso antecipado</li>
+      <li>Requisito: 10 materiais aprovados + 20 utilizadores recrutados</li>
+    </ul>
+  </div>
+
+  <div class="fase">
+    <div class="fase-label">Fase 3 — Mês 4+</div>
+    <h3>Crescimento orgânico + Lançamento das Provas Simuladas</h3>
+    <ul>
+      <li>SEO natural — páginas indexadas no Google por disciplina e universidade</li>
+      <li>Parcerias com professores para publicação de materiais oficiais</li>
+      <li>Lançamento das Provas Simuladas como evento de marketing separado</li>
+    </ul>
+  </div>
+
+  <!-- REDES SOCIAIS -->
+  <h2>Estratégia de Conteúdo para Redes Sociais</h2>
+  <h3>Instagram / TikTok</h3>
+  <ul>
+    <li><em>"Prova de [disciplina] da [universidade] de [ano] — agora disponível no Ponto 24"</em></li>
+    <li><em>"Como consegui 5 créditos para baixar materiais grátis"</em></li>
+    <li><em>"73% dos estudantes erraram esta pergunta — fizeste esta prova simulada?"</em></li>
+    <li>Depoimentos reais de estudantes que usaram a plataforma</li>
+  </ul>
+  <p><strong>Frequência:</strong> 4–5 posts/semana no Instagram, 2–3 reels/TikToks por semana</p>
+
+  <h3>WhatsApp</h3>
+  <ul>
+    <li>Grupo oficial "Ponto 24 — Novidades" para anunciar novos materiais</li>
+    <li>Sempre link direto para o material relevante</li>
+    <li>Máximo 3 mensagens por semana — sem spam</li>
+  </ul>
+
+  <!-- MONETIZAÇÃO -->
+  <div class="page-break"></div>
+  <h2>Monetização — Roadmap</h2>
+
+  <h3>Fase 1 — Lançamento (Gratuito)</h3>
+  <p>Foco total em crescimento. Nenhuma barreira de pagamento.</p>
+
+  <h3>Fase 2 — Créditos pagos (Mês 3–4)</h3>
+  <table>
+    <thead><tr><th>Pacote</th><th>Créditos</th><th>Preço</th></tr></thead>
+    <tbody>
+      <tr><td>Básico</td><td>20 créditos</td><td>500 Kz</td></tr>
+      <tr><td>Médio</td><td>60 créditos</td><td>1.200 Kz</td></tr>
+      <tr><td>Grande</td><td>150 créditos</td><td>2.500 Kz</td></tr>
+    </tbody>
+  </table>
+  <p>Integração sugerida: <strong>Multicaixa Express</strong></p>
+
+  <h3>Fase 3 — Conta Premium (Mês 5–6)</h3>
+  <ul>
+    <li>Downloads ilimitados por 30 dias</li>
+    <li>Provas Simuladas completas com histórico de resultados</li>
+    <li>Badge "Premium" no perfil</li>
+    <li><strong>Preço: 1.500–2.000 Kz/mês</strong></li>
+  </ul>
+
+  <h3>Fase 4 — Publicidade local (Mês 6+)</h3>
+  <ul>
+    <li>Banners de cursinhos, explicadores, papelarias, gráficas</li>
+    <li>Venda direta a negócios locais sem intermediários</li>
+    <li><strong>Preço: 5.000–15.000 Kz/mês por banner</strong></li>
+  </ul>
+
+  <!-- MÉTRICAS -->
+  <h2>Métricas de Sucesso</h2>
+  <table>
+    <thead><tr><th>Métrica</th><th>Mês 1</th><th>Mês 3</th><th>Mês 6</th></tr></thead>
+    <tbody>
+      <tr><td>Utilizadores registados</td><td>500</td><td>3.000</td><td>10.000</td></tr>
+      <tr><td>Materiais aprovados</td><td>500</td><td>3.000</td><td>10.000</td></tr>
+      <tr><td>Downloads por dia</td><td>100</td><td>500</td><td>2.000</td></tr>
+      <tr><td>Simulados por dia</td><td>—</td><td>200</td><td>1.000</td></tr>
+      <tr><td>Instituições ativas</td><td>1</td><td>5</td><td>15</td></tr>
+      <tr><td>Taxa de retorno (7 dias)</td><td>30%</td><td>40%</td><td>50%</td></tr>
+    </tbody>
+  </table>
+
+  <!-- TOM DA MARCA -->
+  <h2>Tom e Voz da Marca</h2>
+  <p>O Ponto 24 é <strong>próximo, angolano, útil e colaborativo</strong> — fala a língua dos estudantes locais e aparece quando o estudante precisa, sem empurrar publicidade.</p>
+
+  <div class="brand-do">
+    <h4>✅ Mensagem certa</h4>
+    <p><em>"Tens provas antigas a ganhar pó? Partilha aqui e ajuda quem vem a seguir — e ainda ganhas créditos."</em></p>
+  </div>
+  <div class="brand-dont">
+    <h4>❌ Mensagem errada</h4>
+    <p><em>"A plataforma líder em conteúdos académicos digitais em Angola."</em></p>
+  </div>
+
+  <!-- PRÓXIMOS PASSOS -->
+  <h2>Próximos Passos Imediatos</h2>
+  <ol>
+    <li><strong>Esta semana</strong> — carregar os primeiros materiais com o sistema de importação em massa</li>
+    <li><strong>Antes de abrir</strong> — testar a plataforma com 5 utilizadores reais da universidade</li>
+    <li><strong>Dia do lançamento</strong> — partilha coordenada nos grupos das turmas com os embaixadores</li>
+    <li><strong>Primeira semana</strong> — monitorizar o painel KPI diariamente e corrigir erros no dia</li>
+    <li><strong>Mês 2</strong> — lançamento das Provas Simuladas como evento de marketing separado</li>
+  </ol>
+
+  <br><br>
+  <div style="border-top:2px solid #e2e8f0;padding-top:16px;text-align:center;color:#94a3b8;font-size:8.5pt">
+    © 2026 Ponto 24 Académico &nbsp;·&nbsp; ponto24academico.com &nbsp;·&nbsp; Documento Confidencial
+  </div>
+
+</div>
+</body>
+</html>
