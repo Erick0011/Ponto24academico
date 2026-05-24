@@ -1,122 +1,318 @@
 {% extends "base.html" %}
-{% block title %}{{ titulo }} — Ponto 24 Académico{% endblock %}
+{% block title %}Sobre o Ponto 24 Académico{% endblock %}
+
+{% block extra_css %}
+<style>
+.valor-card {
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  height: 100%;
+  border: 1px solid rgba(0,0,0,.07);
+  transition: transform .2s, box-shadow .2s;
+}
+.valor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.1);
+}
+.quote-block {
+  border-left: 4px solid var(--p24-orange);
+  padding: 1.25rem 1.5rem;
+  background: var(--p24-orange-soft, #fff5ee);
+  border-radius: 0 12px 12px 0;
+}
+.isaf-badge {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(255,107,0,.1);
+  border: 1px solid rgba(255,107,0,.25);
+  border-radius: 50px;
+  padding: .3rem .9rem;
+  font-size: .8rem; font-weight: 700; color: var(--p24-orange);
+}
+.section-nav {
+  position: sticky;
+  top: 70px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  z-index: 100;
+}
+.section-nav a {
+  color: #555;
+  font-size: .88rem;
+  font-weight: 600;
+  padding: .75rem 1rem;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  display: inline-block;
+  transition: color .15s, border-color .15s;
+}
+.section-nav a:hover,
+.section-nav a.active {
+  color: var(--p24-orange);
+  border-bottom-color: var(--p24-orange);
+}
+.sobre-stat {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.sobre-stat .stat-num {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--p24-orange);
+  line-height: 1;
+}
+.sobre-stat .stat-label {
+  font-size: .85rem;
+  color: #666;
+  margin-top: .5rem;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-5" style="max-width:780px">
 
-  <!-- Breadcrumb -->
-  <nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb p24-breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Início</a></li>
-      <li class="breadcrumb-item active">{{ titulo }}</li>
-    </ol>
-  </nav>
-
-  {% if secao == 'sobre' %}
-
-  <div class="text-center mb-5">
-    <div class="p24-logo-badge mx-auto mb-3" style="width:64px;height:64px;font-size:1.4rem">P<span>24</span></div>
-    <h2 class="fw-800">Sobre o Ponto 24 Académico</h2>
-    <p class="text-muted">A plataforma académica feita por e para estudantes angolanos.</p>
+<!-- Nav interna -->
+<nav class="section-nav shadow-sm">
+  <div class="container d-flex gap-1">
+    <a href="#sobre">Sobre nós</a>
+    <a href="#visao">Visão</a>
+    <a href="#missao">Missão</a>
+    <a href="#valores">Valores</a>
   </div>
+</nav>
 
-  <div class="p24-card mb-4">
-    <p class="mb-3">O <strong>Ponto 24 Académico</strong> nasceu de um problema simples que todos os estudantes angolanos conhecem: provas antigas e resumos que circulam em grupos de WhatsApp, perdem-se, chegam sem contexto, e quem não tem os contactos certos simplesmente não tem acesso.</p>
-    <p class="mb-3">Criámos uma plataforma onde os materiais académicos — provas, resumos, exercícios, apontamentos e gabaritos — são organizados por instituição, disciplina, curso e ano letivo. Qualquer estudante pode encontrar o que precisa e contribuir com o que tem.</p>
-    <p class="mb-0">O nosso modelo é simples: <strong>quem dá, recebe</strong>. Cada material aprovado ganha créditos que permitem descarregar mais. Quanto mais a comunidade contribui, mais todos beneficiam.</p>
-  </div>
+<!-- Sobre nós -->
+<section id="sobre" class="py-5 py-lg-6" style="scroll-margin-top:120px">
+  <div class="container" style="max-width:900px">
+    <div class="text-center mb-5">
+      <h2 class="fw-800">Sobre o Ponto 24 Académico</h2>
+      <p class="text-muted">Uma plataforma feita por estudantes, para estudantes.</p>
+    </div>
 
-  <div class="row g-3 mb-4">
-    <div class="col-md-4">
-      <div class="p24-card text-center h-100">
-        <i class="bi bi-building text-p24 fs-2 mb-2 d-block"></i>
-        <div class="fw-700">Organizado</div>
-        <p class="text-muted small mb-0">Por universidade, disciplina, curso e ano letivo.</p>
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <div class="quote-block mb-4">
+          <p class="fw-600 mb-0" style="font-size:1.05rem;line-height:1.6">
+            "Porquê deve um estudante ter menos acesso a materiais do que outro por não ter os contactos certos?
+            A resposta é: não deve."
+          </p>
+        </div>
+        <p class="text-muted mb-3" style="line-height:1.8">
+          O <strong>Ponto 24 Académico</strong> nasceu dentro das salas do ISAF. Começou como uma frustração partilhada
+          entre colegas: provas antigas que circulavam em grupos privados, resumos excelentes que se perdiam nos telemóveis
+          de quem se formou, exercícios resolvidos que nunca chegavam a quem mais precisava.
+        </p>
+        <p class="text-muted mb-0" style="line-height:1.8">
+          Decidimos parar de reclamar e construir a solução. Uma plataforma onde qualquer estudante angolano pode encontrar
+          o que precisa e contribuir com o que tem. O modelo é simples: <strong>quem dá, recebe</strong>.
+        </p>
+      </div>
+      <div class="col-lg-6">
+        <div class="row g-3">
+          <div class="col-6">
+            <div class="sobre-stat p24-card">
+              <div class="stat-num">+500</div>
+              <div class="stat-label">Materiais partilhados</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="sobre-stat p24-card">
+              <div class="stat-num">+20</div>
+              <div class="stat-label">Instituições representadas</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="sobre-stat p24-card">
+              <div class="stat-num">100%</div>
+              <div class="stat-label">Moderação humana</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="sobre-stat p24-card">
+              <div class="stat-num">0 Kz</div>
+              <div class="stat-label">Para começar a partilhar</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="p24-card text-center h-100">
-        <i class="bi bi-people text-success fs-2 mb-2 d-block"></i>
-        <div class="fw-700">Colaborativo</div>
-        <p class="text-muted small mb-0">A comunidade avalia, comenta e contribui.</p>
+  </div>
+</section>
+
+<!-- Visão -->
+<section id="visao" class="py-5 py-lg-6 bg-light" style="scroll-margin-top:120px">
+  <div class="container" style="max-width:900px">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-5 text-center">
+        <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center"
+             style="width:96px;height:96px;background:var(--p24-orange-soft,#fff5ee)">
+          <i class="bi bi-eye text-p24" style="font-size:2.5rem"></i>
+        </div>
+        <div class="isaf-badge">Visão 2030</div>
+      </div>
+      <div class="col-lg-7">
+        <h2 class="fw-800 mb-3">A Nossa Visão</h2>
+        <div class="quote-block mb-4">
+          <p class="fw-600 mb-0" style="line-height:1.6">
+            "Ser a plataforma de referência para estudantes angolanos, onde o conhecimento circula livremente
+            e quem partilha é reconhecido."
+          </p>
+        </div>
+        <p class="text-muted mb-3" style="line-height:1.8">
+          Acreditamos que o acesso ao conhecimento não deve depender de quem conheces ou de quanto tens.
+          Em Angola, onde os recursos académicos são frequentemente escassos e desorganizados,
+          o Ponto 24 quer mudar esse paradigma.
+        </p>
+        <p class="text-muted mb-0" style="line-height:1.8">
+          A nossa visão é construir o maior repositório digital de materiais académicos do país
+          e ser a ferramenta que acompanha o estudante do primeiro ao último ano.
+        </p>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="p24-card text-center h-100">
-        <i class="bi bi-shield-check text-primary fs-2 mb-2 d-block"></i>
-        <div class="fw-700">Moderado</div>
-        <p class="text-muted small mb-0">Todos os materiais são revistos antes de serem públicos.</p>
+  </div>
+</section>
+
+<!-- Missão -->
+<section id="missao" class="py-5 py-lg-6" style="scroll-margin-top:120px">
+  <div class="container" style="max-width:900px">
+    <div class="row g-5 align-items-center flex-lg-row-reverse">
+      <div class="col-lg-5 text-center">
+        <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center"
+             style="width:96px;height:96px;background:var(--p24-orange-soft,#fff5ee)">
+          <i class="bi bi-bullseye text-p24" style="font-size:2.5rem"></i>
+        </div>
+        <div class="isaf-badge">Missão diária</div>
+      </div>
+      <div class="col-lg-7">
+        <h2 class="fw-800 mb-3">A Nossa Missão</h2>
+        <div class="quote-block mb-4">
+          <p class="fw-600 mb-0" style="line-height:1.6">
+            "Democratizar o acesso a materiais académicos de qualidade, eliminando as barreiras de quem não tem os contactos certos."
+          </p>
+        </div>
+        <p class="text-muted mb-3" style="line-height:1.8">
+          A missão do Ponto 24 é concreta: centralizar, organizar e tornar acessíveis os materiais que já existem
+          mas estão dispersos. Cada prova antiga, cada resumo bem feito, cada lista de exercícios que circula num grupo
+          de WhatsApp tem valor e nós queremos que esse valor chegue a todos.
+        </p>
+        <p class="text-muted mb-0" style="line-height:1.8">
+          A nossa missão está cumprida quando um estudante entra na plataforma, encontra o que precisa,
+          e decide também partilhar o que tem, porque percebe que faz parte de algo maior.
+        </p>
       </div>
     </div>
   </div>
+</section>
 
-  <div class="d-flex gap-3 justify-content-center flex-wrap">
-    <a href="{{ url_for('main.sobre_nos', secao='visao') }}" class="btn btn-outline-primary fw-600">
-      <i class="bi bi-eye me-2"></i>A nossa visão
-    </a>
-    <a href="{{ url_for('main.sobre_nos', secao='missao') }}" class="btn btn-outline-primary fw-600">
-      <i class="bi bi-bullseye me-2"></i>A nossa missão
-    </a>
-    <a href="{{ url_for('main.suporte') }}" class="btn btn-primary fw-600">
-      <i class="bi bi-headset me-2"></i>Contacta-nos
-    </a>
-  </div>
-
-  {% elif secao == 'visao' %}
-
-  <div class="text-center mb-5">
-    <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center"
-         style="width:64px;height:64px;background:var(--p24-orange-soft)">
-      <i class="bi bi-eye text-p24 fs-3"></i>
+<!-- Valores -->
+<section id="valores" class="py-5 py-lg-6 bg-light" style="scroll-margin-top:120px">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="fw-800">Os Nossos Valores</h2>
+      <p class="text-muted">O que define cada decisão que tomamos.</p>
     </div>
-    <h2 class="fw-800">A Nossa Visão</h2>
-    <p class="text-muted">Para onde caminhamos.</p>
-  </div>
-
-  <div class="p24-card mb-4">
-    <p class="fs-5 fw-600 text-p24 mb-4" style="line-height:1.5">"Ser a plataforma de referência para estudantes angolanos — onde o conhecimento circula livremente e quem partilha é reconhecido."</p>
-    <p class="mb-3">Acreditamos que o acesso ao conhecimento não deve depender de quem conheces ou de quanto tens. Em Angola, onde os recursos académicos são frequentemente escassos e desorganizados, o Ponto 24 quer mudar esse paradigma.</p>
-    <p class="mb-3">A nossa visão é construir o maior repositório digital de materiais académicos do país — um espaço onde um estudante do Cunene tem o mesmo acesso que um estudante em Luanda, e onde o esforço de partilhar é sempre recompensado.</p>
-    <p class="mb-0">A longo prazo, queremos expandir para todas as instituições de ensino superior e médio de Angola, e ser a ferramenta que acompanha o estudante do primeiro ao último ano.</p>
-  </div>
-
-  <div class="d-flex gap-3 justify-content-center flex-wrap">
-    <a href="{{ url_for('main.sobre_nos', secao='sobre') }}" class="btn btn-outline-primary fw-600">
-      <i class="bi bi-arrow-left me-2"></i>Sobre nós
-    </a>
-    <a href="{{ url_for('main.sobre_nos', secao='missao') }}" class="btn btn-primary fw-600">
-      A nossa missão <i class="bi bi-arrow-right ms-2"></i>
-    </a>
-  </div>
-
-  {% elif secao == 'missao' %}
-
-  <div class="text-center mb-5">
-    <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center"
-         style="width:64px;height:64px;background:var(--p24-orange-soft)">
-      <i class="bi bi-bullseye text-p24 fs-3"></i>
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="valor-card bg-white">
+          <div class="mb-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                 style="width:52px;height:52px;background:#fff0e6">
+              <i class="bi bi-people-fill text-p24" style="font-size:1.3rem"></i>
+            </div>
+          </div>
+          <h5 class="fw-700 mb-2">Comunidade primeiro</h5>
+          <p class="text-muted small mb-0" style="line-height:1.7">
+            Cada funcionalidade existe para servir os estudantes. Não há anúncios intrusivos, não há paywall,
+            só um sistema justo onde contribuir é a chave para aceder.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="valor-card bg-white">
+          <div class="mb-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                 style="width:52px;height:52px;background:#e8f5e9">
+              <i class="bi bi-shield-check text-success" style="font-size:1.3rem"></i>
+            </div>
+          </div>
+          <h5 class="fw-700 mb-2">Qualidade moderada</h5>
+          <p class="text-muted small mb-0" style="line-height:1.7">
+            Todos os materiais passam por revisão humana antes de serem publicados.
+            Preferimos crescer mais devagar do que encher a plataforma de conteúdo de baixa qualidade.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="valor-card bg-white">
+          <div class="mb-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                 style="width:52px;height:52px;background:#e3f2fd">
+              <i class="bi bi-globe2 text-primary" style="font-size:1.3rem"></i>
+            </div>
+          </div>
+          <h5 class="fw-700 mb-2">Acesso equitativo</h5>
+          <p class="text-muted small mb-0" style="line-height:1.7">
+            Construímos para Angola inteira. Qualquer estudante, em qualquer província,
+            merece ter acesso aos mesmos materiais.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="valor-card bg-white">
+          <div class="mb-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                 style="width:52px;height:52px;background:#fff3e0">
+              <i class="bi bi-award-fill text-warning" style="font-size:1.3rem"></i>
+            </div>
+          </div>
+          <h5 class="fw-700 mb-2">Reconhecimento justo</h5>
+          <p class="text-muted small mb-0" style="line-height:1.7">
+            Quem partilha é reconhecido com créditos, com visibilidade, e com a satisfação de saber
+            que o seu material está a ajudar dezenas de colegas.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="valor-card bg-white">
+          <div class="mb-3">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center"
+                 style="width:52px;height:52px;background:#f3e5f5">
+              <i class="bi bi-mortarboard-fill" style="font-size:1.3rem;color:#9c27b0"></i>
+            </div>
+          </div>
+          <h5 class="fw-700 mb-2">Construído por estudantes</h5>
+          <p class="text-muted small mb-0" style="line-height:1.7">
+            Somos estudantes do ISAF que conhecem o problema por dentro.
+            Não há entidade externa a adivinhar o que os estudantes angolanos precisam.
+          </p>
+        </div>
+      </div>
     </div>
-    <h2 class="fw-800">A Nossa Missão</h2>
-    <p class="text-muted">O que nos move todos os dias.</p>
   </div>
+</section>
 
-  <div class="p24-card mb-4">
-    <p class="fs-5 fw-600 text-p24 mb-4" style="line-height:1.5">"Democratizar o acesso a materiais académicos de qualidade, eliminando as barreiras de quem não tem os contactos certos."</p>
-    <p class="mb-3">A missão do Ponto 24 é concreta: centralizar, organizar e tornar acessíveis os materiais que já existem mas estão dispersos. Cada prova antiga, cada resumo bem feito, cada lista de exercícios que circula num grupo de WhatsApp tem valor — e nós queremos que esse valor chegue a todos.</p>
-    <p class="mb-3">Fazemos isso através de um sistema de créditos que incentiva a partilha, de uma moderação que garante qualidade, e de ferramentas como as Provas Simuladas que transformam o simples repositório numa verdadeira ferramenta de estudo.</p>
-    <p class="mb-0">A nossa missão está cumprida quando um estudante entra na plataforma, encontra o que precisa, e decide também partilhar o que tem — porque percebe que faz parte de algo maior.</p>
-  </div>
+{% endblock %}
 
-  <div class="d-flex gap-3 justify-content-center flex-wrap">
-    <a href="{{ url_for('main.sobre_nos', secao='visao') }}" class="btn btn-outline-primary fw-600">
-      <i class="bi bi-arrow-left me-2"></i>A nossa visão
-    </a>
-    <a href="{{ url_for('materiais.listar') }}" class="btn btn-primary fw-600">
-      <i class="bi bi-grid me-2"></i>Explorar materiais
-    </a>
-  </div>
+{% block extra_js %}
+<script>
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.section-nav a');
+function highlightNav() {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY + 140 >= s.offsetTop) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}
+window.addEventListener('scroll', highlightNav, {passive:true});
+highlightNav();
 
-  {% endif %}
-
-</div>
+{% if secao and secao != 'sobre' %}
+setTimeout(() => {
+  const el = document.getElementById('{{ secao }}');
+  if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+}, 200);
+{% endif %}
+</script>
 {% endblock %}
