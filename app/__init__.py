@@ -98,6 +98,8 @@ def create_app(config_name: str = None):
         "auth.redefinir_senha",
         "auth.sair",
         "static",
+        "main.robots_txt",
+        "main.sitemap_xml",
     }
 
     @app.before_request
