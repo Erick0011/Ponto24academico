@@ -180,10 +180,10 @@
 <!-- ═══════════════════════════════════════ FOOTER ═══════════════════════════════════════ -->
 <footer class="p24-footer mt-5">
   <div class="container-xl">
-    <div class="row g-4 py-5">
+    <div class="row g-4 py-5 align-items-start">
 
-      <!-- Sobre nós -->
-      <div class="col-lg-4">
+      <!-- Logo + descrição + redes -->
+      <div class="col-12 col-lg-3">
         <a class="d-flex align-items-center gap-2 text-decoration-none mb-3" href="{{ url_for('main.index') }}">
           <div class="p24-logo-badge">P<span>24</span></div>
           <div class="p24-logo-text text-white">
@@ -191,30 +191,29 @@
           </div>
         </a>
         <p class="text-white-50 small mb-3">O maior acervo digital de materiais académicos em Angola. Organizado, acessível e colaborativo.</p>
-        <!-- Redes sociais -->
-        <div class="d-flex gap-2 mt-4">
+        <div class="d-flex gap-2">
           {% if cfg.get('instagram') %}
           <a href="https://instagram.com/{{ cfg.instagram | replace('@','') }}" target="_blank"
-             class="btn btn-sm btn-outline-light rounded-circle" style="width:34px;height:34px;padding:0;line-height:32px;text-align:center">
-            <i class="bi bi-instagram" style="font-size:.85rem"></i>
+             class="btn btn-sm btn-outline-light rounded-circle" style="width:32px;height:32px;padding:0;line-height:30px;text-align:center">
+            <i class="bi bi-instagram" style="font-size:.8rem"></i>
           </a>
           {% endif %}
           {% if cfg.get('whatsapp') %}
           <a href="https://wa.me/{{ cfg.whatsapp | replace('+','') | replace(' ','') }}" target="_blank"
-             class="btn btn-sm btn-outline-light rounded-circle" style="width:34px;height:34px;padding:0;line-height:32px;text-align:center">
-            <i class="bi bi-whatsapp" style="font-size:.85rem"></i>
+             class="btn btn-sm btn-outline-light rounded-circle" style="width:32px;height:32px;padding:0;line-height:30px;text-align:center">
+            <i class="bi bi-whatsapp" style="font-size:.8rem"></i>
           </a>
           {% endif %}
           {% if cfg.get('telegram') %}
           <a href="https://t.me/{{ cfg.telegram | replace('@','') }}" target="_blank"
-             class="btn btn-sm btn-outline-light rounded-circle" style="width:34px;height:34px;padding:0;line-height:32px;text-align:center">
-            <i class="bi bi-telegram" style="font-size:.85rem"></i>
+             class="btn btn-sm btn-outline-light rounded-circle" style="width:32px;height:32px;padding:0;line-height:30px;text-align:center">
+            <i class="bi bi-telegram" style="font-size:.8rem"></i>
           </a>
           {% endif %}
           {% if cfg.get('facebook') %}
           <a href="https://facebook.com/{{ cfg.facebook }}" target="_blank"
-             class="btn btn-sm btn-outline-light rounded-circle" style="width:34px;height:34px;padding:0;line-height:32px;text-align:center">
-            <i class="bi bi-facebook" style="font-size:.85rem"></i>
+             class="btn btn-sm btn-outline-light rounded-circle" style="width:32px;height:32px;padding:0;line-height:30px;text-align:center">
+            <i class="bi bi-facebook" style="font-size:.8rem"></i>
           </a>
           {% endif %}
         </div>
@@ -223,58 +222,66 @@
       <!-- Quem somos -->
       <div class="col-6 col-lg-2">
         <h6 class="text-white fw-700 mb-3">Quem somos</h6>
-        <ul class="list-unstyled">
-          <li><a href="{{ url_for('main.sobre_nos') }}" class="text-white-50 text-decoration-none small">Sobre nós</a></li>
-          <li><a href="{{ url_for('main.sobre_nos', secao='visao') }}" class="text-white-50 text-decoration-none small">Visão</a></li>
-          <li><a href="{{ url_for('main.sobre_nos', secao='missao') }}" class="text-white-50 text-decoration-none small">Missão</a></li>
-          <li><a href="{{ url_for('main.suporte') }}" class="text-white-50 text-decoration-none small">Contacto</a></li>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-1"><a href="{{ url_for('main.sobre_nos') }}" class="text-white-50 text-decoration-none small">Sobre nós</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.sobre_nos') }}#visao" class="text-white-50 text-decoration-none small">Visão</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.sobre_nos') }}#missao" class="text-white-50 text-decoration-none small">Missão</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.suporte') }}" class="text-white-50 text-decoration-none small">Contacto</a></li>
         </ul>
       </div>
 
       <!-- Plataforma -->
       <div class="col-6 col-lg-2">
         <h6 class="text-white fw-700 mb-3">Plataforma</h6>
-        <ul class="list-unstyled">
-          <li><a href="{{ url_for('materiais.listar') }}" class="text-white-50 text-decoration-none small">Explorar</a></li>
-          <li><a href="{{ url_for('main.provas_simuladas') }}" class="text-white-50 text-decoration-none small">Provas Simuladas</a></li>
-          <li><a href="{{ url_for('main.como_funciona') }}" class="text-white-50 text-decoration-none small">Como funciona</a></li>
-          <li><a href="{{ url_for('main.suporte') }}" class="text-white-50 text-decoration-none small">Suporte</a></li>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-1"><a href="{{ url_for('materiais.listar') }}" class="text-white-50 text-decoration-none small">Explorar</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.provas_simuladas') }}" class="text-white-50 text-decoration-none small">Provas Simuladas</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.como_funciona') }}" class="text-white-50 text-decoration-none small">Como funciona</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.suporte') }}" class="text-white-50 text-decoration-none small">Suporte</a></li>
         </ul>
       </div>
 
       <!-- Conta -->
       <div class="col-6 col-lg-2">
         <h6 class="text-white fw-700 mb-3">Conta</h6>
-        <ul class="list-unstyled">
+        <ul class="list-unstyled mb-0">
           {% if cfg.modo_pre_lancamento == '1' %}
-          <li><a href="{{ url_for('main.acesso_antecipado') }}" class="text-white-50 text-decoration-none small">Acesso antecipado</a></li>
+          <li class="mb-1"><a href="{{ url_for('main.acesso_antecipado') }}" class="text-white-50 text-decoration-none small">Acesso antecipado</a></li>
           {% else %}
-          <li><a href="{{ url_for('auth.registar') }}" class="text-white-50 text-decoration-none small">Registar</a></li>
+          <li class="mb-1"><a href="{{ url_for('auth.registar') }}" class="text-white-50 text-decoration-none small">Registar</a></li>
           {% endif %}
-          <li><a href="{{ url_for('auth.entrar') }}" class="text-white-50 text-decoration-none small">Entrar</a></li>
-          <li><a href="{{ url_for('materiais.submeter') }}" class="text-white-50 text-decoration-none small">Enviar material</a></li>
+          <li class="mb-1"><a href="{{ url_for('auth.entrar') }}" class="text-white-50 text-decoration-none small">Entrar</a></li>
+          <li class="mb-1"><a href="{{ url_for('materiais.submeter') }}" class="text-white-50 text-decoration-none small">Enviar material</a></li>
         </ul>
       </div>
 
-      <!-- CTA -->
-      <div class="col-lg-4">
-        <h6 class="text-white fw-700 mb-3">Enviar material e ganhar créditos</h6>
-        <p class="text-white-50 small">Partilha os teus materiais e ajuda outros estudantes a avançar. Cada upload aprovado vale 5 créditos.</p>
-        <a href="{{ url_for('materiais.submeter') }}" class="btn btn-warning fw-700 btn-sm mb-4">
-          <i class="bi bi-cloud-upload me-2"></i>Enviar agora
-        </a>
-        <div class="border-top border-white border-opacity-10 pt-3">
-          <p class="text-white-50 small mb-1"><i class="bi bi-envelope me-2"></i>
-            {% if cfg.get('email_suporte') %}
-              <a href="mailto:{{ cfg.email_suporte }}" class="text-white-50 text-decoration-none">{{ cfg.email_suporte }}</a>
-            {% else %}
-              suporte@ponto24academico.com
-            {% endif %}
-          </p>
-          {% if cfg.get('endereco') %}
-          <p class="text-white-50 small mb-0"><i class="bi bi-geo-alt me-2"></i>{{ cfg.endereco }}</p>
+      <!-- Contacto -->
+      <div class="col-6 col-lg-3">
+        <h6 class="text-white fw-700 mb-3">Contacto</h6>
+        <ul class="list-unstyled mb-3">
+          {% if cfg.get('email_suporte') %}
+          <li class="mb-2">
+            <a href="mailto:{{ cfg.email_suporte }}" class="text-white-50 text-decoration-none small">
+              <i class="bi bi-envelope me-2"></i>{{ cfg.email_suporte }}
+            </a>
+          </li>
           {% endif %}
-        </div>
+          {% if cfg.get('whatsapp') %}
+          <li class="mb-2">
+            <a href="https://wa.me/{{ cfg.whatsapp | replace('+','') | replace(' ','') }}" target="_blank" class="text-white-50 text-decoration-none small">
+              <i class="bi bi-whatsapp me-2"></i>{{ cfg.whatsapp }}
+            </a>
+          </li>
+          {% endif %}
+          {% if cfg.get('endereco') %}
+          <li class="mb-2">
+            <span class="text-white-50 small"><i class="bi bi-geo-alt me-2"></i>{{ cfg.endereco }}</span>
+          </li>
+          {% endif %}
+        </ul>
+        <a href="{{ url_for('materiais.submeter') }}" class="btn btn-warning fw-700 btn-sm">
+          <i class="bi bi-cloud-upload me-2"></i>Enviar material
+        </a>
       </div>
 
     </div>
