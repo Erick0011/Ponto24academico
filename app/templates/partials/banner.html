@@ -13,4 +13,53 @@
            style="font-size:.6rem;background:rgba(255,255,255,.7)">Publicidade</small>
   </div>
 </div>
+{% else %}
+{# Espaço vago — CTAs rotativos para atrair anunciantes #}
+<div class="container-xl my-3">
+  <div class="p24-banner-cta text-center position-relative" style="border-radius:10px;overflow:hidden;border:2px dashed #dee2e6;background:#fafafa;padding:18px 20px;">
+    <small class="position-absolute top-0 end-0 text-muted px-2 py-1"
+           style="font-size:.6rem;background:rgba(255,255,255,.8);border-bottom-left-radius:6px">Espaço publicitário</small>
+    <div id="bannerCta" style="min-height:52px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+      <!-- preenchido pelo JS -->
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var ctas = [
+    {
+      icon: 'bi-megaphone',
+      text: 'O teu negócio visto por milhares de estudantes angolanos — <strong>anuncia aqui</strong>.',
+      btn: 'Ver espaços'
+    },
+    {
+      icon: 'bi-graph-up-arrow',
+      text: 'Alcança o teu público-alvo directamente na maior plataforma académica de Angola.',
+      btn: 'Anunciar agora'
+    },
+    {
+      icon: 'bi-people',
+      text: 'Estudantes universitários todos os dias. O teu banner pode estar aqui.',
+      btn: 'Saber mais'
+    },
+    {
+      icon: 'bi-lightning-charge',
+      text: 'Espaço disponível. Coloca a tua marca onde os estudantes estão — a partir de 500 Kz/dia.',
+      btn: 'Reservar espaço'
+    },
+    {
+      icon: 'bi-bookmark-star',
+      text: 'Anuncia no Ponto 24 Académico e sê visto quando os estudantes mais precisam.',
+      btn: 'Ver planos'
+    }
+  ];
+  var idx = Math.floor(Math.random() * ctas.length);
+  var c = ctas[idx];
+  var url = '{{ url_for("main.anunciar") }}';
+  document.getElementById('bannerCta').innerHTML =
+    '<i class="bi ' + c.icon + ' text-p24" style="font-size:1.6rem;flex-shrink:0"></i>' +
+    '<span class="text-muted small" style="max-width:540px">' + c.text + '</span>' +
+    '<a href="' + url + '" class="btn btn-sm btn-outline-secondary fw-600" style="white-space:nowrap">' + c.btn + '</a>';
+})();
+</script>
 {% endif %}
