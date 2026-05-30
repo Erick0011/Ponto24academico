@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Lista de Espera — Admin{% endblock %}
+﻿{% extends "admin/base_admin.html" %}
+{% block title %}Lista de Espera â€” Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
@@ -7,7 +7,7 @@
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
       <h4 class="fw-800 mb-1">Lista de Espera</h4>
-      <p class="text-muted small mb-0">Acesso antecipado — gere convites</p>
+      <p class="text-muted small mb-0">Acesso antecipado â€” gere convites</p>
     </div>
     <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
       <i class="bi bi-arrow-left me-2"></i>Voltar
@@ -55,15 +55,15 @@
         {% for e in entradas.items %}
         <tr>
           <td>
-            <div class="fw-600">{{ e.nome or '—' }}</div>
+            <div class="fw-600">{{ e.nome or 'â€”' }}</div>
             <div class="text-muted small">{{ e.email }}</div>
           </td>
-          <td class="text-muted small">{{ e.instituicao or '—' }}</td>
+          <td class="text-muted small">{{ e.instituicao or 'â€”' }}</td>
           <td>
             {% if e.mensagem %}
             <span class="text-muted small" style="max-width:200px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
                   title="{{ e.mensagem }}">{{ e.mensagem }}</span>
-            {% else %}<span class="text-muted small">—</span>{% endif %}
+            {% else %}<span class="text-muted small">â€”</span>{% endif %}
           </td>
           <td class="text-muted small">{{ e.criado_em.strftime('%d/%m/%Y') }}</td>
           <td>
@@ -105,7 +105,7 @@
     </table>
   </div>
 
-  <!-- Paginação -->
+  <!-- PaginaÃ§Ã£o -->
   {% if entradas.pages > 1 %}
   <nav class="mt-4">
     <ul class="pagination justify-content-center">
@@ -120,7 +120,7 @@
           <a class="page-link" href="{{ url_for('admin.lista_espera', status=status, q=q, page=p) }}">{{ p }}</a>
         </li>
         {% else %}
-        <li class="page-item disabled"><span class="page-link">…</span></li>
+        <li class="page-item disabled"><span class="page-link">â€¦</span></li>
         {% endif %}
       {% endfor %}
       <li class="page-item {% if not entradas.has_next %}disabled{% endif %}">
@@ -134,3 +134,4 @@
 
 </div>
 {% endblock %}
+

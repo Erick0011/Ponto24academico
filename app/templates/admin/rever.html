@@ -1,13 +1,13 @@
-{% extends "base.html" %}
-{% block title %}Rever material — Admin{% endblock %}
+﻿{% extends "admin/base_admin.html" %}
+{% block title %}Rever material â€” Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
 
-  <!-- Header de navegação -->
+  <!-- Header de navegaÃ§Ã£o -->
   <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
     <a href="{{ url_for('admin.moderacao') }}" class="btn btn-light fw-600">
-      <i class="bi bi-arrow-left me-2"></i>Moderação
+      <i class="bi bi-arrow-left me-2"></i>ModeraÃ§Ã£o
     </a>
 
     <div class="d-flex align-items-center gap-2">
@@ -22,7 +22,7 @@
       {% if pos > 0 %}
       <span class="text-muted small fw-600">{{ pos }} / {{ total }} pendentes</span>
       {% else %}
-      <span class="text-muted small">— / {{ total }} pendentes</span>
+      <span class="text-muted small">â€” / {{ total }} pendentes</span>
       {% endif %}
 
       {% if next_id %}
@@ -53,7 +53,7 @@
                style="min-height:400px;background:#f8f9fa">
             <i class="bi bi-file-earmark-word text-primary" style="font-size:5rem;opacity:.5"></i>
             <h6 class="mt-3 fw-700">Documento Word</h6>
-            <p class="text-muted small">Não é possível pré-visualizar ficheiros .docx no browser.</p>
+            <p class="text-muted small">NÃ£o Ã© possÃ­vel prÃ©-visualizar ficheiros .docx no browser.</p>
             <a href="{{ url_for('materiais.download', id=material.id) }}"
                class="btn btn-primary fw-700 mt-2">
               <i class="bi bi-download me-2"></i>Descarregar para ver
@@ -63,13 +63,13 @@
       </div>
     </div>
 
-    <!-- Coluna direita: metadados + ações -->
+    <!-- Coluna direita: metadados + aÃ§Ãµes -->
     <div class="col-lg-4">
       <!-- Status do material -->
       <div class="p24-card mb-3">
         <div class="d-flex align-items-center gap-2 mb-3">
           <span class="badge bg-warning text-dark fw-700 px-3 py-2">
-            <i class="bi bi-hourglass me-1"></i>Pendente de aprovação
+            <i class="bi bi-hourglass me-1"></i>Pendente de aprovaÃ§Ã£o
           </span>
         </div>
         <div class="fw-800 mb-1" style="font-size:1.05rem;line-height:1.3">{{ material.titulo }}</div>
@@ -80,7 +80,7 @@
         {% endif %}
       </div>
 
-      <!-- Informações do material -->
+      <!-- InformaÃ§Ãµes do material -->
       <div class="p24-card mb-3">
         <h6 class="fw-700 mb-3">Detalhes do material</h6>
         <table class="w-100" style="font-size:.85rem;border-collapse:collapse">
@@ -94,7 +94,7 @@
             </td>
           </tr>
           <tr>
-            <td class="text-muted py-1"><i class="bi bi-bank me-1"></i>Instituição</td>
+            <td class="text-muted py-1"><i class="bi bi-bank me-1"></i>InstituiÃ§Ã£o</td>
             <td class="fw-600 py-1">{{ material.instituicao }}</td>
           </tr>
           {% if material.curso %}
@@ -134,15 +134,15 @@
         </table>
         {% if material.descricao %}
         <div class="border-top mt-3 pt-3">
-          <div class="text-muted small mb-1">Descrição</div>
+          <div class="text-muted small mb-1">DescriÃ§Ã£o</div>
           <p class="small mb-0">{{ material.descricao }}</p>
         </div>
         {% endif %}
       </div>
 
-      <!-- Ações de moderação -->
+      <!-- AÃ§Ãµes de moderaÃ§Ã£o -->
       <div class="p24-card">
-        <h6 class="fw-700 mb-3">Decisão de moderação</h6>
+        <h6 class="fw-700 mb-3">DecisÃ£o de moderaÃ§Ã£o</h6>
 
         <!-- Aprovar -->
         <form action="{{ url_for('admin.aprovar', id=material.id) }}" method="post" class="mb-2">
@@ -163,15 +163,15 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="next_url" value="{{ url_for('admin.rever_material', id=next_id) if next_id else url_for('admin.moderacao') }}">
             <div class="mb-2">
-              <label class="form-label small fw-600">Motivo rápido</label>
+              <label class="form-label small fw-600">Motivo rÃ¡pido</label>
               <div class="d-flex flex-wrap gap-1 mb-2">
                 {% set motivos = [
-                  "Ficheiro ilegível ou de baixa qualidade",
-                  "Conteúdo não corresponde ao título",
-                  "Ficheiro duplicado — já existe na plataforma",
+                  "Ficheiro ilegÃ­vel ou de baixa qualidade",
+                  "ConteÃºdo nÃ£o corresponde ao tÃ­tulo",
+                  "Ficheiro duplicado â€” jÃ¡ existe na plataforma",
                   "Ficheiro incompleto ou corrompido",
-                  "Resolução demasiado baixa para leitura",
-                  "Conteúdo incorreto ou com erros graves"
+                  "ResoluÃ§Ã£o demasiado baixa para leitura",
+                  "ConteÃºdo incorreto ou com erros graves"
                 ] %}
                 {% for m in motivos %}
                 <button type="button"
@@ -184,11 +184,11 @@
               </div>
             </div>
             <div class="mb-2">
-              <label class="form-label small fw-600">Motivo da rejeição</label>
+              <label class="form-label small fw-600">Motivo da rejeiÃ§Ã£o</label>
               <textarea id="motivo-texto" name="motivo" class="form-control form-control-sm" rows="3"
                         placeholder="Seleciona um motivo acima ou escreve aqui..." required></textarea>
             </div>
-            <button type="submit" class="btn btn-danger fw-700 w-100">Confirmar rejeição</button>
+            <button type="submit" class="btn btn-danger fw-700 w-100">Confirmar rejeiÃ§Ã£o</button>
           </form>
         </div>
 
@@ -196,7 +196,7 @@
         <div class="border-top mt-3 pt-3">
           <a href="{{ url_for('admin.rever_material', id=next_id) }}"
              class="btn btn-light fw-600 w-100">
-            Próximo pendente <i class="bi bi-chevron-right ms-1"></i>
+            PrÃ³ximo pendente <i class="bi bi-chevron-right ms-1"></i>
           </a>
         </div>
         {% endif %}
@@ -205,18 +205,18 @@
 
   </div>
 
-  <!-- Materiais similares já aprovados -->
+  <!-- Materiais similares jÃ¡ aprovados -->
   {% if similares %}
   <div class="mt-5">
     <h6 class="fw-700 mb-3">
-      <i class="bi bi-files me-2 text-p24"></i>Materiais similares já aprovados
-      <span class="text-muted fw-400 small ms-1">— verifica se é duplicado antes de aprovar</span>
+      <i class="bi bi-files me-2 text-p24"></i>Materiais similares jÃ¡ aprovados
+      <span class="text-muted fw-400 small ms-1">â€” verifica se Ã© duplicado antes de aprovar</span>
     </h6>
     <div class="row g-3">
       {% for s in similares %}
       <div class="col-sm-6 col-md-4 col-lg-2">
         <div class="p24-card p-2 h-100 d-flex flex-column" style="font-size:.8rem">
-          <!-- Thumbnail ou ícone -->
+          <!-- Thumbnail ou Ã­cone -->
           <div class="rounded overflow-hidden mb-2 d-flex align-items-center justify-content-center bg-light"
                style="height:80px">
             {% if thumb_url(s) %}
@@ -254,3 +254,4 @@
 
 </div>
 {% endblock %}
+
