@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Registar — Ponto 24 Académico{% endblock %}
+﻿{% extends "auth/base_auth.html" %}
+{% block title %}Registar â€” Ponto 24 AcadÃ©mico{% endblock %}
 
 {% block content %}
 <div class="p24-auth-page">
@@ -8,26 +8,26 @@
       <a href="{{ url_for('main.index') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
         <div class="p24-logo-badge">P<span>24</span></div>
         <div class="p24-logo-text">
-          <span class="fw-800">PONTO 24</span><br><small>ACADÉMICO</small>
+          <span class="fw-800">PONTO 24</span><br><small>ACADÃ‰MICO</small>
         </div>
       </a>
       <h5 class="fw-800 mt-3 mb-1">Cria a tua conta</h5>
       <p class="text-muted small">Junta-te a milhares de estudantes angolanos</p>
     </div>
 
-    <!-- Boas-vindas créditos -->
+    <!-- Boas-vindas crÃ©ditos -->
     <div class="alert border-0 mb-4 d-flex align-items-center gap-2"
         style="background:var(--p24-orange-lt);border-radius:var(--p24-radius)">
       <i class="bi bi-gift-fill fs-5" style="color:var(--p24-orange)"></i>
       <span class="small fw-600" style="color:var(--p24-orange)">
-        Ganhas <strong>10 créditos</strong> de boas-vindas ao registares!
+        Ganhas <strong>10 crÃ©ditos</strong> de boas-vindas ao registares!
       </span>
     </div>
 
     {% if email_convite %}
     <div class="alert alert-success border-0 d-flex align-items-center gap-2 mb-3">
       <i class="bi bi-envelope-check-fill fs-5"></i>
-      <span class="small fw-600">Convite válido para <strong>{{ email_convite }}</strong>. Completa o registo abaixo.</span>
+      <span class="small fw-600">Convite vÃ¡lido para <strong>{{ email_convite }}</strong>. Completa o registo abaixo.</span>
     </div>
     {% endif %}
 
@@ -45,28 +45,28 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Palavra-passe *</label>
-          <input type="password" name="password" class="form-control" placeholder="Mín. 6 caracteres" required />
+          <input type="password" name="password" class="form-control" placeholder="MÃ­n. 6 caracteres" required />
         </div>
         <div class="col-md-6">
           <label class="form-label">Confirmar *</label>
           <input type="password" name="confirmacao" class="form-control" placeholder="Repete a palavra-passe" required />
         </div>
         <div class="col-md-6">
-          <label class="form-label">Instituição</label>
+          <label class="form-label">InstituiÃ§Ã£o</label>
           <select name="instituicao" id="reg-instituicao" class="form-select">
             <option value="">Seleciona...</option>
-            <option value="ISAF">ISAF — Instituto Superior de Administração e Finanças</option>
+            <option value="ISAF">ISAF â€” Instituto Superior de AdministraÃ§Ã£o e FinanÃ§as</option>
           </select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Curso</label>
           <select name="curso" id="reg-curso" class="form-select" disabled>
-            <option value="">Seleciona primeiro a instituição</option>
+            <option value="">Seleciona primeiro a instituiÃ§Ã£o</option>
           </select>
         </div>
         <div class="col-12 mt-2">
           <button type="submit" class="btn btn-primary w-100 fw-700 py-2">
-            <i class="bi bi-person-plus me-2"></i>Criar conta grátis
+            <i class="bi bi-person-plus me-2"></i>Criar conta grÃ¡tis
           </button>
         </div>
       </div>
@@ -74,7 +74,7 @@
 
     <hr class="my-4">
     <p class="text-center text-muted small mb-0">
-      Já tens conta?
+      JÃ¡ tens conta?
       <a href="{{ url_for('auth.entrar') }}" class="text-orange fw-700">Entrar</a>
     </p>
   </div>
@@ -85,9 +85,9 @@
 <script>
 const CURSOS = {
   'ISAF': [
-    'Informática de Gestão Financeira',
-    'Contabilidade e Finanças',
-    'Gestão Bancária e de Seguros'
+    'InformÃ¡tica de GestÃ£o Financeira',
+    'Contabilidade e FinanÃ§as',
+    'GestÃ£o BancÃ¡ria e de Seguros'
   ]
 };
 
@@ -97,7 +97,7 @@ document.getElementById('reg-instituicao').addEventListener('change', function (
   select.innerHTML = '';
   if (cursos.length === 0) {
     select.disabled = true;
-    select.innerHTML = '<option value="">Seleciona primeiro a instituição</option>';
+    select.innerHTML = '<option value="">Seleciona primeiro a instituiÃ§Ã£o</option>';
   } else {
     select.disabled = false;
     select.innerHTML = '<option value="">Seleciona o curso...</option>';

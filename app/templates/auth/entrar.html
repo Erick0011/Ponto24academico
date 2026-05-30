@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Entrar — Ponto 24 Académico{% endblock %}
+﻿{% extends "auth/base_auth.html" %}
+{% block title %}Entrar â€” Ponto 24 AcadÃ©mico{% endblock %}
 
 {% block content %}
 <div class="p24-auth-page">
@@ -9,7 +9,7 @@
       <a href="{{ url_for('main.index') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
         <div class="p24-logo-badge">P<span>24</span></div>
         <div class="p24-logo-text">
-          <span class="fw-800">PONTO 24</span><br><small>ACADÉMICO</small>
+          <span class="fw-800">PONTO 24</span><br><small>ACADÃ‰MICO</small>
         </div>
       </a>
       <h5 class="fw-800 mt-3 mb-1">Bem-vindo de volta!</h5>
@@ -34,7 +34,7 @@
         <div class="input-group">
           <span class="input-group-text bg-white"><i class="bi bi-lock text-muted"></i></span>
           <input type="password" name="password" id="pw" class="form-control border-start-0 ps-0"
-                 placeholder="••••••••" required />
+                 placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required />
           <button type="button" class="input-group-text bg-white border-start-0"
                   onclick="togglePw()">
             <i class="bi bi-eye text-muted" id="pwIcon"></i>
@@ -54,7 +54,7 @@
 
     <hr class="my-4">
     <p class="text-center text-muted small mb-0">
-      Não tens conta?
+      NÃ£o tens conta?
       <a href="{{ url_for('auth.registar') }}" class="text-orange fw-700">Registar agora</a>
     </p>
   </div>
