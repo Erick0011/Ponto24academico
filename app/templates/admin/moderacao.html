@@ -1,11 +1,11 @@
-{% extends "base.html" %}
-{% block title %}Moderação — Admin{% endblock %}
+﻿{% extends "admin/base_admin.html" %}
+{% block title %}ModeraÃ§Ã£o â€” Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
-      <h4 class="fw-800 mb-1">Moderação de materiais</h4>
+      <h4 class="fw-800 mb-1">ModeraÃ§Ã£o de materiais</h4>
       <p class="text-muted small mb-0">Aprova ou rejeita os materiais submetidos pelos estudantes</p>
     </div>
     <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
@@ -20,10 +20,10 @@
         <tr>
           <th>Material</th>
           <th>Autor</th>
-          <th class="d-none d-md-table-cell">Instituição</th>
+          <th class="d-none d-md-table-cell">InstituiÃ§Ã£o</th>
           <th class="d-none d-lg-table-cell">Data</th>
           <th>Tipo</th>
-          <th class="text-center">Ações</th>
+          <th class="text-center">AÃ§Ãµes</th>
         </tr>
       </thead>
       <tbody>
@@ -34,14 +34,14 @@
                class="text-decoration-none fw-600 text-dark small">
               <i class="bi bi-file-earmark-pdf text-danger me-2"></i>{{ m.titulo }}
             </a>
-            <div class="text-muted" style="font-size:.72rem">{{ m.disciplina }} • {{ m.instituicao }}</div>
+            <div class="text-muted" style="font-size:.72rem">{{ m.disciplina }} â€¢ {{ m.instituicao }}</div>
           </td>
           <td class="small fw-600">{{ m.autor.nome }}</td>
           <td class="d-none d-md-table-cell text-muted small">{{ m.instituicao }}</td>
           <td class="d-none d-lg-table-cell text-muted small">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
           <td>
             <span class="p24-type-badge badge-{{ m.categoria.nome|lower if m.categoria else 'outro' }}">
-              {{ m.categoria.nome if m.categoria else '—' }}
+              {{ m.categoria.nome if m.categoria else 'â€”' }}
             </span>
           </td>
           <td class="text-center">
@@ -51,7 +51,7 @@
                  class="btn btn-primary btn-sm fw-600" title="Ver ficheiro e decidir">
                 <i class="bi bi-eye me-1"></i>Rever
               </a>
-              <!-- Aprovar rápido -->
+              <!-- Aprovar rÃ¡pido -->
               <form action="{{ url_for('admin.aprovar', id=m.id) }}" method="post" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success btn-sm fw-600" title="Aprovar">
@@ -70,7 +70,7 @@
       </tbody>
     </table>
 
-    <!-- Paginação -->
+    <!-- PaginaÃ§Ã£o -->
     {% if materiais.pages > 1 %}
     <div class="p-3 border-top">
       <nav><ul class="pagination justify-content-center mb-0">
@@ -89,13 +89,13 @@
     <div class="text-center py-5">
       <i class="bi bi-check-circle text-success" style="font-size:3rem"></i>
       <h5 class="mt-3 fw-700">Tudo em dia!</h5>
-      <p class="text-muted">Não há materiais pendentes de aprovação.</p>
+      <p class="text-muted">NÃ£o hÃ¡ materiais pendentes de aprovaÃ§Ã£o.</p>
     </div>
     {% endif %}
   </div>
 </div>
 
-<!-- Modais de rejeição -->
+<!-- Modais de rejeiÃ§Ã£o -->
 {% for m in materiais.items %}
 <div class="modal fade" id="rejeitar{{ m.id }}" tabindex="-1">
   <div class="modal-dialog">
@@ -109,15 +109,15 @@
         <div class="modal-body">
           <p class="text-muted small mb-3">Material: <strong>{{ m.titulo }}</strong></p>
           <div class="mb-2">
-            <label class="form-label small fw-600">Motivo rápido</label>
+            <label class="form-label small fw-600">Motivo rÃ¡pido</label>
             <div class="d-flex flex-wrap gap-1 mb-2">
               {% for mot in [
-                "Ficheiro ilegível ou de baixa qualidade",
-                "Conteúdo não corresponde ao título",
-                "Ficheiro duplicado — já existe na plataforma",
+                "Ficheiro ilegÃ­vel ou de baixa qualidade",
+                "ConteÃºdo nÃ£o corresponde ao tÃ­tulo",
+                "Ficheiro duplicado â€” jÃ¡ existe na plataforma",
                 "Ficheiro incompleto ou corrompido",
-                "Resolução demasiado baixa para leitura",
-                "Conteúdo incorreto ou com erros graves"
+                "ResoluÃ§Ã£o demasiado baixa para leitura",
+                "ConteÃºdo incorreto ou com erros graves"
               ] %}
               <button type="button" class="btn btn-light btn-sm fw-600"
                       style="font-size:.72rem"
@@ -128,7 +128,7 @@
             </div>
           </div>
           <div class="mb-2">
-            <label class="form-label small fw-600">Motivo da rejeição</label>
+            <label class="form-label small fw-600">Motivo da rejeiÃ§Ã£o</label>
             <textarea name="motivo" class="form-control" rows="3"
                       placeholder="Seleciona um motivo acima ou escreve aqui..." required></textarea>
           </div>

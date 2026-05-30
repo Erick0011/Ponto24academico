@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}KPIs — Admin{% endblock %}
+﻿{% extends "admin/base_admin.html" %}
+{% block title %}KPIs â€” Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
@@ -11,7 +11,7 @@
       </div>
       <div>
         <h4 class="fw-800 mb-0">Indicadores de desempenho</h4>
-        <p class="text-muted small mb-0">Últimos 30 dias · atualizado em tempo real</p>
+        <p class="text-muted small mb-0">Ãšltimos 30 dias Â· atualizado em tempo real</p>
       </div>
     </div>
     <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600 btn-sm">
@@ -19,7 +19,7 @@
     </a>
   </div>
 
-  <!-- ── Stats rápidos ── -->
+  <!-- â”€â”€ Stats rÃ¡pidos â”€â”€ -->
   <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
       <div class="p24-admin-stat">
@@ -61,7 +61,7 @@
 
   <div class="row g-4 mb-4">
 
-    <!-- ── Pesquisas sem resultado (o mais valioso) ── -->
+    <!-- â”€â”€ Pesquisas sem resultado (o mais valioso) â”€â”€ -->
     <div class="col-lg-6">
       <div class="p24-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -71,7 +71,7 @@
           </div>
           <div>
             <div class="fw-800" style="font-size:.95rem">O que falta na plataforma</div>
-            <div class="text-muted" style="font-size:.72rem">Pesquisas sem nenhum resultado — mostra os gaps de conteúdo</div>
+            <div class="text-muted" style="font-size:.72rem">Pesquisas sem nenhum resultado â€” mostra os gaps de conteÃºdo</div>
           </div>
         </div>
         {% if sem_resultados %}
@@ -98,7 +98,7 @@
       </div>
     </div>
 
-    <!-- ── Top pesquisas ── -->
+    <!-- â”€â”€ Top pesquisas â”€â”€ -->
     <div class="col-lg-6">
       <div class="p24-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
@@ -129,7 +129,7 @@
         {% else %}
         <div class="text-center py-4 text-muted small">
           <i class="bi bi-search fs-3 d-block mb-2"></i>
-          Ainda não há pesquisas registadas.
+          Ainda nÃ£o hÃ¡ pesquisas registadas.
         </div>
         {% endif %}
       </div>
@@ -138,7 +138,7 @@
 
   <div class="row g-4">
 
-    <!-- ── Top downloads ── -->
+    <!-- â”€â”€ Top downloads â”€â”€ -->
     <div class="col-lg-7">
       <div class="p24-card">
         <div class="fw-800 mb-3" style="font-size:.95rem">
@@ -151,7 +151,7 @@
             <span class="fw-800 text-muted flex-shrink-0" style="width:20px;font-size:.8rem">{{ loop.index }}</span>
             <div class="flex-grow-1 min-w-0">
               <div class="fw-600 text-truncate" style="font-size:.82rem">{{ m.titulo_base }}</div>
-              <div class="text-muted" style="font-size:.7rem">{{ m.disciplina }} · {{ m.instituicao }}</div>
+              <div class="text-muted" style="font-size:.7rem">{{ m.disciplina }} Â· {{ m.instituicao }}</div>
             </div>
             <span class="badge bg-success-subtle text-success fw-700 flex-shrink-0" style="font-size:.72rem">
               {{ m.downloads }} downloads
@@ -165,7 +165,7 @@
       </div>
     </div>
 
-    <!-- ── Por categoria ── -->
+    <!-- â”€â”€ Por categoria â”€â”€ -->
     <div class="col-lg-5">
       <div class="p24-card h-100">
         <div class="fw-800 mb-3" style="font-size:.95rem">
@@ -195,3 +195,4 @@
   </div>
 </div>
 {% endblock %}
+

@@ -1,10 +1,10 @@
-{% extends "base.html" %}
-{% block title %}{{ 'Editar' if anuncio else 'Novo' }} Anúncio — Admin{% endblock %}
+﻿{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Editar' if anuncio else 'Novo' }} AnÃºncio â€” Admin{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block content %}
 <div class="container py-4" style="max-width:640px">
-  <h4 class="fw-800 mb-4">{{ 'Editar anúncio' if anuncio else 'Novo anúncio' }}</h4>
+  <h4 class="fw-800 mb-4">{{ 'Editar anÃºncio' if anuncio else 'Novo anÃºncio' }}</h4>
 
   <div class="p24-card">
     <form method="post">
@@ -27,7 +27,7 @@
           <label class="form-label fw-600">URL do banner (imagem) *</label>
           <input type="url" name="banner_url" class="form-control" placeholder="https://..."
                  value="{{ anuncio.banner_url if anuncio else '' }}" required>
-          <small class="text-muted">Dimensão recomendada: 1200×200 px</small>
+          <small class="text-muted">DimensÃ£o recomendada: 1200Ã—200 px</small>
         </div>
 
         <div class="col-12">
@@ -37,29 +37,29 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label fw-600">Percentagem de exposição *</label>
+          <label class="form-label fw-600">Percentagem de exposiÃ§Ã£o *</label>
           <select name="percentagem" class="form-select" required>
             <option value="">Seleciona...</option>
             {% for p in [10, 25, 50] %}
             <option value="{{ p }}"
               {% if anuncio and anuncio.percentagem == p %}selected{% endif %}
               {% if p > disponivel and not anuncio %}disabled{% endif %}>
-              {{ p }}%{% if p > disponivel and not anuncio %} (indisponível){% endif %}
+              {{ p }}%{% if p > disponivel and not anuncio %} (indisponÃ­vel){% endif %}
             </option>
             {% endfor %}
           </select>
-          <small class="text-muted">Disponível: {{ disponivel | int }}%</small>
+          <small class="text-muted">DisponÃ­vel: {{ disponivel | int }}%</small>
         </div>
 
         <div class="col-md-6">
-          <label class="form-label fw-600">Data de início *</label>
+          <label class="form-label fw-600">Data de inÃ­cio *</label>
           <input type="date" name="data_inicio" class="form-control"
                  value="{{ anuncio.data_inicio.isoformat() if anuncio else '' }}" required>
         </div>
 
         <div class="col-md-6">
-          <label class="form-label fw-600">Número de dias *</label>
-          <input type="number" name="dias" class="form-control" min="7" placeholder="Mínimo 7 dias"
+          <label class="form-label fw-600">NÃºmero de dias *</label>
+          <input type="number" name="dias" class="form-control" min="7" placeholder="MÃ­nimo 7 dias"
                  value="{{ (anuncio.data_fim - anuncio.data_inicio).days if anuncio else '' }}" required>
         </div>
 
@@ -84,3 +84,4 @@
   </div>
 </div>
 {% endblock %}
+

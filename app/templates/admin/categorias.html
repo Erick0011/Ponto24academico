@@ -1,12 +1,12 @@
-{% extends "base.html" %}
-{% block title %}Categorias — Admin{% endblock %}
+﻿{% extends "admin/base_admin.html" %}
+{% block title %}Categorias â€” Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
       <h4 class="fw-800 mb-1">Categorias</h4>
-      <p class="text-muted small mb-0">Tipos de materiais disponíveis na plataforma</p>
+      <p class="text-muted small mb-0">Tipos de materiais disponÃ­veis na plataforma</p>
     </div>
     <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
       <i class="bi bi-arrow-left me-2"></i>Voltar
@@ -19,14 +19,14 @@
       <div class="p24-card p-0 overflow-hidden">
         <table class="p24-table w-100">
           <thead>
-            <tr><th>Ícone</th><th>Nome</th><th>Descrição</th><th>Materiais</th><th></th></tr>
+            <tr><th>Ãcone</th><th>Nome</th><th>DescriÃ§Ã£o</th><th>Materiais</th><th></th></tr>
           </thead>
           <tbody>
             {% for c in categorias %}
             <tr>
               <td><i class="bi {{ c.icone }} fs-5 text-p24"></i></td>
               <td class="fw-700">{{ c.nome }}</td>
-              <td class="text-muted small">{{ c.descricao or '—' }}</td>
+              <td class="text-muted small">{{ c.descricao or 'â€”' }}</td>
               <td class="fw-600 text-p24">{{ c.materiais.count() }}</td>
               <td>
                 <div class="d-flex gap-1 justify-content-end">
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <!-- Formulário criar / editar -->
+    <!-- FormulÃ¡rio criar / editar -->
     <div class="col-md-5">
       <div class="p24-card">
         <h6 class="fw-700 mb-3" id="form-titulo">
@@ -72,7 +72,7 @@
             <input type="text" name="nome" id="cat-nome" class="form-control" placeholder="Ex: Prova" required />
           </div>
           <div class="mb-2">
-            <label class="form-label">Ícone Bootstrap Icons</label>
+            <label class="form-label">Ãcone Bootstrap Icons</label>
             <div class="input-group">
               <span class="input-group-text"><i class="bi" id="icone-preview"></i></span>
               <input type="text" name="icone" id="cat-icone" class="form-control"
@@ -81,9 +81,9 @@
             <small class="text-muted">Ex: bi-file-text, bi-book, bi-pencil-square</small>
           </div>
           <div class="mb-4">
-            <label class="form-label">Descrição</label>
+            <label class="form-label">DescriÃ§Ã£o</label>
             <input type="text" name="descricao" id="cat-descricao" class="form-control"
-                   placeholder="Breve descrição do tipo de material" />
+                   placeholder="Breve descriÃ§Ã£o do tipo de material" />
           </div>
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary fw-700 flex-fill" id="btn-submit">
@@ -116,7 +116,7 @@ function preencherEdicao(id, nome, icone, descricao) {
   document.getElementById('form-titulo').innerHTML =
     '<i class="bi bi-pencil me-2 text-warning"></i>Editar categoria';
   document.getElementById('btn-submit').innerHTML =
-    '<i class="bi bi-check me-2"></i>Guardar alterações';
+    '<i class="bi bi-check me-2"></i>Guardar alteraÃ§Ãµes';
   document.getElementById('btn-cancelar').classList.remove('d-none');
   document.getElementById('cat-form').scrollIntoView({behavior:'smooth'});
 }
