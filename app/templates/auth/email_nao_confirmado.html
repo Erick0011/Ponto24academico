@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Confirma o teu email — Ponto 24 Académico{% endblock %}
+﻿{% extends "auth/base_auth.html" %}
+{% block title %}Confirma o teu email â€” Ponto 24 AcadÃ©mico{% endblock %}
 
 {% block content %}
 <div class="d-flex align-items-center justify-content-center" style="min-height:75vh;padding:3rem 1rem">
@@ -13,17 +13,17 @@
     <h3 class="fw-800 mb-2">Confirma o teu email</h3>
     <p class="text-muted mb-1">
       O prazo de 7 dias para confirmares o email expirou.<br>
-      O acesso à plataforma está suspenso até confirmares.
+      O acesso Ã  plataforma estÃ¡ suspenso atÃ© confirmares.
     </p>
     <p class="text-muted mb-4" style="font-size:.9rem">
-      Enviámos um email para <strong>{{ current_user.email }}</strong>.
-      Verifica também a pasta de spam.
+      EnviÃ¡mos um email para <strong>{{ current_user.email }}</strong>.
+      Verifica tambÃ©m a pasta de spam.
     </p>
 
     <form action="{{ url_for('auth.reenviar_confirmacao') }}" method="post" class="mb-3">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="btn btn-warning fw-700 px-5 py-2">
-        <i class="bi bi-send me-2"></i>Reenviar email de confirmação
+        <i class="bi bi-send me-2"></i>Reenviar email de confirmaÃ§Ã£o
       </button>
     </form>
 
@@ -34,3 +34,4 @@
   </div>
 </div>
 {% endblock %}
+
