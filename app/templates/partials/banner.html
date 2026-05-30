@@ -1,0 +1,16 @@
+{% if banner_ativo %}
+<div class="container-xl my-3">
+  <div class="text-center position-relative" style="border-radius:10px;overflow:hidden;background:#f8f9fa;">
+    {% if banner_ativo.link_destino %}
+    <a href="{{ banner_ativo.link_destino }}" target="_blank" rel="noopener">
+    {% endif %}
+      <img src="{{ banner_ativo.banner_url }}" alt="Publicidade — {{ banner_ativo.anunciante }}"
+           style="max-width:100%;max-height:120px;object-fit:cover;display:block;margin:0 auto;">
+    {% if banner_ativo.link_destino %}
+    </a>
+    {% endif %}
+    <small class="position-absolute bottom-0 end-0 text-muted px-1"
+           style="font-size:.6rem;background:rgba(255,255,255,.7)">Publicidade</small>
+  </div>
+</div>
+{% endif %}

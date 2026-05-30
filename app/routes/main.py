@@ -241,6 +241,13 @@ def acesso_antecipado():
     return render_template("main/acesso_antecipado.html", total_espera=total_espera)
 
 
+@main_bp.route("/anunciar")
+def anunciar():
+    from app.models.anuncio import Anuncio
+    disponivel = Anuncio.percentagem_disponivel()
+    return render_template("main/anunciar.html", disponivel=disponivel)
+
+
 @main_bp.route("/robots.txt")
 def robots_txt():
     linhas = [

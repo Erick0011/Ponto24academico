@@ -58,6 +58,7 @@ def create_app(config_name: str = None):
     from app.models.notificacao import Notificacao       # noqa: F401
     from app.models.configuracao import Configuracao     # noqa: F401
     from app.models.lista_espera import ListaEspera, RelatorioMaterial  # noqa: F401
+    from app.models.anuncio import Anuncio               # noqa: F401
 
     # User loader para Flask-Login
     from app.models.user import User
@@ -151,10 +152,18 @@ def create_app(config_name: str = None):
                 if not _cu.email_verificado:
                     limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
                     dias_restantes = max(0, (limite - datetime.utcnow()).days)
-                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url}
+                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
         except Exception:
             pass
-        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url}
+        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
+
+    # Selecciona banner activo para injectar em cada página
+    def _banner():
+        try:
+            from app.models.anuncio import Anuncio
+            return Anuncio.selecionar()
+        except Exception:
+            return None
 
     # Função auxiliar para URL de thumbnail (local ou R2)
     def _thumb_url(material):
