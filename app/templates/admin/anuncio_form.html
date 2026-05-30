@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if anuncio else 'Novo' }} Anúncio — Admin{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:640px">
+  <h4 class="fw-800 mb-4">{{ 'Editar anúncio' if anuncio else 'Novo anúncio' }}</h4>
+
+  <div class="p24-card">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3">
+
+        <div class="col-12">
+          <label class="form-label fw-600">Anunciante *</label>
+          <input type="text" name="anunciante" class="form-control"
+                 value="{{ anuncio.anunciante if anuncio else '' }}" required>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-600">Contacto</label>
+          <input type="text" name="contacto" class="form-control" placeholder="Telefone ou email"
+                 value="{{ anuncio.contacto if anuncio else '' }}">
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-600">URL do banner (imagem) *</label>
+          <input type="url" name="banner_url" class="form-control" placeholder="https://..."
+                 value="{{ anuncio.banner_url if anuncio else '' }}" required>
+          <small class="text-muted">Dimensão recomendada: 1200×200 px</small>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label fw-600">Link de destino (clique)</label>
+          <input type="url" name="link_destino" class="form-control" placeholder="https://..."
+                 value="{{ anuncio.link_destino if anuncio else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-600">Percentagem de exposição *</label>
+          <select name="percentagem" class="form-select" required>
+            <option value="">Seleciona...</option>
+            {% for p in [10, 25, 50] %}
+            <option value="{{ p }}"
+              {% if anuncio and anuncio.percentagem == p %}selected{% endif %}
+              {% if p > disponivel and not anuncio %}disabled{% endif %}>
+              {{ p }}%{% if p > disponivel and not anuncio %} (indisponível){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+          <small class="text-muted">Disponível: {{ disponivel | int }}%</small>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-600">Data de início *</label>
+          <input type="date" name="data_inicio" class="form-control"
+                 value="{{ anuncio.data_inicio.isoformat() if anuncio else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label fw-600">Número de dias *</label>
+          <input type="number" name="dias" class="form-control" min="7" placeholder="Mínimo 7 dias"
+                 value="{{ (anuncio.data_fim - anuncio.data_inicio).days if anuncio else '' }}" required>
+        </div>
+
+        {% if anuncio %}
+        <div class="col-md-6">
+          <label class="form-label fw-600">Estado</label>
+          <select name="ativo" class="form-select">
+            <option value="1" {% if anuncio.ativo %}selected{% endif %}>Activo</option>
+            <option value="0" {% if not anuncio.ativo %}selected{% endif %}>Pausado</option>
+          </select>
+        </div>
+        {% endif %}
+
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button type="submit" class="btn btn-primary fw-700">
+            <i class="bi bi-check-lg me-1"></i>Guardar
+          </button>
+          <a href="{{ url_for('admin.anuncios') }}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.kpi import PesquisaLog
 from app.models.configuracao import Configuracao
 from app.models.lista_espera import ListaEspera, RelatorioMaterial
+from app.models.anuncio import Anuncio
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
@@ -562,3 +563,94 @@ def logs():
             todas = [l for l in todas if f" {nivel.upper()} " in l or f" {nivel.upper()}\t" in l]
         linhas = list(reversed(todas[-1000:]))
     return render_template("admin/logs.html", linhas=linhas, nivel=nivel)
+
+
+# ── Anúncios ──────────────────────────────────────────────────────────────────
+
+@admin_bp.route("/anuncios")
+@login_required
+@admin_required
+def anuncios():
+    todos = Anuncio.query.order_by(Anuncio.data_inicio.desc()).all()
+    disponivel = Anuncio.percentagem_disponivel()
+    return render_template("admin/anuncios.html", anuncios=todos, disponivel=disponivel)
+
+
+@admin_bp.route("/anuncios/criar", methods=["GET", "POST"])
+@login_required
+@admin_required
+def criar_anuncio():
+    from datetime import date as _date, timedelta
+    disponivel = Anuncio.percentagem_disponivel()
+    if request.method == "POST":
+        anunciante   = request.form.get("anunciante", "").strip()
+        contacto     = request.form.get("contacto", "").strip()
+        banner_url   = request.form.get("banner_url", "").strip()
+        link_destino = request.form.get("link_destino", "").strip()
+        percentagem  = request.form.get("percentagem", type=float)
+        dias         = request.form.get("dias", type=int)
+        inicio_str   = request.form.get("data_inicio", "").strip()
+
+        if not all([anunciante, banner_url, percentagem, dias]):
+            flash("Preenche todos os campos obrigatórios.", "erro")
+        elif percentagem > disponivel:
+            flash(f"Só tens {disponivel:.0f}% disponível para vender.", "erro")
+        else:
+            try:
+                data_inicio = _date.fromisoformat(inicio_str) if inicio_str else _date.today()
+            except ValueError:
+                data_inicio = _date.today()
+            data_fim = data_inicio + timedelta(days=dias)
+            db.session.add(Anuncio(
+                anunciante=anunciante,
+                contacto=contacto,
+                banner_url=banner_url,
+                link_destino=link_destino,
+                percentagem=percentagem,
+                data_inicio=data_inicio,
+                data_fim=data_fim,
+            ))
+            db.session.commit()
+            flash(f"Anúncio de {anunciante} criado com sucesso.", "sucesso")
+            return redirect(url_for("admin.anuncios"))
+
+    return render_template("admin/anuncio_form.html", anuncio=None, disponivel=disponivel)
+
+
+@admin_bp.route("/anuncios/<int:id>/editar", methods=["GET", "POST"])
+@login_required
+@admin_required
+def editar_anuncio(id):
+    anuncio = Anuncio.query.get_or_404(id)
+    disponivel = Anuncio.percentagem_disponivel() + anuncio.percentagem
+    if request.method == "POST":
+        from datetime import date as _date, timedelta
+        anuncio.anunciante   = request.form.get("anunciante", "").strip()
+        anuncio.contacto     = request.form.get("contacto", "").strip()
+        anuncio.banner_url   = request.form.get("banner_url", "").strip()
+        anuncio.link_destino = request.form.get("link_destino", "").strip()
+        anuncio.percentagem  = request.form.get("percentagem", type=float)
+        anuncio.ativo        = request.form.get("ativo") == "1"
+        dias = request.form.get("dias", type=int)
+        inicio_str = request.form.get("data_inicio", "").strip()
+        try:
+            anuncio.data_inicio = _date.fromisoformat(inicio_str)
+        except ValueError:
+            pass
+        if dias:
+            anuncio.data_fim = anuncio.data_inicio + timedelta(days=dias)
+        db.session.commit()
+        flash("Anúncio actualizado.", "sucesso")
+        return redirect(url_for("admin.anuncios"))
+    return render_template("admin/anuncio_form.html", anuncio=anuncio, disponivel=disponivel)
+
+
+@admin_bp.route("/anuncios/<int:id>/eliminar", methods=["POST"])
+@login_required
+@admin_required
+def eliminar_anuncio(id):
+    anuncio = Anuncio.query.get_or_404(id)
+    db.session.delete(anuncio)
+    db.session.commit()
+    flash("Anúncio eliminado.", "aviso")
+    return redirect(url_for("admin.anuncios"))

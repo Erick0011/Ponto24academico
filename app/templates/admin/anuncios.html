@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Anúncios — Admin{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-800 mb-0">Anúncios</h4>
+      <small class="text-muted">{{ disponivel | int }}% de exposição disponível para vender</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin.criar_anuncio') }}" class="btn btn-primary fw-600">
+        <i class="bi bi-plus-lg me-1"></i>Novo anúncio
+      </a>
+      <a href="{{ url_for('admin.painel') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Painel
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de capacidade -->
+  <div class="p24-card mb-4">
+    <div class="d-flex justify-content-between mb-1">
+      <span class="small fw-600">Exposição vendida</span>
+      <span class="small fw-600">{{ (100 - disponivel) | int }}% / 100%</span>
+    </div>
+    <div class="progress" style="height:10px">
+      <div class="progress-bar bg-warning" style="width:{{ 100 - disponivel }}%"></div>
+    </div>
+    {% if disponivel == 0 %}
+    <p class="text-danger small mt-2 mb-0"><i class="bi bi-exclamation-circle me-1"></i>100% vendido — sem espaço disponível.</p>
+    {% elif disponivel < 25 %}
+    <p class="text-warning small mt-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Quase cheio — só {{ disponivel | int }}% disponível.</p>
+    {% endif %}
+  </div>
+
+  {% if anuncios %}
+  <div class="p24-card p-0 overflow-hidden">
+    <table class="table mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Anunciante</th>
+          <th>%</th>
+          <th>Período</th>
+          <th>Dias restantes</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in anuncios %}
+        <tr>
+          <td>
+            <div class="fw-600">{{ a.anunciante }}</div>
+            {% if a.contacto %}<small class="text-muted">{{ a.contacto }}</small>{% endif %}
+          </td>
+          <td><span class="badge bg-warning text-dark fw-700">{{ a.percentagem | int }}%</span></td>
+          <td>
+            <small>{{ a.data_inicio.strftime('%d/%m/%y') }} → {{ a.data_fim.strftime('%d/%m/%y') }}</small>
+          </td>
+          <td>
+            {% if a.dias_restantes > 0 %}
+              <span class="fw-600 text-success">{{ a.dias_restantes }} dias</span>
+            {% else %}
+              <span class="text-danger small">Expirado</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if a.esta_ativo %}
+              <span class="badge bg-success">Activo</span>
+            {% elif not a.ativo %}
+              <span class="badge bg-secondary">Pausado</span>
+            {% else %}
+              <span class="badge bg-danger">Expirado</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="{{ url_for('admin.editar_anuncio', id=a.id) }}" class="btn btn-sm btn-outline-secondary me-1">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <form action="{{ url_for('admin.eliminar_anuncio', id=a.id) }}" method="post" class="d-inline"
+                  onsubmit="return confirm('Eliminar anúncio de {{ a.anunciante }}?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="p24-card text-center py-5 text-muted">
+    <i class="bi bi-megaphone fs-2 d-block mb-2"></i>
+    Nenhum anúncio criado ainda.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

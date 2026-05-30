@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Anuncie no Ponto 24 Académico{% endblock %}
+{% block meta_description %}Chegue a milhares de estudantes angolanos. Anuncie no Ponto 24 Académico e coloque a sua marca onde os estudantes estão.{% endblock %}
+
+{% block content %}
+
+<div class="container py-5" style="max-width:860px">
+
+  <div class="text-center mb-5">
+    <h1 class="fw-800 mb-3">Chegue a quem estuda em Angola</h1>
+    <p class="text-muted fs-5">O Ponto 24 Académico é visitado diariamente por estudantes universitários angolanos. O seu negócio pode estar aqui.</p>
+    {% if disponivel > 0 %}
+    <div class="badge bg-success fs-6 px-3 py-2">{{ disponivel | int }}% de exposição disponível</div>
+    {% else %}
+    <div class="badge bg-danger fs-6 px-3 py-2">Espaço esgotado — entre em contacto para lista de espera</div>
+    {% endif %}
+  </div>
+
+  <!-- Onde aparecem os banners -->
+  <div class="p24-card mb-4">
+    <h5 class="fw-800 mb-4">Onde vai aparecer o seu anúncio</h5>
+    <div class="row g-4">
+      <div class="col-md-4 text-center">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:#fff5ee">
+          <i class="bi bi-grid text-p24 fs-4"></i>
+        </div>
+        <div class="fw-700 mb-1">Listagem de materiais</div>
+        <p class="text-muted small mb-0">Banner no topo da página mais visitada do site, onde todos os estudantes procuram materiais.</p>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:#fff5ee">
+          <i class="bi bi-layout-text-sidebar text-p24 fs-4"></i>
+        </div>
+        <div class="fw-700 mb-1">Entre os resultados</div>
+        <p class="text-muted small mb-0">Banner inserido entre os materiais durante a navegação, com alta visibilidade natural.</p>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+             style="width:56px;height:56px;background:#fff5ee">
+          <i class="bi bi-file-earmark-text text-p24 fs-4"></i>
+        </div>
+        <div class="fw-700 mb-1">Detalhe do material</div>
+        <p class="text-muted small mb-0">Banner abaixo de cada material, quando o estudante está mais envolvido com o conteúdo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preços -->
+  <div class="p24-card mb-4">
+    <h5 class="fw-800 mb-1">Preços por exposição</h5>
+    <p class="text-muted small mb-4">Compra uma percentagem da rotação diária. Quanto maior a percentagem, mais vezes o teu banner aparece.</p>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="border rounded-3 p-3 text-center h-100">
+          <div class="fw-800 fs-3 text-p24">10%</div>
+          <div class="text-muted small mb-2">de exposição</div>
+          <div class="fw-700 fs-5">500 Kz<span class="text-muted fw-400 fs-6">/dia</span></div>
+          <div class="text-muted small mt-1">15.000 Kz/mês</div>
+          <hr>
+          <small class="text-muted">Mínimo 7 dias</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border border-warning rounded-3 p-3 text-center h-100 position-relative">
+          <div class="position-absolute top-0 start-50 translate-middle">
+            <span class="badge bg-warning text-dark">Mais popular</span>
+          </div>
+          <div class="fw-800 fs-3 text-p24 mt-2">25%</div>
+          <div class="text-muted small mb-2">de exposição</div>
+          <div class="fw-700 fs-5">1.000 Kz<span class="text-muted fw-400 fs-6">/dia</span></div>
+          <div class="text-muted small mt-1">30.000 Kz/mês</div>
+          <hr>
+          <small class="text-muted">Mínimo 7 dias</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="border rounded-3 p-3 text-center h-100">
+          <div class="fw-800 fs-3 text-p24">50%</div>
+          <div class="text-muted small mb-2">de exposição</div>
+          <div class="fw-700 fs-5">1.800 Kz<span class="text-muted fw-400 fs-6">/dia</span></div>
+          <div class="text-muted small mt-1">54.000 Kz/mês</div>
+          <hr>
+          <small class="text-muted">Mínimo 7 dias</small>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 p-3 rounded-3 bg-light">
+      <p class="fw-600 small mb-2"><i class="bi bi-graph-up-arrow text-p24 me-1"></i>Tabela de subida de preços por tráfego</p>
+      <div class="row g-2 text-center">
+        <div class="col-4">
+          <div class="small text-muted">Agora</div>
+          <div class="fw-700 small">Preços actuais</div>
+        </div>
+        <div class="col-4">
+          <div class="small text-muted">5.000 visitas/dia</div>
+          <div class="fw-700 small text-warning">+50%</div>
+        </div>
+        <div class="col-4">
+          <div class="small text-muted">10.000 visitas/dia</div>
+          <div class="fw-700 small text-danger">×2</div>
+        </div>
+      </div>
+    </div>
+    <p class="text-muted small mt-3 mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      Quem entra agora fica com os melhores preços — os contratos activos não são afectados pelas subidas.
+    </p>
+  </div>
+
+  <!-- Como funciona -->
+  <div class="p24-card mb-4">
+    <h5 class="fw-800 mb-4">Como funciona</h5>
+    <div class="row g-3">
+      <div class="col-md-4 text-center">
+        <div class="fw-800 fs-2 text-p24 mb-1">1</div>
+        <div class="fw-700 mb-1">Contacta-nos</div>
+        <p class="text-muted small mb-0">Envia-nos o teu interesse e escolhemos juntos a percentagem e o período.</p>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="fw-800 fs-2 text-p24 mb-1">2</div>
+        <div class="fw-700 mb-1">Envias o banner</div>
+        <p class="text-muted small mb-0">Uma imagem de 1200×200 px com o link de destino. Activamos em 24h.</p>
+      </div>
+      <div class="col-md-4 text-center">
+        <div class="fw-800 fs-2 text-p24 mb-1">3</div>
+        <div class="fw-700 mb-1">Apareces no site</div>
+        <p class="text-muted small mb-0">O teu banner entra na rotação e aparece automaticamente até ao fim do período.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="text-center">
+    <h5 class="fw-800 mb-2">Pronto para anunciar?</h5>
+    <p class="text-muted mb-4">Fala connosco e garantimos o teu espaço antes de ser vendido.</p>
+    <a href="{{ url_for('main.suporte') }}" class="btn btn-primary fw-700 px-5 py-2">
+      <i class="bi bi-headset me-2"></i>Entrar em contacto
+    </a>
+  </div>
+
+</div>
+{% endblock %}
