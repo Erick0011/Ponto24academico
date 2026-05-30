@@ -157,11 +157,18 @@ def create_app(config_name: str = None):
             pass
         return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
 
-    # Selecciona banner activo para injectar em cada página
+    # Selecciona banner activo e resolve URL da imagem
     def _banner():
         try:
             from app.models.anuncio import Anuncio
-            return Anuncio.selecionar()
+            b = Anuncio.selecionar()
+            if b and b.banner_key:
+                if os.environ.get("R2_ENDPOINT"):
+                    from app.services.r2_service import presigned_url
+                    b.banner_url = presigned_url(b.banner_key, expires=3600)
+                else:
+                    b.banner_url = "/static/anuncios/" + b.banner_key.split("/")[-1]
+            return b
         except Exception:
             return None
 

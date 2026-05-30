@@ -8,7 +8,8 @@ class Anuncio(db.Model):
     id           = db.Column(db.Integer, primary_key=True)
     anunciante   = db.Column(db.String(120), nullable=False)
     contacto     = db.Column(db.String(120), default="")
-    banner_url   = db.Column(db.String(500), nullable=False)   # URL da imagem
+    banner_url   = db.Column(db.String(500), default="")       # URL externo (fallback)
+    banner_key   = db.Column(db.String(500), default="")       # chave R2 ou path local
     link_destino = db.Column(db.String(500), default="")       # URL de clique
     percentagem  = db.Column(db.Float, nullable=False)         # 10 / 25 / 50
     data_inicio  = db.Column(db.Date, nullable=False)

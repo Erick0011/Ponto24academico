@@ -576,6 +576,27 @@ def anuncios():
     return render_template("admin/anuncios.html", anuncios=todos, disponivel=disponivel)
 
 
+def _guardar_banner(ficheiro):
+    """Guarda imagem de banner em R2 ou local. Devolve (banner_key, banner_url)."""
+    import uuid, os
+    ext = ficheiro.filename.rsplit(".", 1)[-1].lower()
+    if ext not in ("jpg", "jpeg", "png", "gif", "webp"):
+        return None, None
+    dados = ficheiro.read()
+    key = f"anuncios/{uuid.uuid4().hex}.{ext}"
+    if os.environ.get("R2_ENDPOINT"):
+        from app.services.r2_service import upload_bytes
+        upload_bytes(dados, key, ext)
+        return key, ""
+    else:
+        pasta = os.path.join(current_app.root_path, "static", "anuncios")
+        os.makedirs(pasta, exist_ok=True)
+        nome = key.split("/")[-1]
+        with open(os.path.join(pasta, nome), "wb") as f:
+            f.write(dados)
+        return "", f"/static/anuncios/{nome}"
+
+
 @admin_bp.route("/anuncios/criar", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -586,13 +607,22 @@ def criar_anuncio():
         anunciante   = request.form.get("anunciante", "").strip()
         contacto     = request.form.get("contacto", "").strip()
         banner_url   = request.form.get("banner_url", "").strip()
+        banner_key   = ""
         link_destino = request.form.get("link_destino", "").strip()
         percentagem  = request.form.get("percentagem", type=float)
         dias         = request.form.get("dias", type=int)
         inicio_str   = request.form.get("data_inicio", "").strip()
 
-        if not all([anunciante, banner_url, percentagem, dias]):
-            flash("Preenche todos os campos obrigatórios.", "erro")
+        ficheiro = request.files.get("banner_file")
+        if ficheiro and ficheiro.filename:
+            bkey, burl = _guardar_banner(ficheiro)
+            if bkey is None and burl is None:
+                flash("Formato de imagem inválido. Usa JPG, PNG, GIF ou WEBP.", "erro")
+                return render_template("admin/anuncio_form.html", anuncio=None, disponivel=disponivel)
+            banner_key, banner_url = bkey, burl
+
+        if not all([anunciante, percentagem, dias]) or (not banner_url and not banner_key):
+            flash("Preenche todos os campos obrigatórios (incluindo a imagem).", "erro")
         elif percentagem > disponivel:
             flash(f"Só tens {disponivel:.0f}% disponível para vender.", "erro")
         else:
@@ -600,15 +630,15 @@ def criar_anuncio():
                 data_inicio = _date.fromisoformat(inicio_str) if inicio_str else _date.today()
             except ValueError:
                 data_inicio = _date.today()
-            data_fim = data_inicio + timedelta(days=dias)
             db.session.add(Anuncio(
                 anunciante=anunciante,
                 contacto=contacto,
                 banner_url=banner_url,
+                banner_key=banner_key,
                 link_destino=link_destino,
                 percentagem=percentagem,
                 data_inicio=data_inicio,
-                data_fim=data_fim,
+                data_fim=data_inicio + timedelta(days=dias),
             ))
             db.session.commit()
             flash(f"Anúncio de {anunciante} criado com sucesso.", "sucesso")
@@ -627,10 +657,30 @@ def editar_anuncio(id):
         from datetime import date as _date, timedelta
         anuncio.anunciante   = request.form.get("anunciante", "").strip()
         anuncio.contacto     = request.form.get("contacto", "").strip()
-        anuncio.banner_url   = request.form.get("banner_url", "").strip()
         anuncio.link_destino = request.form.get("link_destino", "").strip()
         anuncio.percentagem  = request.form.get("percentagem", type=float)
         anuncio.ativo        = request.form.get("ativo") == "1"
+
+        ficheiro = request.files.get("banner_file")
+        if ficheiro and ficheiro.filename:
+            bkey, burl = _guardar_banner(ficheiro)
+            if bkey is None and burl is None:
+                flash("Formato de imagem inválido.", "erro")
+                return render_template("admin/anuncio_form.html", anuncio=anuncio, disponivel=disponivel)
+            # apagar banner antigo do R2
+            if anuncio.banner_key:
+                import os
+                if os.environ.get("R2_ENDPOINT"):
+                    from app.services.r2_service import delete_object
+                    delete_object(anuncio.banner_key)
+            anuncio.banner_key = bkey
+            anuncio.banner_url = burl
+        else:
+            url_manual = request.form.get("banner_url", "").strip()
+            if url_manual:
+                anuncio.banner_url = url_manual
+                anuncio.banner_key = ""
+
         dias = request.form.get("dias", type=int)
         inicio_str = request.form.get("data_inicio", "").strip()
         try:
@@ -649,7 +699,11 @@ def editar_anuncio(id):
 @login_required
 @admin_required
 def eliminar_anuncio(id):
+    import os
     anuncio = Anuncio.query.get_or_404(id)
+    if anuncio.banner_key and os.environ.get("R2_ENDPOINT"):
+        from app.services.r2_service import delete_object
+        delete_object(anuncio.banner_key)
     db.session.delete(anuncio)
     db.session.commit()
     flash("Anúncio eliminado.", "aviso")
