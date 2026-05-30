@@ -1,13 +1,13 @@
-﻿{% extends "admin/base_admin.html" %}
-{% block title %}{{ 'Editar' if anuncio else 'Novo' }} AnÃºncio â€” Admin{% endblock %}
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Editar' if anuncio else 'Novo' }} Anúncio — Admin{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block content %}
 <div class="container py-4" style="max-width:640px">
-  <h4 class="fw-800 mb-4">{{ 'Editar anÃºncio' if anuncio else 'Novo anÃºncio' }}</h4>
+  <h4 class="fw-800 mb-4">{{ 'Editar anúncio' if anuncio else 'Novo anúncio' }}</h4>
 
   <div class="p24-card">
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3">
 
@@ -23,12 +23,36 @@
                  value="{{ anuncio.contacto if anuncio else '' }}">
         </div>
 
+        <!-- Banner image -->
         <div class="col-12">
-          <label class="form-label fw-600">URL do banner (imagem) *</label>
-          <input type="url" name="banner_url" class="form-control" placeholder="https://..."
-                 value="{{ anuncio.banner_url if anuncio else '' }}" required>
-          <small class="text-muted">DimensÃ£o recomendada: 1200Ã—200 px</small>
+          <label class="form-label fw-600">Imagem do banner *</label>
+
+          {% if anuncio and (anuncio.banner_key or anuncio.banner_url) %}
+          <div class="mb-2 p-2 border rounded-2 text-center bg-light">
+            <small class="text-muted d-block mb-1">Banner actual</small>
+            <img src="{{ anuncio.banner_url or '' }}" alt="Banner actual"
+                 style="max-height:80px;max-width:100%;object-fit:contain;"
+                 onerror="this.style.display='none'">
+            {% if anuncio.banner_key %}
+            <small class="text-muted d-block mt-1" style="word-break:break-all">{{ anuncio.banner_key }}</small>
+            {% endif %}
+          </div>
+          <label class="form-label small text-muted">Novo ficheiro (substitui o actual)</label>
+          {% endif %}
+
+          <input type="file" name="banner_file" class="form-control"
+                 accept="image/jpeg,image/png,image/gif,image/webp"
+                 {{ 'required' if not anuncio else '' }}>
+          <small class="text-muted">JPG, PNG, GIF ou WEBP — dimensão recomendada: 1200×200 px</small>
         </div>
+
+        {% if anuncio %}
+        <div class="col-12">
+          <label class="form-label fw-600 small text-muted">Ou URL externo (deixa vazio para manter imagem actual)</label>
+          <input type="url" name="banner_url" class="form-control form-control-sm" placeholder="https://..."
+                 value="">
+        </div>
+        {% endif %}
 
         <div class="col-12">
           <label class="form-label fw-600">Link de destino (clique)</label>
@@ -37,29 +61,29 @@
         </div>
 
         <div class="col-md-6">
-          <label class="form-label fw-600">Percentagem de exposiÃ§Ã£o *</label>
+          <label class="form-label fw-600">Percentagem de exposição *</label>
           <select name="percentagem" class="form-select" required>
             <option value="">Seleciona...</option>
             {% for p in [10, 25, 50] %}
             <option value="{{ p }}"
               {% if anuncio and anuncio.percentagem == p %}selected{% endif %}
               {% if p > disponivel and not anuncio %}disabled{% endif %}>
-              {{ p }}%{% if p > disponivel and not anuncio %} (indisponÃ­vel){% endif %}
+              {{ p }}%{% if p > disponivel and not anuncio %} (indisponível){% endif %}
             </option>
             {% endfor %}
           </select>
-          <small class="text-muted">DisponÃ­vel: {{ disponivel | int }}%</small>
+          <small class="text-muted">Disponível: {{ disponivel | int }}%</small>
         </div>
 
         <div class="col-md-6">
-          <label class="form-label fw-600">Data de inÃ­cio *</label>
+          <label class="form-label fw-600">Data de início *</label>
           <input type="date" name="data_inicio" class="form-control"
                  value="{{ anuncio.data_inicio.isoformat() if anuncio else '' }}" required>
         </div>
 
         <div class="col-md-6">
-          <label class="form-label fw-600">NÃºmero de dias *</label>
-          <input type="number" name="dias" class="form-control" min="7" placeholder="MÃ­nimo 7 dias"
+          <label class="form-label fw-600">Número de dias *</label>
+          <input type="number" name="dias" class="form-control" min="7" placeholder="Mínimo 7 dias"
                  value="{{ (anuncio.data_fim - anuncio.data_inicio).days if anuncio else '' }}" required>
         </div>
 
@@ -84,4 +108,3 @@
   </div>
 </div>
 {% endblock %}
-
