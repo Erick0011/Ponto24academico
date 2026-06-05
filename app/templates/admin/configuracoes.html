@@ -1,12 +1,12 @@
-﻿{% extends "admin/base_admin.html" %}
-{% block title %}ConfiguraÃ§Ãµes â€” Admin{% endblock %}
+{% extends "admin/base_admin.html" %}
+{% block title %}Configurações — Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
-      <h4 class="fw-800 mb-1">ConfiguraÃ§Ãµes da plataforma</h4>
-      <p class="text-muted small mb-0">Edita contactos, redes sociais e modo de lanÃ§amento</p>
+      <h4 class="fw-800 mb-1">Configurações da plataforma</h4>
+      <p class="text-muted small mb-0">Edita contactos, redes sociais e modo de lançamento</p>
     </div>
     <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
       <i class="bi bi-arrow-left me-2"></i>Voltar
@@ -31,7 +31,7 @@
                      placeholder="suporte@ponto24academico.com"
                      value="{{ cfg.get('email_suporte','') }}">
             </div>
-            <small class="text-muted">Aparece na pÃ¡gina de suporte e recebe as mensagens do formulÃ¡rio.</small>
+            <small class="text-muted">Aparece na página de suporte e recebe as mensagens do formulário.</small>
           </div>
 
           <div class="mb-3">
@@ -75,33 +75,33 @@
           </div>
 
           <div class="mb-3">
-            <label class="form-label fw-600">EndereÃ§o / LocalizaÃ§Ã£o</label>
+            <label class="form-label fw-600">Endereço / Localização</label>
             <input type="text" name="endereco" class="form-control"
                    placeholder="Luanda, Angola"
                    value="{{ cfg.get('endereco','') }}">
           </div>
 
           <div class="mb-0">
-            <label class="form-label fw-600">Texto informativo na pÃ¡gina de suporte</label>
+            <label class="form-label fw-600">Texto informativo na página de suporte</label>
             <textarea name="texto_suporte" class="form-control" rows="3"
                       placeholder="Ex: Respondemos em 24h, de segunda a sexta.">{{ cfg.get('texto_suporte','') }}</textarea>
           </div>
         </div>
       </div>
 
-      <!-- Modo prÃ©-lanÃ§amento -->
+      <!-- Modo pré-lançamento -->
       <div class="col-lg-6">
         <div class="p24-card mb-4">
-          <h6 class="fw-700 mb-3"><i class="bi bi-rocket-takeoff me-2 text-warning"></i>Modo PrÃ©-lanÃ§amento</h6>
+          <h6 class="fw-700 mb-3"><i class="bi bi-rocket-takeoff me-2 text-warning"></i>Modo Pré-lançamento</h6>
 
           {% set modo_ativo = cfg.get('modo_pre_lancamento', '0') == '1' %}
 
           <div class="alert {% if modo_ativo %}alert-warning{% else %}alert-success{% endif %} mb-4">
             <strong>Estado atual:</strong>
             {% if modo_ativo %}
-              <i class="bi bi-lock-fill ms-1 me-1"></i>Registo fechado â€” sÃ³ quem tem convite pode criar conta.
+              <i class="bi bi-lock-fill ms-1 me-1"></i>Registo fechado — só quem tem convite pode criar conta.
             {% else %}
-              <i class="bi bi-unlock-fill ms-1 me-1"></i>Registo aberto â€” qualquer pessoa pode criar conta.
+              <i class="bi bi-unlock-fill ms-1 me-1"></i>Registo aberto — qualquer pessoa pode criar conta.
             {% endif %}
           </div>
 
@@ -111,7 +111,7 @@
                    {% if modo_ativo %}checked{% endif %}
                    onchange="document.getElementById('badge-estado').textContent = this.checked ? 'Ativado' : 'Desativado'">
             <label class="form-check-label fw-600" for="modoPreLancamento">
-              Ativar modo prÃ©-lanÃ§amento
+              Ativar modo pré-lançamento
               <span id="badge-estado" class="badge {% if modo_ativo %}bg-warning text-dark{% else %}bg-success{% endif %} ms-2">
                 {% if modo_ativo %}Ativado{% else %}Desativado{% endif %}
               </span>
@@ -121,17 +121,17 @@
           <div class="text-muted small">
             <strong>Quando ativo:</strong>
             <ul class="mt-1 ps-3">
-              <li>O registo fica bloqueado para o pÃºblico geral.</li>
-              <li>Visitantes sÃ£o redirecionados para a pÃ¡gina de acesso antecipado.</li>
+              <li>O registo fica bloqueado para o público geral.</li>
+              <li>Visitantes são redirecionados para a página de acesso antecipado.</li>
               <li>Apenas utilizadores com link de convite podem registar-se.</li>
-              <li>Podes enviar convites na secÃ§Ã£o <a href="{{ url_for('admin.lista_espera') }}" class="text-p24">Lista de Espera</a>.</li>
+              <li>Podes enviar convites na secção <a href="{{ url_for('admin.lista_espera') }}" class="text-p24">Lista de Espera</a>.</li>
             </ul>
             <strong>Quando desativo:</strong> qualquer pessoa pode criar conta normalmente.
           </div>
         </div>
 
         <div class="p24-card">
-          <h6 class="fw-700 mb-3"><i class="bi bi-bar-chart me-2 text-p24"></i>Resumo rÃ¡pido</h6>
+          <h6 class="fw-700 mb-3"><i class="bi bi-bar-chart me-2 text-p24"></i>Resumo rápido</h6>
           <div class="row g-3 text-center">
             <div class="col-4">
               <div class="fw-800 fs-4 text-p24">{{ stats.espera }}</div>
@@ -139,7 +139,7 @@
             </div>
             <div class="col-4">
               <div class="fw-800 fs-4 text-warning">{{ stats.pendentes }}</div>
-              <div class="text-muted small">Pendentes moderaÃ§Ã£o</div>
+              <div class="text-muted small">Pendentes moderação</div>
             </div>
             <div class="col-4">
               <div class="fw-800 fs-4 text-success">{{ stats.users }}</div>
@@ -153,7 +153,7 @@
 
     <div class="mt-4 text-end">
       <button type="submit" class="btn btn-primary fw-700 px-5">
-        <i class="bi bi-check2 me-2"></i>Guardar configuraÃ§Ãµes
+        <i class="bi bi-check2 me-2"></i>Guardar configurações
       </button>
     </div>
 

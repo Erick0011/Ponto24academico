@@ -1,5 +1,5 @@
-﻿{% extends "admin/base_admin.html" %}
-{% block title %}Logs â€” Admin{% endblock %}
+{% extends "admin/base_admin.html" %}
+{% block title %}Logs — Admin{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -14,7 +14,7 @@
 {% block content %}
 <div class="container-xl py-4">
   <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-    <h4 class="fw-800 mb-0">Logs da aplicaÃ§Ã£o</h4>
+    <h4 class="fw-800 mb-0">Logs da aplicação</h4>
     <div class="d-flex gap-2 flex-wrap">
       <a href="{{ url_for('admin.logs') }}" class="btn btn-sm {% if not nivel %}btn-dark{% else %}btn-outline-secondary{% endif %}">Todos</a>
       <a href="{{ url_for('admin.logs', nivel='ERROR') }}" class="btn btn-sm {% if nivel == 'ERROR' %}btn-danger{% else %}btn-outline-danger{% endif %}">Erros</a>
@@ -44,7 +44,7 @@
     {% else %}
       <div class="text-center text-muted py-5">
         <i class="bi bi-journal-text fs-2 d-block mb-2"></i>
-        Sem logs{% if nivel %} do nÃ­vel {{ nivel }}{% endif %} registados.
+        Sem logs{% if nivel %} do nível {{ nivel }}{% endif %} registados.
       </div>
     {% endif %}
   </div>
