@@ -279,6 +279,7 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
 
                 material = Material(
                     titulo        = titulo_gerado,
+                    descricao     = f"{disciplina} — Material disponibilizado pela comunidade de estudantes do ISAF para apoio ao estudo.",
                     instituicao   = instituicao,
                     disciplina    = disciplina,
                     ano_letivo    = ano_letivo,
