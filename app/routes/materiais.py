@@ -65,7 +65,9 @@ def listar():
     if ordenar == "popular":
         query = query.order_by(Material.downloads.desc())
     elif ordenar == "avaliado":
-        query = query.order_by(Material.nota_media.desc())
+        query = query.order_by(Material.nota_media.desc(), Material.downloads.desc())
+    elif ordenar == "visitado":
+        query = query.order_by(Material.visualizacoes.desc())
     else:
         query = query.order_by(Material.criado_em.desc())
 
