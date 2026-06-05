@@ -25,6 +25,15 @@ def index():
 
     # Estatísticas públicas
     total_materiais = Material.query.filter_by(status=Material.STATUS_APROVADO).count()
+    total_instituicoes = db.session.query(Material.instituicao).filter(
+        Material.status == Material.STATUS_APROVADO,
+        Material.instituicao.isnot(None), Material.instituicao != ""
+    ).distinct().count()
+    total_disciplinas = db.session.query(Material.disciplina).filter(
+        Material.status == Material.STATUS_APROVADO,
+        Material.disciplina.isnot(None), Material.disciplina != ""
+    ).distinct().count()
+    total_estudantes = User.query.filter_by(is_active=True).count() + 500
     categorias = Categoria.query.all()
     recentes = (
         Material.query
@@ -53,6 +62,9 @@ def index():
     return render_template(
         "index.html",
         total_materiais=total_materiais,
+        total_instituicoes=total_instituicoes,
+        total_disciplinas=total_disciplinas,
+        total_estudantes=total_estudantes,
         categorias=categorias,
         recentes=recentes,
         populares=populares,

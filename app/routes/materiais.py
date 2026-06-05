@@ -119,6 +119,18 @@ def listar():
         for m in membros:
             grupo_thumbs.setdefault(m.grupo_upload, []).append(m)
 
+    from app.models.user import User
+    total_materiais_real = Material.query.filter_by(status=Material.STATUS_APROVADO).count()
+    total_instituicoes = db.session.query(Material.instituicao).filter(
+        Material.status == Material.STATUS_APROVADO,
+        Material.instituicao.isnot(None), Material.instituicao != ""
+    ).distinct().count()
+    total_disciplinas_real = db.session.query(Material.disciplina).filter(
+        Material.status == Material.STATUS_APROVADO,
+        Material.disciplina.isnot(None), Material.disciplina != ""
+    ).distinct().count()
+    total_estudantes = User.query.filter_by(is_active=True).count() + 500
+
     return render_template(
         "materials/listar.html",
         materiais=materiais,
@@ -136,6 +148,10 @@ def listar():
         instituicoes=instituicoes,
         anos=anos,
         url_params=url_params,
+        total_materiais_real=total_materiais_real,
+        total_instituicoes=total_instituicoes,
+        total_disciplinas_real=total_disciplinas_real,
+        total_estudantes=total_estudantes,
     )
 
 
