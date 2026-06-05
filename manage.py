@@ -30,7 +30,6 @@ Uso do importar-lote:
 import os
 import re
 import uuid
-import shutil
 import unicodedata
 import click
 from datetime import datetime
@@ -216,6 +215,13 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
         click.echo(f"\nTotal: {total} ficheiros")
         return
 
+    # ── Pré-contar ficheiros por (disciplina, categoria) para numeração ───
+    contadores = {}
+    for _, _, disc, cat in ficheiros:
+        chave = (disc, cat)
+        contadores[chave] = contadores.get(chave, 0) + 1
+    sequencias = {}
+
     # ── Importar ───────────────────────────────────────────────────────────
     upload_base  = current_app.config["UPLOAD_FOLDER"]
     agora        = datetime.now()
@@ -238,23 +244,41 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
                 if not cat_obj:
                     stats["sem_cat"] += 1
 
+                # Título: "Disciplina" ou "Disciplina — Parte 2" se houver múltiplos
+                chave = (disciplina, cat_nome)
+                sequencias[chave] = sequencias.get(chave, 0) + 1
+                seq = sequencias[chave]
+                if contadores[chave] == 1:
+                    titulo_gerado = disciplina
+                else:
+                    titulo_gerado = f"{disciplina} — Parte {seq}"
+
                 # Pasta de destino: materiais/{cat_slug}/{YYYY}/{MM}/
-                cat_slug    = _slugify(cat_nome)
-                subfolder   = f"materiais/{cat_slug}/{agora.strftime('%Y')}/{agora.strftime('%m')}"
-                destino_dir = os.path.join(upload_base, subfolder)
-                os.makedirs(destino_dir, exist_ok=True)
-
+                cat_slug      = _slugify(cat_nome)
+                subfolder     = f"materiais/{cat_slug}/{agora.strftime('%Y')}/{agora.strftime('%m')}"
                 nome_guardado = f"{uuid.uuid4().hex}.{ext}"
-                destino       = os.path.join(destino_dir, nome_guardado)
-                shutil.copy2(str(ficheiro_path), destino)
-
                 path_relativo = f"{subfolder}/{nome_guardado}"
 
-                if ext in {"png", "jpg", "jpeg", "gif", "webp"}:
-                    _gerar_thumbnail(destino, destino_dir, nome_guardado)
+                with open(str(ficheiro_path), "rb") as fh:
+                    data = fh.read()
+
+                if os.environ.get("R2_ENDPOINT"):
+                    from app.services.r2_service import upload_bytes
+                    upload_bytes(data, path_relativo, ext)
+                    if ext in {"png", "jpg", "jpeg", "gif", "webp"}:
+                        from app.services.upload_service import _gerar_thumbnail_r2
+                        _gerar_thumbnail_r2(data, subfolder, nome_guardado, ext)
+                else:
+                    destino_dir = os.path.join(upload_base, subfolder)
+                    os.makedirs(destino_dir, exist_ok=True)
+                    destino = os.path.join(destino_dir, nome_guardado)
+                    with open(destino, "wb") as fh:
+                        fh.write(data)
+                    if ext in {"png", "jpg", "jpeg", "gif", "webp"}:
+                        _gerar_thumbnail(destino, destino_dir, nome_guardado)
 
                 material = Material(
-                    titulo        = ficheiro_path.stem,
+                    titulo        = titulo_gerado,
                     instituicao   = instituicao,
                     disciplina    = disciplina,
                     ano_letivo    = ano_letivo,
@@ -262,7 +286,7 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
                     ficheiro_nome = ficheiro_path.name,
                     ficheiro_path = path_relativo,
                     ficheiro_tipo = ext,
-                    ficheiro_tamanho = os.path.getsize(destino),
+                    ficheiro_tamanho = len(data),
                     ficheiro_hash = hash_val,
                     autor_id      = autor.id,
                     status        = status,
