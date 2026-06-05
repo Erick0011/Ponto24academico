@@ -178,6 +178,27 @@ def editar_perfil():
     return redirect(url_for("main.perfil"))
 
 
+@main_bp.route("/perfil/alterar-senha", methods=["POST"])
+@login_required
+def alterar_senha():
+    senha_atual = request.form.get("senha_atual", "")
+    nova_senha = request.form.get("nova_senha", "")
+    confirmar = request.form.get("confirmar_senha", "")
+
+    if not current_user.check_password(senha_atual):
+        flash("Senha atual incorreta.", "erro")
+    elif len(nova_senha) < 6:
+        flash("A nova senha deve ter pelo menos 6 caracteres.", "erro")
+    elif nova_senha != confirmar:
+        flash("As senhas não coincidem.", "erro")
+    else:
+        current_user.set_password(nova_senha)
+        db.session.commit()
+        flash("Senha alterada com sucesso!", "sucesso")
+
+    return redirect(url_for("main.perfil"))
+
+
 @main_bp.route("/sobre")
 def sobre_nos():
     secao = request.args.get("secao", "sobre")

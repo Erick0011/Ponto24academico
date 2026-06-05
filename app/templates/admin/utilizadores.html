@@ -1,5 +1,5 @@
-﻿{% extends "admin/base_admin.html" %}
-{% block title %}Utilizadores â€” Admin{% endblock %}
+{% extends "admin/base_admin.html" %}
+{% block title %}Utilizadores — Admin{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
@@ -19,10 +19,10 @@
         <tr>
           <th>Utilizador</th>
           <th class="d-none d-md-table-cell">Curso</th>
-          <th>CrÃ©ditos</th>
+          <th>Créditos</th>
           <th class="d-none d-sm-table-cell">Materiais</th>
           <th>Estado</th>
-          <th class="text-center">AÃ§Ãµes</th>
+          <th class="text-center">Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -42,7 +42,7 @@
             </div>
           </td>
           <td class="d-none d-md-table-cell text-muted small">
-            {{ u.curso or u.instituicao or 'â€”' }}
+            {{ u.curso or u.instituicao or '—' }}
           </td>
           <td><span class="fw-700 text-warning">{{ u.creditos }}</span></td>
           <td class="d-none d-sm-table-cell fw-600 text-p24">{{ u.total_uploads }}</td>
@@ -55,13 +55,13 @@
           </td>
           <td class="text-center">
             <div class="d-flex gap-1 justify-content-center">
-              <!-- Ver perfil pÃºblico -->
+              <!-- Ver perfil público -->
               <a href="{{ url_for('main.ver_perfil', id=u.id) }}"
                  class="btn btn-light btn-sm" title="Ver perfil" target="_blank">
                 <i class="bi bi-person"></i>
               </a>
-              <!-- Ajustar crÃ©ditos -->
-              <button class="btn btn-warning btn-sm" title="Ajustar crÃ©ditos"
+              <!-- Ajustar créditos -->
+              <button class="btn btn-warning btn-sm" title="Ajustar créditos"
                       data-bs-toggle="modal" data-bs-target="#creditos{{ u.id }}">
                 <i class="bi bi-coin"></i>
               </button>
@@ -96,7 +96,7 @@
       </tbody>
     </table>
 
-    <!-- PaginaÃ§Ã£o -->
+    <!-- Paginação -->
     {% if users.pages > 1 %}
     <div class="p-3 border-top">
       <nav><ul class="pagination justify-content-center mb-0">
@@ -106,7 +106,7 @@
             <a class="page-link" href="?page={{ p }}">{{ p }}</a>
           </li>
           {% else %}
-          <li class="page-item disabled"><span class="page-link">â€¦</span></li>
+          <li class="page-item disabled"><span class="page-link">…</span></li>
           {% endif %}
         {% endfor %}
       </ul></nav>
@@ -115,20 +115,20 @@
   </div>
 </div>
 
-<!-- Modais de ajuste de crÃ©ditos -->
+<!-- Modais de ajuste de créditos -->
 {% for u in users.items %}
 <div class="modal fade" id="creditos{{ u.id }}" tabindex="-1">
   <div class="modal-dialog modal-sm">
     <div class="modal-content rounded-4">
       <div class="modal-header border-0">
-        <h6 class="modal-title fw-700">Ajustar crÃ©ditos â€” {{ u.nome.split()[0] }}</h6>
+        <h6 class="modal-title fw-700">Ajustar créditos — {{ u.nome.split()[0] }}</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <form action="{{ url_for('admin.ajustar_creditos', id=u.id) }}" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <p class="text-muted small mb-3">
-            Saldo atual: <strong class="text-warning">{{ u.creditos }} crÃ©ditos</strong>
+            Saldo atual: <strong class="text-warning">{{ u.creditos }} créditos</strong>
           </p>
           <div class="mb-2">
             <label class="form-label small fw-600">Quantidade (positivo para adicionar, negativo para remover)</label>
