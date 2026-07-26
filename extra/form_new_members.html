@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ponto 24 Académico — Em breve</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --p24-orange: #f97316;
+        --p24-dark: #0f172a;
+        --p24-navy: #1e293b;
+      }
+
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background: var(--p24-dark);
+        color: #f1f5f9;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+      }
+
+      /* ── Background decorativo ── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 50% at 50% -10%,
+            rgba(249, 115, 22, 0.18) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 60% 40% at 80% 80%,
+            rgba(249, 115, 22, 0.08) 0%,
+            transparent 60%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1.5rem;
+      }
+
+      /* ── Logo badge ── */
+      .p24-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        background: var(--p24-orange);
+        border-radius: 14px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.5px;
+        flex-shrink: 0;
+      }
+      .p24-badge span {
+        font-size: 0.75rem;
+        vertical-align: super;
+      }
+
+      .p24-logo-text {
+        line-height: 1.15;
+      }
+      .p24-logo-text .brand {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 0.04em;
+      }
+      .p24-logo-text .sub {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 0.12em;
+      }
+
+      /* ── Tag "em breve" ── */
+      .badge-soon {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(249, 115, 22, 0.15);
+        border: 1px solid rgba(249, 115, 22, 0.35);
+        color: var(--p24-orange);
+        border-radius: 999px;
+        padding: 0.35rem 1rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .badge-soon .dot {
+        width: 7px;
+        height: 7px;
+        background: var(--p24-orange);
+        border-radius: 50%;
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.7);
+        }
+      }
+
+      /* ── Título ── */
+      h1 {
+        font-size: clamp(2.2rem, 6vw, 3.6rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+      }
+      h1 .highlight {
+        color: var(--p24-orange);
+        position: relative;
+      }
+
+      /* ── Subtítulo ── */
+      .subtitle {
+        font-size: clamp(0.95rem, 2vw, 1.15rem);
+        color: rgba(241, 245, 249, 0.6);
+        line-height: 1.7;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      /* ── Features ── */
+      .feature-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        padding: 0.45rem 1rem;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: rgba(241, 245, 249, 0.8);
+        white-space: nowrap;
+      }
+      .feature-pill i {
+        color: var(--p24-orange);
+        font-size: 0.9rem;
+      }
+
+      /* ── Formulário ── */
+      .notify-form {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        max-width: 460px;
+        margin: 0 auto;
+        backdrop-filter: blur(10px);
+      }
+      .notify-form input[type="email"] {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        font-family: inherit;
+        font-size: 0.92rem;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .notify-form input[type="email"]::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+      .notify-form input[type="email"]:focus {
+        border-color: var(--p24-orange);
+      }
+      .notify-form button {
+        background: var(--p24-orange);
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-family: inherit;
+        font-size: 0.92rem;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        transition: opacity 0.2s;
+        white-space: nowrap;
+      }
+      .notify-form button:hover {
+        opacity: 0.88;
+      }
+
+      /* ── Contador ── */
+      .counter-box {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 0.9rem 1.4rem;
+        text-align: center;
+        min-width: 75px;
+      }
+      .counter-box .num {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+      }
+      .counter-box .lbl {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 0.25rem;
+      }
+
+      /* ── Footer ── */
+      footer {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 1.5rem;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.25);
+      }
+
+      /* ── Mensagem de sucesso ── */
+      .success-msg {
+        display: none;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4ade80;
+        font-size: 0.88rem;
+        font-weight: 600;
+        justify-content: center;
+        margin-top: 0.75rem;
+      }
+      .form-control,
+      select,
+      textarea {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        border-radius: 10px;
+        padding: 0.8rem;
+      }
+
+      .form-control:focus {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--p24-orange);
+        color: white;
+      }
+
+      .btn {
+        background: var(--p24-orange);
+        color: white;
+        font-weight: 700;
+        padding: 0.9rem;
+        border-radius: 10px;
+      }
+
+      .btn:hover {
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="text-center" style="max-width: 760px; width: 100%">
+        <!-- Logo -->
+        <div
+          class="d-flex align-items-center justify-content-center gap-3 mb-4"
+        >
+          <div class="p24-badge">P<span>24</span></div>
+          <div class="p24-logo-text text-start">
+            <div class="brand">PONTO 24</div>
+            <div class="sub">ACADÉMICO</div>
+          </div>
+        </div>
+
+        <!-- Tag -->
+        <div class="mb-4">
+          <span class="badge-soon">
+            <span class="dot"></span>
+            Equipa Fundadora
+          </span>
+        </div>
+
+        <!-- Título -->
+        <h1 class="mb-4">
+          Ajuda a construir a maior<br />
+          comunidade académica de <span class="highlight">Angola</span>
+        </h1>
+
+        <!-- Intro -->
+        <p class="subtitle mb-4">
+          Todos os estudantes deveriam ter acesso a bons materiais de estudo,
+          independentemente da universidade onde estudam ou das conexões que
+          possuem.
+        </p>
+
+        <p class="subtitle mb-5">
+          O Ponto 24 Académico nasceu com uma missão: criar uma plataforma onde
+          estudantes possam encontrar, organizar e partilhar conhecimento. Mas
+          uma plataforma não é construída apenas com tecnologia. É construída
+          por pessoas.
+        </p>
+
+        <!-- Benefícios -->
+        <div class="row g-3 mb-5">
+          <div class="col-md-6">
+            <div class="feature-pill w-100 justify-content-center">
+              <i class="bi bi-book"></i>
+              Partilhar conhecimento
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="feature-pill w-100 justify-content-center">
+              <i class="bi bi-people"></i>
+              Impactar estudantes
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="feature-pill w-100 justify-content-center">
+              <i class="bi bi-building"></i>
+              Representar universidade
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="feature-pill w-100 justify-content-center">
+              <i class="bi bi-rocket"></i>
+              Construir algo nacional
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensagem missão -->
+
+        <div class="notify-form mb-5 text-start">
+          <h5 class="fw-bold mb-3">🚀 Porquê juntar-te?</h5>
+
+          <p class="text-white-50">
+            O material que está esquecido no teu computador pode ser exactamente
+            o que outro estudante precisa para passar. Ao entrares nesta fase
+            inicial, farás parte das primeiras pessoas a construir uma solução
+            que pode ajudar milhares de estudantes.
+          </p>
+
+          <ul class="text-white-50">
+            <li>Certificado de participação</li>
+            <li>Reconhecimento como membro fundador</li>
+            <li>Possibilidade de integrar a equipa principal</li>
+            <li>Networking com estudantes de várias universidades</li>
+          </ul>
+        </div>
+
+        <!-- Formulario -->
+
+        <div class="notify-form text-start">
+          <h4 class="fw-bold mb-4 text-center">
+            Junta-te ao Ponto 24 Académico 🚀
+          </h4>
+
+          <form id="teamForm">
+            <label class="mb-2">Nome completo</label>
+            <input class="form-control mb-3" placeholder="O teu nome" />
+
+            <label class="mb-2">Email</label>
+            <input class="form-control mb-3" placeholder="email@email.com" />
+
+            <label class="mb-2">WhatsApp</label>
+            <input class="form-control mb-3" placeholder="+244" />
+
+            <label class="mb-2">Universidade</label>
+
+            <select class="form-control mb-3">
+              <option>Seleciona</option>
+              <option>Universidade Agostinho Neto</option>
+              <option>ISAF</option>
+              <option>ISPTEC</option>
+              <option>Universidade Católica</option>
+              <option>Outra</option>
+            </select>
+
+            <label class="mb-2">Curso</label>
+            <input class="form-control mb-3" />
+
+            <label class="mb-2"> Como gostarias de ajudar? </label>
+
+            <select class="form-control mb-3">
+              <option>Escolhe uma opção</option>
+
+              <option>Partilhar materiais académicos</option>
+
+              <option>Representar minha universidade</option>
+
+              <option>Criar conteúdos e divulgação</option>
+
+              <option>Ajudar na tecnologia</option>
+
+              <option>Criar parcerias</option>
+            </select>
+
+            <label class="mb-2"> Porque queres fazer parte do Ponto 24? </label>
+
+            <textarea
+              class="form-control mb-3"
+              rows="4"
+              placeholder="Conta-nos a tua motivação"
+            ></textarea>
+
+            <label class="mb-2"> Tens interesse em assumir liderança? </label>
+
+            <select class="form-control mb-3">
+              <option>Apenas colaborar</option>
+
+              <option>Sim, quero liderar uma área</option>
+
+              <option>Talvez no futuro</option>
+            </select>
+
+            <button class="btn w-100">Enviar candidatura</button>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <footer>© 2026 Ponto 24 Académico · Feito para estudantes angolanos</footer>
+
+    <script>
+      // ── Countdown: data de lançamento ──────────────────────────────────────────
+      // Muda esta data para quando planeias lançar
+      const LAUNCH = new Date("2026-05-25T00:00:00");
+
+      function updateCountdown() {
+        const diff = LAUNCH - new Date();
+        if (diff <= 0) {
+          document.getElementById("countdown").style.display = "none";
+          return;
+        }
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        document.getElementById("cd-days").textContent = String(d).padStart(
+          2,
+          "0",
+        );
+        document.getElementById("cd-hours").textContent = String(h).padStart(
+          2,
+          "0",
+        );
+        document.getElementById("cd-mins").textContent = String(m).padStart(
+          2,
+          "0",
+        );
+        document.getElementById("cd-secs").textContent = String(s).padStart(
+          2,
+          "0",
+        );
+      }
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+
+      // ── Formulário ─────────────────────────────────────────────────────────────
+      function handleSubmit(e) {
+        e.preventDefault();
+        const email = document.getElementById("emailInput").value;
+        if (!email) return;
+
+        // Guarda localmente (podes substituir por um POST para uma API ou Mailchimp)
+        const lista = JSON.parse(localStorage.getItem("p24_waitlist") || "[]");
+        if (!lista.includes(email)) lista.push(email);
+        localStorage.setItem("p24_waitlist", JSON.stringify(lista));
+
+        document
+          .getElementById("notifyForm")
+          .querySelector(".d-flex").style.display = "none";
+        const msg = document.getElementById("successMsg");
+        msg.style.display = "flex";
+      }
+    </script>
+  </body>
+</html>

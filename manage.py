@@ -1,6 +1,6 @@
 """
 Comandos CLI para gestão da aplicação.
-Uso: flask --app manage.py <comando>
+Uso: flask -- app manage.py <comando>
 
 Comandos disponíveis:
   seed-db                         Cria categorias base
@@ -27,6 +27,7 @@ Uso do importar-lote:
     --autor EMAIL       Email do utilizador autor (default: primeiro admin)
     --dry-run           Mostra o que seria importado sem fazer nada
 """
+
 import os
 import re
 import uuid
@@ -135,7 +136,11 @@ def testar_email(destinatario):
         destinatario,
         f"Material rejeitado — {material.titulo_base}",
         "email/material_rejeitado.html",
-        {"material": material, "user": user, "motivo": "Ficheiro ilegível ou de baixa qualidade"},
+        {
+            "material": material,
+            "user": user,
+            "motivo": "Ficheiro ilegível ou de baixa qualidade",
+        },
     )
     click.echo(f"  {'OK' if ok3 else 'FALHOU'} — Material rejeitado")
 
@@ -145,13 +150,17 @@ def testar_email(destinatario):
         click.echo("Alguns emails falharam. Verifica os logs acima.")
 
 
-
 @app.cli.command("importar-lote")
 @click.argument("pasta", type=click.Path(exists=True, file_okay=False))
-@click.option("--ano-letivo",   default="",    help='Ano letivo ex: "2024/2025"')
-@click.option("--auto-aprovar", is_flag=True,  help="Aprovar sem moderação")
-@click.option("--autor",        "autor_email", default=None, help="Email do autor (default: primeiro admin)")
-@click.option("--dry-run",      is_flag=True,  help="Simula sem importar nada")
+@click.option("--ano-letivo", default="", help='Ano letivo ex: "2024/2025"')
+@click.option("--auto-aprovar", is_flag=True, help="Aprovar sem moderação")
+@click.option(
+    "--autor",
+    "autor_email",
+    default=None,
+    help="Email do autor (default: primeiro admin)",
+)
+@click.option("--dry-run", is_flag=True, help="Simula sem importar nada")
 def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
     """Importa materiais em massa a partir de uma pasta organizada.
 
@@ -171,7 +180,9 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
     else:
         autor = User.query.filter_by(is_admin=True).first()
         if not autor:
-            click.echo("ERRO: nenhum admin encontrado. Corre 'criar-admin' primeiro.", err=True)
+            click.echo(
+                "ERRO: nenhum admin encontrado. Corre 'criar-admin' primeiro.", err=True
+            )
             return
 
     click.echo(f"Autor: {autor.nome} ({autor.email})")
@@ -179,7 +190,9 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
     # ── Categorias (nome lowercase → objeto) ───────────────────────────────
     categorias_db = {c.nome.lower(): c for c in Categoria.query.all()}
     if not categorias_db:
-        click.echo("ERRO: sem categorias na base de dados. Corre 'seed-db' primeiro.", err=True)
+        click.echo(
+            "ERRO: sem categorias na base de dados. Corre 'seed-db' primeiro.", err=True
+        )
         return
 
     # ── Descobrir ficheiros ────────────────────────────────────────────────
@@ -197,7 +210,9 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
                     continue
                 for f in sorted(cat_dir.iterdir()):
                     if f.is_file() and f.suffix.lstrip(".").lower() in EXTENSOES:
-                        ficheiros.append((f, inst_dir.name, disc_dir.name, cat_dir.name))
+                        ficheiros.append(
+                            (f, inst_dir.name, disc_dir.name, cat_dir.name)
+                        )
 
     total = len(ficheiros)
     click.echo(f"Ficheiros encontrados: {total}")
@@ -223,15 +238,15 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
     sequencias = {}
 
     # ── Importar ───────────────────────────────────────────────────────────
-    upload_base  = current_app.config["UPLOAD_FOLDER"]
-    agora        = datetime.now()
-    status       = Material.STATUS_APROVADO if auto_aprovar else Material.STATUS_PENDENTE
-    stats        = {"ok": 0, "duplicados": 0, "sem_cat": 0, "erros": 0}
+    upload_base = current_app.config["UPLOAD_FOLDER"]
+    agora = datetime.now()
+    status = Material.STATUS_APROVADO if auto_aprovar else Material.STATUS_PENDENTE
+    stats = {"ok": 0, "duplicados": 0, "sem_cat": 0, "erros": 0}
 
     with click.progressbar(ficheiros, label="A importar", width=40) as bar:
         for ficheiro_path, instituicao, disciplina, cat_nome in bar:
             try:
-                ext      = ficheiro_path.suffix.lstrip(".").lower()
+                ext = ficheiro_path.suffix.lstrip(".").lower()
                 hash_val = calcular_hash(str(ficheiro_path))
 
                 # Duplicado?
@@ -240,7 +255,7 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
                     continue
 
                 # Categoria
-                cat_obj  = _resolver_categoria(cat_nome, categorias_db)
+                cat_obj = _resolver_categoria(cat_nome, categorias_db)
                 if not cat_obj:
                     stats["sem_cat"] += 1
 
@@ -254,8 +269,8 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
                     titulo_gerado = f"{disciplina} — Parte {seq}"
 
                 # Pasta de destino: materiais/{cat_slug}/{YYYY}/{MM}/
-                cat_slug      = _slugify(cat_nome)
-                subfolder     = f"materiais/{cat_slug}/{agora.strftime('%Y')}/{agora.strftime('%m')}"
+                cat_slug = _slugify(cat_nome)
+                subfolder = f"materiais/{cat_slug}/{agora.strftime('%Y')}/{agora.strftime('%m')}"
                 nome_guardado = f"{uuid.uuid4().hex}.{ext}"
                 path_relativo = f"{subfolder}/{nome_guardado}"
 
@@ -264,9 +279,11 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
 
                 if os.environ.get("R2_ENDPOINT"):
                     from app.services.r2_service import upload_bytes
+
                     upload_bytes(data, path_relativo, ext)
                     if ext in {"png", "jpg", "jpeg", "gif", "webp"}:
                         from app.services.upload_service import _gerar_thumbnail_r2
+
                         _gerar_thumbnail_r2(data, subfolder, nome_guardado, ext)
                 else:
                     destino_dir = os.path.join(upload_base, subfolder)
@@ -278,19 +295,19 @@ def importar_lote(pasta, ano_letivo, auto_aprovar, autor_email, dry_run):
                         _gerar_thumbnail(destino, destino_dir, nome_guardado)
 
                 material = Material(
-                    titulo        = titulo_gerado,
-                    descricao     = f"{disciplina} — Material disponibilizado pela comunidade de estudantes do ISAF para apoio ao estudo.",
-                    instituicao   = instituicao,
-                    disciplina    = disciplina,
-                    ano_letivo    = ano_letivo,
-                    categoria_id  = cat_obj.id if cat_obj else None,
-                    ficheiro_nome = ficheiro_path.name,
-                    ficheiro_path = path_relativo,
-                    ficheiro_tipo = ext,
-                    ficheiro_tamanho = len(data),
-                    ficheiro_hash = hash_val,
-                    autor_id      = autor.id,
-                    status        = status,
+                    titulo=titulo_gerado,
+                    descricao=f"{disciplina} — Material disponibilizado pela comunidade de estudantes do ISAF para apoio ao estudo.",
+                    instituicao=instituicao,
+                    disciplina=disciplina,
+                    ano_letivo=ano_letivo,
+                    categoria_id=cat_obj.id if cat_obj else None,
+                    ficheiro_nome=ficheiro_path.name,
+                    ficheiro_path=path_relativo,
+                    ficheiro_tipo=ext,
+                    ficheiro_tamanho=len(data),
+                    ficheiro_hash=hash_val,
+                    autor_id=autor.id,
+                    status=status,
                 )
                 db.session.add(material)
                 stats["ok"] += 1
