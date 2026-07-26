@@ -1,0 +1,835 @@
+{% extends "base.html" %} {% block title %} Equipa Fundadora — Ponto 24
+Académico {% endblock %} {% block extra_css %}
+<style>
+  .hero-early {
+    background: linear-gradient(135deg, #0f1b35 0%, #1a2f5a 60%, #ff6b00 100%);
+    min-height: 600px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-early::before {
+    content: "";
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: rgba(255, 107, 0, 0.08);
+    top: -200px;
+    right: -200px;
+  }
+  .badge-slot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 107, 0, 0.15);
+    border: 1px solid rgba(255, 107, 0, 0.3);
+    border-radius: 50px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ff8533;
+  }
+  .form-control,
+  .form-select,
+  textarea {
+    border-radius: 12px;
+    padding: 0.8rem;
+    border: 1.5px solid #e9ecef;
+    transition: all 0.2s ease;
+  }
+  .form-control:focus,
+  .form-select:focus,
+  textarea:focus {
+    border-color: #ff6b00;
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+  }
+  .section-title {
+    font-weight: 800;
+  }
+
+  /* Wizard Steps */
+  .wizard-step {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .wizard-step.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+  }
+  .wizard-step.leaving {
+    animation: fadeOut 0.3s ease forwards;
+  }
+
+  /* Step Indicators */
+  .step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    position: relative;
+  }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+  }
+  .step-indicator.active .step-circle {
+    background: #ff6b00;
+    color: white;
+    box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.2);
+  }
+  .step-indicator.completed .step-circle {
+    background: #198754;
+    color: white;
+  }
+  .step-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #6c757d;
+    white-space: nowrap;
+  }
+  .step-indicator.active .step-label {
+    color: #ff6b00;
+    font-weight: 700;
+  }
+  .step-line {
+    height: 2px;
+    background: #e9ecef;
+    flex: 1;
+    margin: 0 4px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+  }
+  .step-line.completed {
+    background: #198754;
+  }
+
+  /* Check Cards */
+  .check-card {
+    cursor: pointer;
+    display: block;
+  }
+  .check-card-inner {
+    border: 2px solid #e9ecef;
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    background: white;
+  }
+  .check-card:hover .check-card-inner {
+    border-color: #ff6b00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  .check-card input:checked + .check-card-inner {
+    border-color: #ff6b00;
+    background: rgba(255, 107, 0, 0.05);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+  }
+
+  /* Feature Cards */
+  .feature-card {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  }
+  .feature-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Success State */
+  .success-circle {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #198754, #20c997);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    animation: popIn 0.5s ease;
+  }
+  @keyframes popIn {
+    0% {
+      transform: scale(0);
+    }
+    70% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: linear-gradient(135deg, #ff6b00, #ff8533);
+    border: none;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 107, 0, 0.3);
+    background: linear-gradient(135deg, #ff6b00, #ff8533);
+  }
+  .btn-warning {
+    background: linear-gradient(135deg, #ffc107, #ffca2c);
+    border: none;
+    color: #0f1b35;
+    transition: all 0.2s ease;
+  }
+  .btn-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 193, 7, 0.3);
+  }
+
+  @keyframes shake {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    20% {
+      transform: translateX(-8px);
+    }
+    40% {
+      transform: translateX(8px);
+    }
+    60% {
+      transform: translateX(-4px);
+    }
+    80% {
+      transform: translateX(4px);
+    }
+  }
+
+  @media (max-width: 576px) {
+    .step-label {
+      display: none;
+    }
+    .step-line {
+      margin-bottom: 8px;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<section class="hero-early d-flex align-items-center">
+  <div class="container py-5">
+    <div class="row align-items-center g-5">
+      <!-- TEXTO -->
+      <div class="col-lg-6 text-white">
+        <h1
+          class="fw-800 mb-4"
+          style="font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.15"
+        >
+          Ajuda a construir a maior comunidade académica de Angola.
+        </h1>
+        <p class="mb-4" style="font-size: 1.1rem; opacity: 0.85">
+          Todos os estudantes deveriam ter acesso a bons materiais de estudo,
+          independentemente da universidade onde estudam ou das pessoas que
+          conhecem.
+        </p>
+        <p class="mb-4" style="font-size: 1.05rem; opacity: 0.85">
+          O Ponto 24 Académico nasceu para criar um espaço onde estudantes podem
+          encontrar, organizar e partilhar conhecimento.
+        </p>
+        <p class="mb-4" style="font-size: 1.05rem; opacity: 0.85">
+          Mas uma plataforma não é construída apenas com tecnologia. É
+          construída por pessoas que acreditam que o conhecimento deve ser
+          acessível.
+        </p>
+        <div class="small text-white-50">
+          <i class="bi bi-people-fill me-2"></i>
+          Junta-te às primeiras pessoas a construir esta missão.
+        </div>
+      </div>
+
+      <!-- FORM WIZARD -->
+      <div class="col-lg-5 offset-lg-1">
+        <div
+          class="p24-card shadow-lg"
+          style="border-radius: 20px; background: white; padding: 2rem"
+        >
+          <div class="text-center mb-4">
+            <h4 class="fw-800 mb-1">Junta-te ao Ponto 24</h4>
+            <p class="text-muted mb-0">
+              Preenche a candidatura para fazer parte da comunidade.
+            </p>
+          </div>
+
+          <!-- Progress Steps -->
+          <div
+            class="d-flex justify-content-between align-items-center mb-4 px-2"
+          >
+            <div class="step-indicator active" data-step="1">
+              <div class="step-circle">1</div>
+              <small class="step-label">Dados</small>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" data-step="2">
+              <div class="step-circle">2</div>
+              <small class="step-label">Contribuir</small>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" data-step="3">
+              <div class="step-circle">3</div>
+              <small class="step-label">Motivação</small>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" data-step="4">
+              <div class="step-circle">4</div>
+              <small class="step-label">Experiência</small>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-indicator" data-step="5">
+              <div class="step-circle">5</div>
+              <small class="step-label">Liderança</small>
+            </div>
+          </div>
+
+          <form
+            id="wizardForm"
+            method="POST"
+            action="{{ url_for('main.juntar_se') }}"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+            <!-- STEP 1: Dados Pessoais -->
+            <div class="wizard-step active" data-step="1">
+              <h6 class="section-title mb-3 d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill">1</span> Dados
+                pessoais
+              </h6>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Nome completo</label>
+                <input
+                  type="text"
+                  name="nome"
+                  class="form-control"
+                  placeholder="O teu nome completo"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  class="form-control"
+                  placeholder="email@email.com"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">WhatsApp</label>
+                <input
+                  type="text"
+                  name="telefone"
+                  class="form-control"
+                  placeholder="+244 xxx xxx xxx"
+                />
+              </div>
+              <div class="row g-2">
+                <div class="col-8 mb-3">
+                  <label class="form-label fw-semibold">Universidade</label>
+                  <input
+                    type="text"
+                    name="universidade"
+                    class="form-control"
+                    placeholder="Ex: ISAF, ISPTEC, UAN"
+                  />
+                </div>
+                <div class="col-4 mb-3">
+                  <label class="form-label fw-semibold">Ano</label>
+                  <select name="ano" class="form-select">
+                    <option>1º</option>
+                    <option>2º</option>
+                    <option>3º</option>
+                    <option>4º</option>
+                    <option>5º</option>
+                    <option>6º</option>
+                    <option>Finalista</option>
+                    <option>Recém-formado</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Curso</label>
+                <input
+                  type="text"
+                  name="curso"
+                  class="form-control"
+                  placeholder="O teu curso"
+                />
+              </div>
+            </div>
+
+            <!-- STEP 2: Contribuição -->
+            <div class="wizard-step" data-step="2">
+              <h6 class="section-title mb-3 d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill">2</span> Como queres
+                contribuir?
+              </h6>
+              <div class="row g-2">
+                <div class="col-6">
+                  <label class="check-card">
+                    <input
+                      type="checkbox"
+                      name="contribuicoes"
+                      value="materiais"
+                      class="d-none"
+                    />
+                    <div class="check-card-inner">
+                      <i
+                        class="bi bi-journal-bookmark-fill fs-3 text-primary mb-2"
+                      ></i>
+                      <div class="fw-semibold small">Materiais académicos</div>
+                    </div>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <label class="check-card">
+                    <input
+                      type="checkbox"
+                      name="contribuicoes"
+                      value="campus"
+                      class="d-none"
+                    />
+                    <div class="check-card-inner">
+                      <i class="bi bi-buildings fs-3 text-success mb-2"></i>
+                      <div class="fw-semibold small">
+                        Representar universidade
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <label class="check-card">
+                    <input
+                      type="checkbox"
+                      name="contribuicoes"
+                      value="marketing"
+                      class="d-none"
+                    />
+                    <div class="check-card-inner">
+                      <i
+                        class="bi bi-megaphone-fill fs-3 text-warning mb-2"
+                      ></i>
+                      <div class="fw-semibold small">Marketing</div>
+                    </div>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <label class="check-card">
+                    <input
+                      type="checkbox"
+                      name="contribuicoes"
+                      value="tecnologia"
+                      class="d-none"
+                    />
+                    <div class="check-card-inner">
+                      <i class="bi bi-code-slash fs-3 text-info mb-2"></i>
+                      <div class="fw-semibold small">Tecnologia</div>
+                    </div>
+                  </label>
+                </div>
+                <div class="col-6">
+                  <label class="check-card">
+                    <input
+                      type="checkbox"
+                      name="contribuicoes"
+                      value="parcerias"
+                      class="d-none"
+                    />
+                    <div class="check-card-inner">
+                      <i class="bi bi-handshake fs-3 text-danger mb-2"></i>
+                      <div class="fw-semibold small">Parcerias</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 3: Motivação -->
+            <div class="wizard-step" data-step="3">
+              <h6 class="section-title mb-3 d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill">3</span> Motivação
+              </h6>
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Porque queres fazer parte?</label
+                >
+                <textarea
+                  name="motivacao"
+                  class="form-control"
+                  rows="4"
+                  placeholder="Conta-nos porque acreditas nesta missão"
+                ></textarea>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Que impacto acreditas que podemos criar?</label
+                >
+                <textarea
+                  name="impacto"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Como imaginas o futuro desta plataforma?"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- STEP 4: Experiência -->
+            <div class="wizard-step" data-step="4">
+              <h6 class="section-title mb-3 d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill">4</span> Experiência
+              </h6>
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Já participaste em algum projeto ou associação?</label
+                >
+                <textarea
+                  name="experiencia"
+                  class="form-control"
+                  rows="5"
+                  placeholder="Conta-nos alguma experiência relevante..."
+                ></textarea>
+              </div>
+              <div class="alert alert-light border" style="border-radius: 12px">
+                <i class="bi bi-lightbulb text-warning me-2"></i>
+                <small class="text-muted"
+                  >Não tens experiência? Sem problema! O que conta é a tua
+                  vontade de aprender.</small
+                >
+              </div>
+            </div>
+
+            <!-- STEP 5: Liderança -->
+            <div class="wizard-step" data-step="5">
+              <h6 class="section-title mb-3 d-flex align-items-center gap-2">
+                <span class="badge bg-primary rounded-pill">5</span> Equipa de
+                liderança
+              </h6>
+              <p class="text-muted small mb-3">
+                Além dos colaboradores, estamos a selecionar pessoas para
+                integrar a equipa inicial de liderança.
+              </p>
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Interesse em liderança?</label
+                >
+                <select name="lideranca" class="form-select">
+                  <option value="nao">Apenas colaborar</option>
+                  <option value="sim">Sim, quero liderar uma área</option>
+                  <option value="futuro">Talvez no futuro</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Área de interesse</label>
+                <select name="area" class="form-select">
+                  <option>Campus / Universidades</option>
+                  <option>Gestão de comunidade</option>
+                  <option>Marketing e Comunicação</option>
+                  <option>Conteúdo académico</option>
+                  <option>Parcerias</option>
+                  <option>Tecnologia</option>
+                  <option>Outra</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold"
+                  >Porque serias boa pessoa para liderar?</label
+                >
+                <textarea
+                  name="lideranca_motivo"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Fala um pouco sobre ti"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- SUCCESS STATE -->
+            <div class="wizard-step text-center py-5" data-step="success">
+              <div class="success-circle mb-3">
+                <i class="bi bi-check-lg fs-1 text-white"></i>
+              </div>
+              <h4 class="fw-800 text-success">Candidatura enviada!</h4>
+              <p class="text-muted">
+                Obrigado por quereres fazer parte do Ponto 24. Entraremos em
+                contacto em breve.
+              </p>
+              <button
+                type="button"
+                class="btn btn-outline-primary mt-2"
+                onclick="resetWizard()"
+              >
+                <i class="bi bi-arrow-clockwise me-2"></i>Nova candidatura
+              </button>
+            </div>
+
+            <!-- NAV BUTTONS -->
+            <div
+              class="d-flex justify-content-between mt-4 pt-3 border-top"
+              id="wizardNav"
+            >
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                id="prevBtn"
+                onclick="changeStep(-1)"
+                style="display: none"
+              >
+                <i class="bi bi-arrow-left me-2"></i>Anterior
+              </button>
+              <div></div>
+              <button
+                type="button"
+                class="btn btn-primary fw-700 px-4"
+                id="nextBtn"
+                onclick="changeStep(1)"
+              >
+                Próximo<i class="bi bi-arrow-right ms-2"></i>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECÇÃO MISSÃO -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span
+        class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill"
+        >Vantagens</span
+      >
+      <h3 class="fw-800">Porque fazer parte agora?</h3>
+      <p class="text-muted">
+        As primeiras pessoas serão responsáveis por construir a base desta
+        comunidade.
+      </p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-star-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Membro fundador</h6>
+          <p class="text-muted small mb-0">
+            Faz parte da primeira geração do Ponto 24.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+            <i class="bi bi-people-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Impacto real</h6>
+          <p class="text-muted small mb-0">
+            Ajuda estudantes que precisam de acesso a materiais.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-success bg-opacity-10 text-success">
+            <i class="bi bi-building fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Representação</h6>
+          <p class="text-muted small mb-0">
+            Leva o projeto para a tua universidade.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-danger bg-opacity-10 text-danger">
+            <i class="bi bi-award fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Reconhecimento</h6>
+          <p class="text-muted small mb-0">
+            Recebe reconhecimento pela tua contribuição.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section
+  class="py-5"
+  style="background: linear-gradient(135deg, #0f1b35 0%, #1a2f5a 100%)"
+>
+  <div class="container text-center text-white py-4">
+    <h2 class="fw-800 mb-3">O conhecimento não tem fronteiras.</h2>
+    <p class="mb-4 opacity-75" style="font-size: 1.1rem">
+      Junta-te a nós e ajuda a democratizar o acesso à educação em Angola.
+    </p>
+    <button
+      class="btn btn-warning fw-700 px-5 py-3 rounded-pill"
+      onclick="
+        document
+          .querySelector('.p24-card')
+          .scrollIntoView({ behavior: 'smooth' })
+      "
+    >
+      <i class="bi bi-rocket-takeoff me-2"></i>Candidatar agora
+    </button>
+  </div>
+</section>
+
+<script>
+  let currentStep = 1;
+  const totalSteps = 5;
+
+  function submitForm() {
+    document.getElementById("wizardForm").submit();
+  }
+
+  function changeStep(direction) {
+    const currentEl = document.querySelector(
+      `.wizard-step[data-step="${currentStep}"]`,
+    );
+
+    if (direction === 1 && !validateStep(currentStep)) {
+      shakeForm();
+      return;
+    }
+
+    if (direction === 1 && currentStep === totalSteps) {
+      submitForm();
+      return;
+    }
+
+    const newStep = currentStep + direction;
+    if (newStep < 1 || newStep > totalSteps) return;
+
+    currentEl.classList.add("leaving");
+    setTimeout(() => {
+      currentEl.classList.remove("active", "leaving");
+      const nextEl = document.querySelector(
+        `.wizard-step[data-step="${newStep}"]`,
+      );
+      nextEl.classList.add("active");
+      currentStep = newStep;
+      updateIndicators();
+      updateButtons();
+    }, 300);
+  }
+
+  function validateStep(step) {
+    const stepEl = document.querySelector(`.wizard-step[data-step="${step}"]`);
+    const required = stepEl.querySelectorAll("[required]");
+    let valid = true;
+    required.forEach((field) => {
+      if (!field.value.trim()) {
+        field.style.borderColor = "#dc3545";
+        valid = false;
+      } else {
+        field.style.borderColor = "#e9ecef";
+      }
+    });
+    return valid;
+  }
+
+  function shakeForm() {
+    const card = document.querySelector(".p24-card");
+    card.style.animation = "shake 0.5s ease";
+    setTimeout(() => (card.style.animation = ""), 500);
+  }
+
+  function updateIndicators() {
+    document.querySelectorAll(".step-indicator").forEach((el) => {
+      const step = parseInt(el.dataset.step);
+      el.classList.remove("active", "completed");
+      if (step === currentStep) el.classList.add("active");
+      else if (step < currentStep) el.classList.add("completed");
+    });
+    document.querySelectorAll(".step-line").forEach((el, idx) => {
+      el.classList.toggle("completed", idx < currentStep - 1);
+    });
+  }
+
+  function updateButtons() {
+    document.getElementById("prevBtn").style.display =
+      currentStep === 1 ? "none" : "inline-block";
+    const nextBtn = document.getElementById("nextBtn");
+    nextBtn.innerHTML =
+      currentStep === totalSteps
+        ? '<i class="bi bi-rocket-takeoff me-2"></i>Enviar candidatura'
+        : 'Próximo<i class="bi bi-arrow-right ms-2"></i>';
+  }
+
+  function resetWizard() {
+    currentStep = 1;
+    document.getElementById("wizardForm").reset();
+    document
+      .querySelectorAll(".wizard-step")
+      .forEach((el) => el.classList.remove("active"));
+    document
+      .querySelector('.wizard-step[data-step="1"]')
+      .classList.add("active");
+    document.getElementById("wizardNav").style.display = "flex";
+    document.querySelectorAll(".step-indicator, .step-line").forEach((el) => {
+      el.style.opacity = "1";
+    });
+    updateIndicators();
+    updateButtons();
+  }
+
+  document.addEventListener("input", (e) => {
+    if (
+      e.target.classList.contains("form-control") ||
+      e.target.classList.contains("form-select")
+    ) {
+      e.target.style.borderColor = "#e9ecef";
+    }
+  });
+</script>
+{% endblock %}
