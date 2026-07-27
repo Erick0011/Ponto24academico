@@ -1,113 +1,543 @@
-{% extends "auth/base_auth.html" %}
-{% block title %}Registar — Ponto 24 Académico{% endblock %}
-
-{% block content %}
-<div class="p24-auth-page">
-  <div class="p24-auth-card" style="max-width:520px">
-    <div class="text-center mb-4">
-      <a href="{{ url_for('main.index') }}" class="d-inline-flex align-items-center gap-2 text-decoration-none">
-        <div class="p24-logo-badge">P<span>24</span></div>
-        <div class="p24-logo-text">
-          <span class="fw-800">PONTO 24</span><br><small>ACADÉMICO</small>
-        </div>
-      </a>
-      <h5 class="fw-800 mt-3 mb-1">Cria a tua conta</h5>
-      <p class="text-muted small">Junta-te a milhares de estudantes angolanos</p>
-    </div>
-
-    <!-- Boas-vindas créditos -->
-    <div class="alert border-0 mb-4 d-flex align-items-center gap-2"
-        style="background:var(--p24-orange-lt);border-radius:var(--p24-radius)">
-      <i class="bi bi-gift-fill fs-5" style="color:var(--p24-orange)"></i>
-      <span class="small fw-600" style="color:var(--p24-orange)">
-        Ganhas <strong>10 créditos</strong> de boas-vindas ao registares!
-      </span>
-    </div>
-
-    {% if email_convite %}
-    <div class="alert alert-success border-0 d-flex align-items-center gap-2 mb-3">
-      <i class="bi bi-envelope-check-fill fs-5"></i>
-      <span class="small fw-600">Convite válido para <strong>{{ email_convite }}</strong>. Completa o registo abaixo.</span>
-    </div>
-    {% endif %}
-
-    <form method="post"{% if invite_token %} action="?token={{ invite_token }}"{% endif %}>
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="row g-3">
-        <div class="col-12">
-          <label class="form-label">Nome completo *</label>
-          <input type="text" name="nome" class="form-control" placeholder="Nome completo" required />
-        </div>
-        <div class="col-12">
-          <label class="form-label">Email *</label>
-          <input type="email" name="email" class="form-control" placeholder="exemplo@email.com"
-                 value="{{ email_convite or '' }}" {% if email_convite %}readonly{% endif %} required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Palavra-passe *</label>
-          <input type="password" name="password" class="form-control" placeholder="Mín. 6 caracteres" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Confirmar *</label>
-          <input type="password" name="confirmacao" class="form-control" placeholder="Repete a palavra-passe" required />
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Instituição</label>
-          <select name="instituicao" id="reg-instituicao" class="form-select">
-            <option value="">Seleciona...</option>
-            <option value="ISAF">ISAF — Instituto Superior de Administração e Finanças</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Curso</label>
-          <select name="curso" id="reg-curso" class="form-select" disabled>
-            <option value="">Seleciona primeiro a instituição</option>
-          </select>
-        </div>
-        <div class="col-12 mt-2">
-          <button type="submit" class="btn btn-primary w-100 fw-700 py-2">
-            <i class="bi bi-person-plus me-2"></i>Criar conta grátis
-          </button>
-        </div>
-      </div>
-    </form>
-
-    <hr class="my-4">
-    <p class="text-center text-muted small mb-0">
-      Já tens conta?
-      <a href="{{ url_for('auth.entrar') }}" class="text-orange fw-700">Entrar</a>
-    </p>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const CURSOS = {
-  'ISAF': [
-    'Informática de Gestão Financeira',
-    'Contabilidade e Finanças',
-    'Gestão Bancária e de Seguros'
-  ]
-};
-
-document.getElementById('reg-instituicao').addEventListener('change', function () {
-  const select = document.getElementById('reg-curso');
-  const cursos = CURSOS[this.value] || [];
-  select.innerHTML = '';
-  if (cursos.length === 0) {
-    select.disabled = true;
-    select.innerHTML = '<option value="">Seleciona primeiro a instituição</option>';
-  } else {
-    select.disabled = false;
-    select.innerHTML = '<option value="">Seleciona o curso...</option>';
-    cursos.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      select.appendChild(opt);
-    });
-  }
-});
-</script>
-{% endblock %}
+{% extends "auth/base_auth.html" %} {% block title %}Registar — Ponto 24
+Académico{% endblock %} {% block content %}
+<div class="p24-auth-page">
+  <div class="p24-auth-card" style="max-width: 520px">
+    <div class="text-center mb-4">
+      <a
+        href="{{ url_for('main.index') }}"
+        class="d-inline-flex align-items-center gap-2 text-decoration-none"
+      >
+        <div class="p24-logo-badge">P<span>24</span></div>
+        <div class="p24-logo-text">
+          <span class="fw-800">PONTO 24</span><br /><small>ACADÉMICO</small>
+        </div>
+      </a>
+      <h5 class="fw-800 mt-3 mb-1">Cria a tua conta</h5>
+      <p class="text-muted small">
+        Junta-te a milhares de estudantes angolanos
+      </p>
+    </div>
+
+    <!-- Boas-vindas créditos -->
+    <div
+      class="alert border-0 mb-4 d-flex align-items-center gap-2"
+      style="background: var(--p24-orange-lt); border-radius: var(--p24-radius)"
+    >
+      <i class="bi bi-gift-fill fs-5" style="color: var(--p24-orange)"></i>
+      <span class="small fw-600" style="color: var(--p24-orange)">
+        Ganhas <strong>10 créditos</strong> de boas-vindas ao registares!
+      </span>
+    </div>
+
+    {% if email_convite %}
+    <div
+      class="alert alert-success border-0 d-flex align-items-center gap-2 mb-3"
+    >
+      <i class="bi bi-envelope-check-fill fs-5"></i>
+      <span class="small fw-600"
+        >Convite válido para <strong>{{ email_convite }}</strong>. Completa o
+        registo abaixo.</span
+      >
+    </div>
+    {% endif %}
+
+    <form
+      method="post"
+      id="regForm"
+      {%
+      if
+      invite_token
+      %}
+      action="?token={{ invite_token }}"
+      {%
+      endif
+      %}
+      onsubmit="return validateForm();"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="row g-3">
+        <!-- Nome -->
+        <div class="col-12">
+          <label class="form-label">Nome completo *</label>
+          <input
+            type="text"
+            name="nome"
+            class="form-control"
+            placeholder="Nome completo"
+            required
+          />
+        </div>
+
+        <!-- Email -->
+        <div class="col-12">
+          <label class="form-label">Email *</label>
+          <input
+            type="email"
+            name="email"
+            class="form-control"
+            placeholder="exemplo@email.com"
+            value="{{ email_convite or '' }}"
+            {%
+            if
+            email_convite
+            %}readonly{%
+            endif
+            %}
+            required
+          />
+        </div>
+
+        <!-- Password com força -->
+        <div class="col-md-6">
+          <label class="form-label">Palavra-passe *</label>
+          <div class="position-relative">
+            <input
+              type="password"
+              name="password"
+              id="password"
+              class="form-control"
+              placeholder="Mín. 8 caracteres"
+              required
+              oninput="checkPassword()"
+            />
+            <button
+              type="button"
+              class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted p-0 pe-2"
+              style="z-index: 5"
+              onclick="togglePassword('password', this)"
+            >
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <!-- Medidor de força -->
+          <div class="mt-2">
+            <div class="progress" style="height: 4px; border-radius: 4px">
+              <div
+                id="strengthBar"
+                class="progress-bar bg-danger"
+                style="width: 0%; transition: all 0.3s ease"
+              ></div>
+            </div>
+            <small
+              id="strengthText"
+              class="text-muted d-block mt-1"
+              style="font-size: 0.7rem"
+              >Força: vazia</small
+            >
+          </div>
+          <!-- Requisitos -->
+          <div class="mt-2 p-2 rounded-3" style="background: #f8f9fa">
+            <small class="text-muted d-block mb-1" style="font-size: 0.7rem"
+              >Requisitos:</small
+            >
+            <div class="row g-1">
+              <div class="col-6">
+                <small
+                  id="req-len"
+                  class="d-flex align-items-center gap-1 text-muted"
+                  style="font-size: 0.7rem"
+                  ><i class="bi bi-circle" style="font-size: 0.5rem"></i> 8+
+                  caracteres</small
+                >
+              </div>
+              <div class="col-6">
+                <small
+                  id="req-upper"
+                  class="d-flex align-items-center gap-1 text-muted"
+                  style="font-size: 0.7rem"
+                  ><i class="bi bi-circle" style="font-size: 0.5rem"></i>
+                  Maiúscula</small
+                >
+              </div>
+              <div class="col-6">
+                <small
+                  id="req-lower"
+                  class="d-flex align-items-center gap-1 text-muted"
+                  style="font-size: 0.7rem"
+                  ><i class="bi bi-circle" style="font-size: 0.5rem"></i>
+                  Minúscula</small
+                >
+              </div>
+              <div class="col-6">
+                <small
+                  id="req-num"
+                  class="d-flex align-items-center gap-1 text-muted"
+                  style="font-size: 0.7rem"
+                  ><i class="bi bi-circle" style="font-size: 0.5rem"></i>
+                  Número</small
+                >
+              </div>
+              <div class="col-6">
+                <small
+                  id="req-sym"
+                  class="d-flex align-items-center gap-1 text-muted"
+                  style="font-size: 0.7rem"
+                  ><i class="bi bi-circle" style="font-size: 0.5rem"></i>
+                  Símbolo (!@#$...)</small
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirmar password -->
+        <div class="col-md-6">
+          <label class="form-label">Confirmar *</label>
+          <div class="position-relative">
+            <input
+              type="password"
+              name="confirmacao"
+              id="confirm"
+              class="form-control"
+              placeholder="Repete a palavra-passe"
+              required
+              oninput="checkMatch()"
+            />
+            <button
+              type="button"
+              class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-muted p-0 pe-2"
+              style="z-index: 5"
+              onclick="togglePassword('confirm', this)"
+            >
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <small
+            id="matchText"
+            class="text-danger d-none"
+            style="font-size: 0.75rem"
+            ><i class="bi bi-x-circle me-1"></i>As palavras-passe não
+            coincidem</small
+          >
+        </div>
+
+        <!-- Instituição: toggle select / input -->
+        <div class="col-md-6">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label mb-0">Instituição</label>
+            <div class="btn-group btn-group-sm" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="inst-mode"
+                id="inst-select-mode"
+                checked
+                onchange="toggleInstMode()"
+              />
+              <label
+                class="btn btn-outline-secondary"
+                for="inst-select-mode"
+                style="font-size: 0.65rem; padding: 0.15rem 0.4rem"
+                >Lista</label
+              >
+              <input
+                type="radio"
+                class="btn-check"
+                name="inst-mode"
+                id="inst-text-mode"
+                onchange="toggleInstMode()"
+              />
+              <label
+                class="btn btn-outline-secondary"
+                for="inst-text-mode"
+                style="font-size: 0.65rem; padding: 0.15rem 0.4rem"
+                >Outra</label
+              >
+            </div>
+          </div>
+          <select
+            name="instituicao_select"
+            id="inst-select"
+            class="form-select"
+            onchange="updateCursos()"
+          >
+            <option value="">Seleciona...</option>
+            <option value="ISAF">
+              ISAF — Instituto Superior de Administração e Finanças
+            </option>
+            <option value="ISPTEC">
+              ISPTEC — Instituto Superior Politécnico de Tecnologias e Ciências
+            </option>
+            <option value="UAN">UAN — Universidade Agostinho Neto</option>
+            <option value="UCAN">UCAN — Universidade Católica de Angola</option>
+            <option value="OUTRA">Outra (especificar abaixo)</option>
+          </select>
+          <input
+            type="text"
+            name="instituicao_text"
+            id="inst-text"
+            class="form-control mt-2 d-none"
+            placeholder="Escreve o nome da tua instituição"
+          />
+          <!-- Campo hidden que envia o valor final -->
+          <input type="hidden" name="instituicao" id="inst-final" />
+        </div>
+
+        <!-- Curso: toggle select / input -->
+        <div class="col-md-6">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="form-label mb-0">Curso</label>
+            <div class="btn-group btn-group-sm" role="group">
+              <input
+                type="radio"
+                class="btn-check"
+                name="curso-mode"
+                id="curso-select-mode"
+                checked
+                onchange="toggleCursoMode()"
+              />
+              <label
+                class="btn btn-outline-secondary"
+                for="curso-select-mode"
+                style="font-size: 0.65rem; padding: 0.15rem 0.4rem"
+                >Lista</label
+              >
+              <input
+                type="radio"
+                class="btn-check"
+                name="curso-mode"
+                id="curso-text-mode"
+                onchange="toggleCursoMode()"
+              />
+              <label
+                class="btn btn-outline-secondary"
+                for="curso-text-mode"
+                style="font-size: 0.65rem; padding: 0.15rem 0.4rem"
+                >Outro</label
+              >
+            </div>
+          </div>
+          <select
+            name="curso_select"
+            id="curso-select"
+            class="form-select"
+            disabled
+          >
+            <option value="">Seleciona primeiro a instituição</option>
+          </select>
+          <input
+            type="text"
+            name="curso_text"
+            id="curso-text"
+            class="form-control mt-2 d-none"
+            placeholder="Escreve o nome do teu curso"
+          />
+          <!-- Campo hidden que envia o valor final -->
+          <input type="hidden" name="curso" id="curso-final" />
+        </div>
+
+        <div class="col-12 mt-2">
+          <button type="submit" class="btn btn-primary w-100 fw-700 py-2">
+            <i class="bi bi-person-plus me-2"></i>Criar conta grátis
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <hr class="my-4" />
+    <p class="text-center text-muted small mb-0">
+      Já tens conta?
+      <a href="{{ url_for('auth.entrar') }}" class="text-orange fw-700"
+        >Entrar</a
+      >
+    </p>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  const CURSOS = {
+    ISAF: [
+      "Informática de Gestão Financeira",
+      "Contabilidade e Finanças",
+      "Gestão Bancária e de Seguros",
+    ],
+    ISPTEC: [
+      "Engenharia Informática",
+      "Engenharia Electrotécnica",
+      "Engenharia Mecânica",
+      "Arquitectura",
+    ],
+    UAN: ["Medicina", "Direito", "Economia", "Engenharia Civil"],
+    UCAN: ["Teologia", "Direito", "Psicologia", "Ciências da Educação"],
+  };
+
+  // ─── Password ───────────────────────────────────────────────
+
+  function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    const icon = btn.querySelector("i");
+    if (input.type === "password") {
+      input.type = "text";
+      icon.classList.replace("bi-eye", "bi-eye-slash");
+    } else {
+      input.type = "password";
+      icon.classList.replace("bi-eye-slash", "bi-eye");
+    }
+  }
+
+  function checkPassword() {
+    const pwd = document.getElementById("password").value;
+    const bar = document.getElementById("strengthBar");
+    const text = document.getElementById("strengthText");
+
+    const hasLen = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNum = /\d/.test(pwd);
+    const hasSym = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+
+    updateReq("req-len", hasLen);
+    updateReq("req-upper", hasUpper);
+    updateReq("req-lower", hasLower);
+    updateReq("req-num", hasNum);
+    updateReq("req-sym", hasSym);
+
+    const score = [hasLen, hasUpper, hasLower, hasNum, hasSym].filter(
+      Boolean,
+    ).length;
+
+    let width = 0,
+      color = "bg-danger",
+      label = "Muito fraca";
+    if (score === 1) {
+      width = 20;
+      color = "bg-danger";
+      label = "Fraca";
+    } else if (score === 2) {
+      width = 40;
+      color = "bg-warning";
+      label = "Razoável";
+    } else if (score === 3) {
+      width = 60;
+      color = "bg-info";
+      label = "Boa";
+    } else if (score === 4) {
+      width = 80;
+      color = "bg-success";
+      label = "Forte";
+    } else if (score === 5) {
+      width = 100;
+      color = "bg-success";
+      label = "Muito forte";
+    }
+
+    bar.style.width = width + "%";
+    bar.className = "progress-bar " + color;
+    text.textContent = "Força: " + label;
+
+    checkMatch();
+  }
+
+  function updateReq(id, ok) {
+    const el = document.getElementById(id);
+    const icon = el.querySelector("i");
+    if (ok) {
+      el.classList.remove("text-muted");
+      el.classList.add("text-success");
+      icon.className = "bi bi-check-circle-fill";
+    } else {
+      el.classList.remove("text-success");
+      el.classList.add("text-muted");
+      icon.className = "bi bi-circle";
+    }
+  }
+
+  function checkMatch() {
+    const pwd = document.getElementById("password").value;
+    const conf = document.getElementById("confirm").value;
+    const txt = document.getElementById("matchText");
+    if (conf && pwd !== conf) {
+      txt.classList.remove("d-none");
+    } else {
+      txt.classList.add("d-none");
+    }
+  }
+
+  // ─── Instituição / Curso toggle ─────────────────────────────
+
+  function toggleInstMode() {
+    const selectMode = document.getElementById("inst-select-mode").checked;
+    document
+      .getElementById("inst-select")
+      .classList.toggle("d-none", !selectMode);
+    document.getElementById("inst-text").classList.toggle("d-none", selectMode);
+    if (!selectMode) document.getElementById("inst-text").focus();
+  }
+
+  function toggleCursoMode() {
+    const selectMode = document.getElementById("curso-select-mode").checked;
+    document
+      .getElementById("curso-select")
+      .classList.toggle("d-none", !selectMode);
+    document
+      .getElementById("curso-text")
+      .classList.toggle("d-none", selectMode);
+    if (!selectMode) document.getElementById("curso-text").focus();
+  }
+
+  function updateCursos() {
+    const inst = document.getElementById("inst-select").value;
+    const select = document.getElementById("curso-select");
+    const cursos = CURSOS[inst] || [];
+
+    select.innerHTML = "";
+    if (cursos.length === 0) {
+      select.disabled = true;
+      select.innerHTML =
+        '<option value="">Seleciona primeiro a instituição</option>';
+    } else {
+      select.disabled = false;
+      select.innerHTML = '<option value="">Seleciona o curso...</option>';
+      cursos.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+      });
+    }
+  }
+
+  // ─── Validação final do form ────────────────────────────────
+
+  function validateForm() {
+    const pwd = document.getElementById("password").value;
+    const conf = document.getElementById("confirm").value;
+
+    // Requisitos da password
+    const hasLen = pwd.length >= 8;
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasNum = /\d/.test(pwd);
+    const hasSym = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd);
+
+    if (!hasLen || !hasUpper || !hasLower || !hasNum || !hasSym) {
+      alert("A palavra-passe não cumpre todos os requisitos de segurança.");
+      document.getElementById("password").focus();
+      return false;
+    }
+
+    if (pwd !== conf) {
+      alert("As palavras-passe não coincidem.");
+      document.getElementById("confirm").focus();
+      return false;
+    }
+
+    // Monta os campos hidden finais
+    const instSelectMode = document.getElementById("inst-select-mode").checked;
+    const instVal = instSelectMode
+      ? document.getElementById("inst-select").value
+      : document.getElementById("inst-text").value.trim();
+    document.getElementById("inst-final").value = instVal;
+
+    const cursoSelectMode =
+      document.getElementById("curso-select-mode").checked;
+    const cursoVal = cursoSelectMode
+      ? document.getElementById("curso-select").value
+      : document.getElementById("curso-text").value.trim();
+    document.getElementById("curso-final").value = cursoVal;
+
+    return true;
+  }
+</script>
+{% endblock %}
