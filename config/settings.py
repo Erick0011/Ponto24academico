@@ -26,6 +26,12 @@ class Config:
     CREDITOS_POR_UPLOAD_APROVADO = 5
     CREDITOS_POR_DOWNLOAD = 1
 
+    # Marketing / email em massa — limites de segurança para não sermos
+    # marcados como spam ou bloqueados pelo servidor SMTP (ex: Gmail costuma
+    # suspender contas que enviam rajadas de emails sem intervalo).
+    MARKETING_INTERVALO_SEGUNDOS = int(os.environ.get("MARKETING_INTERVALO_SEGUNDOS", 3))
+    MARKETING_LIMITE_DIARIO = int(os.environ.get("MARKETING_LIMITE_DIARIO", 300))
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

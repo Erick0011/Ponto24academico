@@ -22,6 +22,8 @@ from app.utils.honeypot import honeypot_preenchido
 from app.utils.validacao import senha_forte
 from app.models.atividade import AtividadeLog
 from app.services.atividade_service import registar_atividade
+from app.services.tokens_service import verificar_token
+from app.services.marketing_service import SALT_MARKETING_CANCELAR
 
 
 def _slugify(s):
@@ -486,3 +488,26 @@ def sitemap_xml():
   </url>""")
     xml.append("</urlset>")
     return Response("\n".join(xml), mimetype="application/xml")
+
+
+@main_bp.route("/marketing/cancelar/<token>", methods=["GET", "POST"])
+def cancelar_marketing(token):
+    """Cancela a subscrição de emails de marketing. Aceita GET (link clicado
+    pelo utilizador) e POST (botão "cancelar subscrição" nativo de clientes
+    de email, via cabeçalho List-Unsubscribe-Post — RFC 8058)."""
+    # 10 anos — link de cancelamento não deve expirar
+    user_id = verificar_token(token, SALT_MARKETING_CANCELAR, max_age=60 * 60 * 24 * 3650)
+    if not user_id:
+        flash("Link de cancelamento inválido ou expirado.", "danger")
+        return redirect(url_for("main.index"))
+
+    user = User.query.get(int(user_id))
+    if user and user.aceita_marketing:
+        user.aceita_marketing = False
+        registar_atividade(
+            AtividadeLog.EVENTO_MARKETING_CANCELADO,
+            utilizador_id=user.id, alvo_tipo="user", alvo_id=user.id,
+        )
+        db.session.commit()
+
+    return render_template("main/marketing_cancelado.html")

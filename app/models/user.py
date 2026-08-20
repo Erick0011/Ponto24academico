@@ -30,6 +30,7 @@ class User(UserMixin, db.Model):
     is_moderador  = db.Column(db.Boolean, default=False)
     is_active     = db.Column(db.Boolean, default=True)
     email_verificado = db.Column(db.Boolean, default=False)
+    aceita_marketing = db.Column(db.Boolean, default=True, nullable=False)
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     ultimo_login = db.Column(db.DateTime)
 

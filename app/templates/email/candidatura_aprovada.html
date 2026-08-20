@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><title>Candidatura aprovada</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:40px 0">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08)">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0f1b35 0%,#1a2f5a 60%,#ff6b00 100%);padding:40px 48px;text-align:center">
+            <div style="background:rgba(255,107,0,.2);border:2px solid rgba(255,107,0,.4);border-radius:12px;display:inline-block;padding:8px 20px;margin-bottom:20px">
+              <span style="color:#ff8533;font-weight:800;font-size:1.1rem;letter-spacing:.08em">PONTO 24</span>
+            </div>
+            <h1 style="color:#fff;margin:0;font-size:1.8rem;font-weight:800">Candidatura aprovada</h1>
+            <p style="color:rgba(255,255,255,.7);margin:12px 0 0;font-size:1rem">Bem-vindo(a) à equipa de colaboradores</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px 48px">
+            <p style="font-size:1rem;color:#444;margin-bottom:16px">
+              Olá <strong>{{ candidatura.nome }}</strong>,
+            </p>
+            <p style="font-size:1rem;color:#444;margin-bottom:24px">
+              Boas notícias: a tua candidatura para colaborar com o <strong>Ponto 24 Académico</strong>
+              foi aprovada. Obrigado por quereres fazer parte deste projeto.
+            </p>
+
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px 24px;margin-bottom:28px">
+              <p style="margin:0;font-size:.9rem;color:#166534;font-weight:700">
+                Em breve entraremos em contacto contigo
+              </p>
+              <p style="margin:8px 0 0;font-size:.85rem;color:#166534">
+                A nossa equipa vai enviar os próximos passos para este email ({{ candidatura.email }}).
+              </p>
+            </div>
+
+            <div style="text-align:center;margin:32px 0">
+              <a href="{{ url_for('main.index', _external=True) }}"
+                 style="background:#ff6b00;color:#fff;text-decoration:none;padding:16px 40px;border-radius:50px;font-weight:800;font-size:1.05rem;display:inline-block">
+                Visitar o Ponto 24 Académico
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8f9fa;padding:24px 48px;text-align:center;border-top:1px solid #eee">
+            <p style="margin:0;font-size:.8rem;color:#aaa">
+              Ponto 24 Académico &middot; O acervo académico de Angola
+            </p>
+            <p style="margin:8px 0 0;font-size:.75rem;color:#bbb">
+              Recebeste este email porque submeteste uma candidatura para colaborar connosco.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

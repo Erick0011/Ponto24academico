@@ -270,4 +270,49 @@
 
 ---
 
-**Total: 158 testes**
+## 14. Email Automático de Candidaturas e Marketing em Massa
+
+### Email automático de candidaturas
+
+- [ ] **Aprovar candidatura envia email** — `POST /admin/candidaturas/<id>/aprovar` chama `email_candidatura_aprovada`; sem SMTP configurado, falha silenciosamente (não quebra a aprovação)
+- [ ] **Rejeitar candidatura envia email** — idem para `email_candidatura_rejeitada`
+- [ ] **Templates sem emojis** — `email/candidatura_aprovada.html` e `email/candidatura_rejeitada.html` não usam nenhum caráter emoji (regra do projeto)
+- [ ] **Flash confirma envio** — mensagem "Email enviado" aparece após aprovar/rejeitar
+
+### Modelo e opt-out de marketing
+
+- [ ] **`aceita_marketing` default True** — utilizadores existentes e novos ficam `True` após a migração/registo
+- [ ] **`flask db upgrade` limpo** — migração aplica sem erro numa BD existente com utilizadores (server_default evita falha em coluna NOT NULL)
+
+### Criar e enviar campanha
+
+- [ ] **Criar campanha** — `/admin/marketing/criar` guarda como `rascunho`, regista `AtividadeLog.EVENTO_CAMPANHA_CRIADA`
+- [ ] **Pré-visualização** — `/admin/marketing/<id>` mostra o HTML da campanha dentro do template de marca, num iframe
+- [ ] **Só admin acede** — utilizador moderador (não admin) recebe 403 em todas as rotas `/admin/marketing*`
+- [ ] **Enviar campanha** — dispara thread em segundo plano; `CampanhaEmailDestinatario` é populado uma vez (público elegível: ativo + `aceita_marketing=True`, mais filtro extra se público = confirmados/ativos)
+- [ ] **Progresso em tempo real** — `/admin/marketing/<id>/estado` reflete contagem de enviados/falhados enquanto a thread corre
+- [ ] **Throttle entre envios** — respeita `MARKETING_INTERVALO_SEGUNDOS` entre cada email
+- [ ] **Limite diário pausa corretamente** — atinge `MARKETING_LIMITE_DIARIO` com destinatários ainda pendentes → estado `pausada_limite_diario`
+- [ ] **Conclusão no limite exato** — quando o último destinatário pendente é enviado exatamente no envio que atinge o limite diário, o estado final é `concluida`, não `pausada_limite_diario`
+- [ ] **Retomar no dia seguinte** — campanha pausada, ao reiniciar noutro dia (ou reclicar "Continuar envio"), retoma dos pendentes sem duplicar envios já feitos
+- [ ] **Cancelar campanha** — campanha `enviando`/`pausada` pode ser cancelada; emails já enviados não são afetados; a thread para no próximo ciclo
+- [ ] **Não reenvia campanha concluída/cancelada** — `POST /admin/marketing/<id>/enviar` numa campanha já concluída ou cancelada não recomeça o envio
+
+### Proteções anti-bloqueio no email de marketing
+
+- [ ] **Cabeçalho `List-Unsubscribe` presente** — inclui `mailto:` e URL de cancelamento
+- [ ] **Cabeçalho `List-Unsubscribe-Post: List-Unsubscribe=One-Click` presente** (RFC 8058)
+- [ ] **Cabeçalhos `Precedence: bulk` e `X-Auto-Response-Suppress: All` presentes**
+- [ ] **Multipart com texto simples + HTML** — mensagem inclui `text/plain` (gerado a partir do HTML) antes do `text/html`
+- [ ] **Link de cancelamento usa o domínio real** — construído a partir do `request.url_root` do pedido que disparou o envio, não `localhost`
+
+### Cancelamento de subscrição (unsubscribe)
+
+- [ ] **Link de cancelamento funciona sem login** — `GET /marketing/cancelar/<token>` marca `aceita_marketing=False` e mostra confirmação
+- [ ] **Token inválido/adulterado** — mostra mensagem de erro e não altera nenhum utilizador
+- [ ] **Utilizador que cancelou não recebe mais campanhas** — fica de fora de `publico_query()` em campanhas futuras
+- [ ] **Rota acessível em modo pré-lançamento** — `main.cancelar_marketing` está na whitelist de endpoints públicos
+
+---
+
+**Total: 184 testes**

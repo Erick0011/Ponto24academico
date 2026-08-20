@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Subscrição cancelada — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height:75vh;padding:3rem 1rem">
+  <div class="text-center" style="max-width:480px">
+
+    <div class="mb-4 d-inline-flex align-items-center justify-content-center rounded-circle"
+         style="width:72px;height:72px;background:#f0fdf4">
+      <i class="bi bi-check-lg" style="font-size:2rem;color:#16a34a"></i>
+    </div>
+
+    <h2 class="fw-800 mb-2">Subscrição cancelada</h2>
+    <p class="text-muted mb-4">
+      Já não vais receber emails de marketing do Ponto 24 Académico.<br>
+      Continuas a receber notificações essenciais da tua conta (aprovações, recuperação de senha, etc.).
+    </p>
+
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="{{ url_for('main.index') }}" class="btn btn-primary fw-700 px-4">
+        <i class="bi bi-house me-2"></i>Página inicial
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

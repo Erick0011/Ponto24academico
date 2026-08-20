@@ -40,6 +40,12 @@ class AtividadeLog(db.Model):
     EVENTO_LISTA_ESPERA = "lista_espera_entrada"
     EVENTO_CONVITE_ENVIADO = "convite_enviado"
 
+    # Marketing / email em massa
+    EVENTO_CAMPANHA_CRIADA = "campanha_criada"
+    EVENTO_CAMPANHA_ENVIADA = "campanha_enviada"
+    EVENTO_CAMPANHA_CANCELADA = "campanha_cancelada"
+    EVENTO_MARKETING_CANCELADO = "marketing_cancelado"  # utilizador cancelou subscrição
+
     id = db.Column(db.Integer, primary_key=True)
     evento = db.Column(db.String(40), nullable=False, index=True)
     # Alvo polimórfico opcional (material, candidatura, user, lista_espera...) — sem FK,

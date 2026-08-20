@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head><meta charset="UTF-8"><title>Ponto 24 Académico</title></head>
+<body style="margin:0;padding:0;background:#f4f6fb;font-family:'Segoe UI',Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fb;padding:40px 0">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08)">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#0f1b35 0%,#1a2f5a 60%,#ff6b00 100%);padding:28px 48px;text-align:center">
+            <div style="background:rgba(255,107,0,.2);border:2px solid rgba(255,107,0,.4);border-radius:12px;display:inline-block;padding:6px 18px">
+              <span style="color:#ff8533;font-weight:800;font-size:1rem;letter-spacing:.08em">PONTO 24 ACADÉMICO</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Corpo definido pelo admin na campanha -->
+        <tr>
+          <td style="padding:40px 48px;font-size:1rem;color:#444;line-height:1.6">
+            {{ corpo_html | safe }}
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8f9fa;padding:24px 48px;text-align:center;border-top:1px solid #eee">
+            <p style="margin:0;font-size:.8rem;color:#aaa">
+              Ponto 24 Académico &middot; O acervo académico de Angola
+            </p>
+            <p style="margin:8px 0 0;font-size:.75rem;color:#bbb">
+              Recebeste este email porque tens conta no Ponto 24 Académico.
+              <a href="{{ url_cancelar }}" style="color:#888;text-decoration:underline">Cancelar subscrição de emails de marketing</a>.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
