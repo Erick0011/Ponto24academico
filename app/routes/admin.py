@@ -10,11 +10,14 @@ from app.models.kpi import PesquisaLog
 from app.models.configuracao import Configuracao
 from app.models.lista_espera import ListaEspera, RelatorioMaterial
 from app.models.anuncio import Anuncio
+from app.models.candidaturas import Candidatura
+from app.models.atividade import AtividadeLog
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
 from app.services.mail_service import email_material_aprovado, email_material_rejeitado, email_convite_acesso
 from app.services.tokens_service import gerar_token, SALT_CONVITE
+from app.services.atividade_service import registar_atividade, atividade_recente, contagem_por_evento
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -54,6 +57,7 @@ def painel():
     total_categorias = Categoria.query.count()
     total_espera     = ListaEspera.query.filter_by(status=ListaEspera.STATUS_PENDENTE).count()
     total_relatorios = RelatorioMaterial.query.filter_by(status=RelatorioMaterial.STATUS_PENDENTE).count()
+    total_candidaturas_pendentes = Candidatura.query.filter_by(status="pendente").count()
 
     return render_template(
         "admin/painel.html",
@@ -64,6 +68,7 @@ def painel():
         total_categorias=total_categorias,
         total_espera=total_espera,
         total_relatorios=total_relatorios,
+        total_candidaturas_pendentes=total_candidaturas_pendentes,
     )
 
 
@@ -123,6 +128,13 @@ def kpi():
     novos_users_semana = User.query.filter(User.criado_em >= h7).count()
     novos_users_mes    = User.query.filter(User.criado_em >= h30).count()
 
+    # ── Candidaturas ─────────────────────────────────────────────────────
+    candidaturas_pendentes = Candidatura.query.filter_by(status="pendente").count()
+
+    # ── Atividade (log de auditoria) ────────────────────────────────────
+    atividade_feed = atividade_recente(20)
+    acoes_por_tipo = contagem_por_evento(h30)
+
     return render_template(
         "admin/kpi.html",
         total_pesquisas=total_pesquisas,
@@ -135,6 +147,9 @@ def kpi():
         novos_users_mes=novos_users_mes,
         total_users=User.query.count(),
         total_materiais=Material.query.filter_by(status=Material.STATUS_APROVADO).count(),
+        candidaturas_pendentes=candidaturas_pendentes,
+        atividade_feed=atividade_feed,
+        acoes_por_tipo=acoes_por_tipo,
     )
 
 
@@ -164,6 +179,12 @@ def aprovar(id):
 
     dar_creditos_upload(material.autor)
     notificar_aprovacao(material)
+    registar_atividade(
+        AtividadeLog.EVENTO_MATERIAL_APROVADO,
+        utilizador_id=current_user.id,
+        alvo_tipo="material", alvo_id=material.id,
+        detalhes={"titulo": material.titulo_base, "autor_id": material.autor_id},
+    )
     db.session.commit()
     email_material_aprovado(material)
 
@@ -184,6 +205,12 @@ def rejeitar(id):
     material.moderado_por_id = current_user.id
 
     notificar_rejeicao(material, motivo)
+    registar_atividade(
+        AtividadeLog.EVENTO_MATERIAL_REJEITADO,
+        utilizador_id=current_user.id,
+        alvo_tipo="material", alvo_id=material.id,
+        detalhes={"titulo": material.titulo_base, "motivo": motivo},
+    )
     db.session.commit()
     email_material_rejeitado(material, motivo)
 
@@ -309,6 +336,11 @@ def toggle_admin(id):
         user.is_admin = not user.is_admin
         if user.is_admin:
             user.is_moderador = False  # admin > moderador
+        registar_atividade(
+            AtividadeLog.EVENTO_USER_PROMOVIDO_ADMIN if user.is_admin else AtividadeLog.EVENTO_USER_REMOVIDO_ADMIN,
+            utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
+            detalhes={"nome": user.nome, "email": user.email},
+        )
         db.session.commit()
         estado = "promovido a admin" if user.is_admin else "removido de admin"
         flash(f"{user.nome} {estado}.", "sucesso")
@@ -324,6 +356,11 @@ def toggle_moderador(id):
         flash("Admins já têm permissões de moderação.", "aviso")
     else:
         user.is_moderador = not user.is_moderador
+        registar_atividade(
+            AtividadeLog.EVENTO_USER_PROMOVIDO_MODERADOR if user.is_moderador else AtividadeLog.EVENTO_USER_REMOVIDO_MODERADOR,
+            utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
+            detalhes={"nome": user.nome, "email": user.email},
+        )
         db.session.commit()
         estado = "promovido a moderador" if user.is_moderador else "removido de moderador"
         flash(f"{user.nome} {estado}.", "sucesso")
@@ -339,6 +376,11 @@ def toggle_ativo(id):
         flash("Não podes desativar a tua própria conta.", "aviso")
     else:
         user.is_active = not user.is_active
+        registar_atividade(
+            AtividadeLog.EVENTO_USER_ATIVADO if user.is_active else AtividadeLog.EVENTO_USER_DESATIVADO,
+            utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
+            detalhes={"nome": user.nome, "email": user.email},
+        )
         db.session.commit()
         estado = "ativada" if user.is_active else "desativada"
         flash(f"Conta de {user.nome} {estado}.", "sucesso")
@@ -486,6 +528,11 @@ def convidar_lista_espera(id):
     url_convite = url_for("auth.registar", token=token, _external=True)
 
     entrada.status = ListaEspera.STATUS_CONVIDADO
+    registar_atividade(
+        AtividadeLog.EVENTO_CONVITE_ENVIADO,
+        utilizador_id=current_user.id, alvo_tipo="lista_espera", alvo_id=entrada.id,
+        detalhes={"email": entrada.email},
+    )
     db.session.commit()
 
     email_convite_acesso(entrada, url_convite)
@@ -502,6 +549,74 @@ def eliminar_lista_espera(id):
     db.session.commit()
     flash("Entrada removida da lista.", "aviso")
     return redirect(url_for("admin.lista_espera"))
+
+
+# ── Candidaturas (só admin) ───────────────────────────────────────────────────
+
+@admin_bp.route("/candidaturas")
+@login_required
+@admin_required
+def candidaturas():
+    status = request.args.get("status", "")
+    q = request.args.get("q", "").strip()
+    page = request.args.get("page", 1, type=int)
+
+    query = Candidatura.query
+    if status:
+        query = query.filter_by(status=status)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(
+            db.or_(Candidatura.nome.ilike(like), Candidatura.email.ilike(like),
+                   Candidatura.universidade.ilike(like))
+        )
+    entradas = query.order_by(Candidatura.created_at.desc()).paginate(
+        page=page, per_page=25, error_out=False
+    )
+
+    counts = {
+        "todos":     Candidatura.query.count(),
+        "pendente":  Candidatura.query.filter_by(status="pendente").count(),
+        "aprovado":  Candidatura.query.filter_by(status="aprovado").count(),
+        "rejeitado": Candidatura.query.filter_by(status="rejeitado").count(),
+    }
+
+    return render_template(
+        "admin/candidaturas.html",
+        entradas=entradas, counts=counts, status=status, q=q,
+    )
+
+
+@admin_bp.route("/candidaturas/<int:id>/aprovar", methods=["POST"])
+@login_required
+@admin_required
+def aprovar_candidatura(id):
+    candidatura = Candidatura.query.get_or_404(id)
+    candidatura.status = "aprovado"
+    registar_atividade(
+        AtividadeLog.EVENTO_CANDIDATURA_APROVADA,
+        utilizador_id=current_user.id, alvo_tipo="candidatura", alvo_id=candidatura.id,
+        detalhes={"nome": candidatura.nome, "email": candidatura.email},
+    )
+    db.session.commit()
+    flash(f"Candidatura de {candidatura.nome} aprovada.", "sucesso")
+    return redirect(request.referrer or url_for("admin.candidaturas"))
+
+
+@admin_bp.route("/candidaturas/<int:id>/rejeitar", methods=["POST"])
+@login_required
+@admin_required
+def rejeitar_candidatura(id):
+    candidatura = Candidatura.query.get_or_404(id)
+    candidatura.status = "rejeitado"
+    registar_atividade(
+        AtividadeLog.EVENTO_CANDIDATURA_REJEITADA,
+        utilizador_id=current_user.id, alvo_tipo="candidatura", alvo_id=candidatura.id,
+        detalhes={"nome": candidatura.nome, "email": candidatura.email},
+    )
+    db.session.commit()
+    flash(f"Candidatura de {candidatura.nome} rejeitada.", "aviso")
+    return redirect(request.referrer or url_for("admin.candidaturas"))
 
 
 # ── Relatórios de materiais (moderadores e admins) ────────────────────────────

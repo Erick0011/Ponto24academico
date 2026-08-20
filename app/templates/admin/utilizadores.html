@@ -14,6 +14,7 @@
   </div>
 
   <div class="p24-card p-0 overflow-hidden">
+    <div class="table-responsive">
     <table class="p24-table w-100">
       <thead>
         <tr>
@@ -35,6 +36,8 @@
                   {{ u.nome }}
                   {% if u.is_admin %}
                   <span class="badge bg-warning text-dark fw-600" style="font-size:.65rem">Admin</span>
+                  {% elif u.is_moderador %}
+                  <span class="badge bg-info fw-600" style="font-size:.65rem">Moderador</span>
                   {% endif %}
                 </div>
                 <div class="text-muted" style="font-size:.72rem">{{ u.email }}</div>
@@ -95,6 +98,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
 
     <!-- Paginação -->
     {% if users.pages > 1 %}

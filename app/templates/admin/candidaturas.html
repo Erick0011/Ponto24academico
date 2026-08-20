@@ -1,0 +1,173 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Candidaturas — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-800 mb-1">Candidaturas</h4>
+      <p class="text-muted small mb-0">Voluntários e colaboradores — {{ counts.todos }} candidaturas</p>
+    </div>
+    <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+  </div>
+
+  <!-- Tabs de estado -->
+  <div class="d-flex gap-2 mb-4 flex-wrap">
+    {% for s, label, cor in [('', 'Todos', 'secondary'), ('pendente', 'Pendentes', 'warning'),
+                              ('aprovado', 'Aprovadas', 'success'), ('rejeitado', 'Rejeitadas', 'danger')] %}
+    <a href="{{ url_for('admin.candidaturas', status=s, q=q) }}"
+       class="btn btn-sm {% if status == s %}btn-{{ cor }}{% else %}btn-outline-{{ cor }}{% endif %} fw-600">
+      {% if s == '' %}Todos <span class="badge bg-dark ms-1">{{ counts.todos }}</span>
+      {% elif s == 'pendente' %}Pendentes <span class="badge bg-dark ms-1">{{ counts.pendente }}</span>
+      {% elif s == 'aprovado' %}Aprovadas <span class="badge bg-dark ms-1">{{ counts.aprovado }}</span>
+      {% else %}Rejeitadas <span class="badge bg-dark ms-1">{{ counts.rejeitado }}</span>{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Pesquisa -->
+  <form method="get" class="mb-4">
+    <div class="input-group" style="max-width:400px">
+      <input type="text" name="q" class="form-control" placeholder="Pesquisar nome, email, universidade..." value="{{ q }}">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+      {% if q %}<a href="{{ url_for('admin.candidaturas', status=status) }}" class="btn btn-outline-danger"><i class="bi bi-x"></i></a>{% endif %}
+    </div>
+  </form>
+
+  <!-- Tabela -->
+  <div class="p24-card p-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="p24-table w-100">
+        <thead>
+          <tr>
+            <th>Nome / Email</th>
+            <th>Universidade / Curso</th>
+            <th>Contribuições</th>
+            <th>Data</th>
+            <th>Estado</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in entradas.items %}
+          <tr>
+            <td>
+              <div class="fw-600">{{ c.nome }}</div>
+              <div class="text-muted small">{{ c.email }}</div>
+            </td>
+            <td class="text-muted small">
+              {{ c.universidade or '—' }}{% if c.curso %} · {{ c.curso }}{% endif %}
+            </td>
+            <td>
+              {% set contrib = c.get_contribuicoes_list()|join(', ') %}
+              {% if contrib %}
+              <span class="text-muted small" style="max-width:180px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+                    title="{{ contrib }}">{{ contrib }}</span>
+              {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+            <td class="text-muted small">{{ c.created_at.strftime('%d/%m/%Y') }}</td>
+            <td>
+              {% if c.status == 'pendente' %}
+                <span class="badge bg-warning text-dark">Pendente</span>
+              {% elif c.status == 'aprovado' %}
+                <span class="badge bg-success">Aprovada</span>
+              {% else %}
+                <span class="badge bg-danger">Rejeitada</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex gap-1 justify-content-center">
+                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal"
+                        data-bs-target="#detalhe{{ c.id }}" title="Ver detalhes">
+                  <i class="bi bi-eye"></i>
+                </button>
+                {% if c.status != 'aprovado' %}
+                <form action="{{ url_for('admin.aprovar_candidatura', id=c.id) }}" method="post"
+                      onsubmit="return confirm('Aprovar candidatura de {{ c.nome }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-success" title="Aprovar">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                </form>
+                {% endif %}
+                {% if c.status != 'rejeitado' %}
+                <form action="{{ url_for('admin.rejeitar_candidatura', id=c.id) }}" method="post"
+                      onsubmit="return confirm('Rejeitar candidatura de {{ c.nome }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger" title="Rejeitar">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>Nenhuma candidatura encontrada.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginação -->
+  {% if entradas.pages > 1 %}
+  <nav class="mt-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item {% if not entradas.has_prev %}disabled{% endif %}">
+        <a class="page-link" href="{{ url_for('admin.candidaturas', status=status, q=q, page=entradas.prev_num) }}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% for p in entradas.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <li class="page-item {% if p == entradas.page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('admin.candidaturas', status=status, q=q, page=p) }}">{{ p }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {% if not entradas.has_next %}disabled{% endif %}">
+        <a class="page-link" href="{{ url_for('admin.candidaturas', status=status, q=q, page=entradas.next_num) }}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+
+</div>
+
+<!-- Modais de detalhe -->
+{% for c in entradas.items %}
+<div class="modal fade" id="detalhe{{ c.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700">Candidatura — {{ c.nome }}</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small mb-2"><strong>Telefone:</strong> {{ c.telefone or '—' }}</p>
+        <p class="small mb-2"><strong>Ano:</strong> {{ c.ano or '—' }}</p>
+        <p class="small mb-1"><strong>Motivação:</strong></p>
+        <p class="small text-muted mb-2">{{ c.motivacao or '—' }}</p>
+        <p class="small mb-1"><strong>Impacto esperado:</strong></p>
+        <p class="small text-muted mb-2">{{ c.impacto or '—' }}</p>
+        <p class="small mb-1"><strong>Experiência:</strong></p>
+        <p class="small text-muted mb-2">{{ c.experiencia or '—' }}</p>
+        <p class="small mb-1"><strong>Liderança:</strong> {{ c.lideranca or '—' }}{% if c.area %} — {{ c.area }}{% endif %}</p>
+        {% if c.lideranca_motivo %}<p class="small text-muted mb-0">{{ c.lideranca_motivo }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

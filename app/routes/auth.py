@@ -14,6 +14,8 @@ from app.services.tokens_service import (
 )
 from app.utils.honeypot import honeypot_preenchido
 from app.utils.validacao import senha_forte
+from app.models.atividade import AtividadeLog
+from app.services.atividade_service import registar_atividade
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -79,6 +81,10 @@ def registar():
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
+        registar_atividade(
+            AtividadeLog.EVENTO_REGISTO, utilizador_id=user.id,
+            detalhes={"email": user.email},
+        )
         creditos_ao_registar(user)
 
         # Marca como registado na lista de espera
@@ -117,14 +123,28 @@ def entrar():
         user = User.query.filter_by(email=email).first()
 
         if not user or not user.check_password(password):
+            registar_atividade(
+                AtividadeLog.EVENTO_LOGIN_FALHADO,
+                utilizador_id=user.id if user else None,
+                detalhes={"email": email, "motivo": "credenciais_invalidas"},
+            )
+            db.session.commit()
             flash("Email ou palavra-passe incorretos.", "erro")
             return render_template("auth/entrar.html")
 
         if not user.is_active:
+            registar_atividade(
+                AtividadeLog.EVENTO_LOGIN_FALHADO,
+                utilizador_id=user.id,
+                detalhes={"email": email, "motivo": "conta_suspensa"},
+            )
+            db.session.commit()
             flash("Conta suspensa. Contacta o suporte.", "erro")
             return render_template("auth/entrar.html")
 
         login_user(user, remember=lembrar)
+        registar_atividade(AtividadeLog.EVENTO_LOGIN, utilizador_id=user.id)
+        db.session.commit()
         flash(f"Bem-vindo(a) de volta, {user.nome}!", "sucesso")
 
         from urllib.parse import urlparse
@@ -139,7 +159,10 @@ def entrar():
 @auth_bp.route("/sair")
 @login_required
 def sair():
+    uid = current_user.id
     logout_user()
+    registar_atividade(AtividadeLog.EVENTO_LOGOUT, utilizador_id=uid)
+    db.session.commit()
     flash("Sessão terminada com sucesso.", "info")
     return redirect(url_for("auth.entrar"))
 

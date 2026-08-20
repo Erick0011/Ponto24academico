@@ -182,4 +182,47 @@
 
 ---
 
-**Total: 80 testes**
+## 12. Painel Admin — Fase 2
+
+### Candidaturas (só admin)
+
+- [ ] **Listar candidaturas** — `/admin/candidaturas` carrega com contagens corretas nas tabs
+- [ ] **Filtrar por estado** — tabs Pendentes/Aprovadas/Rejeitadas filtram corretamente
+- [ ] **Pesquisar** — pesquisa por nome/email/universidade devolve resultados esperados
+- [ ] **Ver detalhes** — modal mostra motivação, impacto, experiência e liderança sem quebrar layout
+- [ ] **Aprovar candidatura** — estado muda para "Aprovada", `updated_at` atualizado
+- [ ] **Rejeitar candidatura** — estado muda para "Rejeitada", `updated_at` atualizado
+- [ ] **Acesso restrito a admin** — utilizador moderador (não admin) recebe 403 em `/admin/candidaturas`
+- [ ] **Tabela responsiva** — em ecrã estreito (375px), tabela faz scroll horizontal em vez de overflow da página
+
+### Badge de moderador
+
+- [ ] **Badge visível** — utilizador com `is_moderador=True` mostra badge "Moderador" (azul/info) em `/admin/utilizadores`
+- [ ] **Admin não mostra duplo badge** — utilizador admin mostra só "Admin", nunca os dois
+
+### Navegação admin
+
+- [ ] **Nav presente em todas as páginas admin** — sub-nav visível em Painel, Moderação, Candidaturas, Utilizadores, Categorias, Materiais, Relatórios, Lista de Espera, Anúncios, KPI, Configurações, Logs
+- [ ] **Item ativo destacado** — a página atual aparece destacada na nav
+- [ ] **Nav em mobile** — nav faz scroll horizontal em ecrã estreito sem quebrar o layout
+- [ ] **Itens admin-only ocultos para moderador** — utilizador moderador (não admin) não vê Candidaturas/Utilizadores/Categorias/Materiais/etc. na nav
+
+### KPI — Fase 2
+
+- [ ] **KPI carrega em base de dados vazia** — sem erros mesmo sem nenhum `AtividadeLog`/`Candidatura` registados
+- [ ] **Stat "Candidaturas pendentes"** — contagem correta
+- [ ] **"Ações por tipo (30 dias)"** — lista agrupada corresponde aos eventos reais gerados
+- [ ] **"Atividade recente"** — feed mostra os últimos eventos com utilizador e data corretos
+
+### Log de auditoria — spot-checks
+
+- [ ] **Aprovar material gera log** — aprovar um material cria uma linha `AtividadeLog` com `evento=material_aprovado`, `utilizador_id` do moderador, `alvo_id` do material
+- [ ] **Rejeitar material gera log** — idem, `evento=material_rejeitado`, `detalhes` inclui o motivo
+- [ ] **Download gera log** — descarregar um material cria linha `evento=download` com `utilizador_id` correto
+- [ ] **Login gera log** — login com sucesso cria linha `evento=login`; tentativa falhada cria `evento=login_falhado`
+- [ ] **Submeter candidatura gera log** — `/juntar-se` bem-sucedido cria linha `evento=candidatura_recebida`
+- [ ] **Toggle de permissões gera log** — promover/remover admin ou moderador cria a linha correspondente
+
+---
+
+**Total: 132 testes**

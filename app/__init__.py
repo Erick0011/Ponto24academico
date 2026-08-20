@@ -71,6 +71,7 @@ def create_app(config_name: str = None):
     from app.models.configuracao import Configuracao     # noqa: F401
     from app.models.lista_espera import ListaEspera, RelatorioMaterial  # noqa: F401
     from app.models.anuncio import Anuncio               # noqa: F401
+    from app.models.atividade import AtividadeLog         # noqa: F401
 
     # User loader para Flask-Login
     from app.models.user import User
