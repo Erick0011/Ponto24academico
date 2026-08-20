@@ -7,11 +7,18 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+# Nota: armazenamento em memória — com `gunicorn -w 4` cada worker mantém o
+# seu próprio contador, pelo que o limite real pode chegar a ~4x o definido.
+# Aceitável para travar spam/abuso; para limites exatos, migrar para um
+# storage partilhado (ex. Redis ou a mesma BD via RATELIMIT_STORAGE_URI).
+limiter = Limiter(key_func=get_remote_address, default_limits=["200 per hour"])
 
 
 def create_app(config_name: str = None):
@@ -22,7 +29,11 @@ def create_app(config_name: str = None):
     # Configuração
     from config import config
     env = config_name or os.environ.get("FLASK_ENV", "development")
-    app.config.from_object(config.get(env, config["default"]))
+    config_class = config.get(env, config["default"])
+    app.config.from_object(config_class)
+    app.config.setdefault("RATELIMIT_STORAGE_URI", "memory://")
+    if hasattr(config_class, "init_app"):
+        config_class.init_app(app)
 
     # Garante que a pasta de uploads e logs existe
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -48,6 +59,7 @@ def create_app(config_name: str = None):
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     login_manager.init_app(app)
     login_manager.login_view = "auth.entrar"
@@ -191,6 +203,24 @@ def create_app(config_name: str = None):
         args["page"] = str(page)
         return "?" + urlencode(args)
 
+    # Cabeçalhos de segurança em toda a resposta
+    @app.after_request
+    def set_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; "
+            "img-src 'self' data: https:; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:;"
+        )
+        if not app.debug:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
     # Handlers de erros
     @app.errorhandler(403)
     def forbidden(e):
@@ -199,6 +229,10 @@ def create_app(config_name: str = None):
     @app.errorhandler(404)
     def not_found(e):
         return render_template("errors/404.html"), 404
+
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        return render_template("errors/429.html"), 429
 
     @app.errorhandler(500)
     def server_error(e):

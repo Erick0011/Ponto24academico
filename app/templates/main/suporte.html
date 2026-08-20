@@ -21,6 +21,7 @@
         <h5 class="fw-700 mb-4"><i class="bi bi-envelope me-2 text-p24"></i>Enviar mensagem</h5>
         <form method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% include "partials/honeypot.html" %}
           <div class="row g-3 mb-3">
             <div class="col-sm-6">
               <label class="form-label fw-600">Nome *</label>

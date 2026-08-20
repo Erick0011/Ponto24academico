@@ -91,6 +91,7 @@
 
           <form method="post" id="waitlistForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% include "partials/honeypot.html" %}
             <div class="mb-3">
               <label class="form-label fw-600">Nome</label>
               <input type="text" name="nome" class="form-control" placeholder="O teu nome">

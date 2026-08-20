@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db
+from app import db, limiter
 from app.models.user import User
 from app.models.configuracao import Configuracao
 from app.models.lista_espera import ListaEspera
@@ -12,11 +12,14 @@ from app.services.tokens_service import (
     gerar_token, verificar_token,
     SALT_CONFIRMACAO, SALT_RECUPERACAO, SALT_CONVITE,
 )
+from app.utils.honeypot import honeypot_preenchido
+from app.utils.validacao import senha_forte
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @auth_bp.route("/registar", methods=["GET", "POST"])
+@limiter.limit("5 per hour", methods=["POST"])
 def registar():
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
@@ -36,6 +39,9 @@ def registar():
             return redirect(url_for("main.acesso_antecipado"))
 
     if request.method == "POST":
+        if honeypot_preenchido():
+            return redirect(url_for("main.index"))
+
         nome        = request.form.get("nome", "").strip()
         email       = request.form.get("email", "").strip().lower()
         password    = request.form.get("password", "")
@@ -59,8 +65,8 @@ def registar():
             return render_template("auth/registar.html",
                                    email_convite=email_convite, invite_token=invite_token)
 
-        if len(password) < 6:
-            flash("A palavra-passe deve ter pelo menos 6 caracteres.", "erro")
+        if not senha_forte(password):
+            flash("A palavra-passe deve ter pelo menos 8 caracteres, com maiúscula, minúscula e número.", "erro")
             return render_template("auth/registar.html",
                                    email_convite=email_convite, invite_token=invite_token)
 
@@ -98,6 +104,7 @@ def registar():
 
 
 @auth_bp.route("/entrar", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
 def entrar():
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
@@ -186,6 +193,7 @@ def reenviar_confirmacao():
 # ── Recuperação de palavra-passe ───────────────────────────────────────────────
 
 @auth_bp.route("/recuperar", methods=["GET", "POST"])
+@limiter.limit("5 per hour", methods=["POST"])
 def recuperar():
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
@@ -222,8 +230,8 @@ def redefinir_senha(token):
         password    = request.form.get("password", "")
         confirmacao = request.form.get("confirmacao", "")
 
-        if len(password) < 6:
-            flash("A palavra-passe deve ter pelo menos 6 caracteres.", "erro")
+        if not senha_forte(password):
+            flash("A palavra-passe deve ter pelo menos 8 caracteres, com maiúscula, minúscula e número.", "erro")
             return render_template("auth/redefinir.html", token=token)
 
         if password != confirmacao:

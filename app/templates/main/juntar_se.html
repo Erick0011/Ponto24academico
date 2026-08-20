@@ -332,6 +332,7 @@ Académico {% endblock %} {% block extra_css %}
             action="{{ url_for('main.juntar_se') }}"
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {% include "partials/honeypot.html" %}
 
             <!-- STEP 1: Dados Pessoais -->
             <div class="wizard-step active" data-step="1">

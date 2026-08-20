@@ -1,4 +1,0 @@
-[2026-07-27 01:31:27] WARNING  app.services.mail_service: Falha ao enviar email para erick.baptista00@gmail.com: email/teste.html
-[2026-07-27 01:51:30] WARNING  app.services.mail_service: Falha ao enviar email para erick.baptista00@gmail.com: (553, b'Sender is not allowed to relay emails')
-[2026-07-27 01:51:33] WARNING  app.services.mail_service: Falha ao enviar email para erick.baptista00@gmail.com: (553, b'Sender is not allowed to relay emails')
-[2026-07-27 01:51:37] WARNING  app.services.mail_service: Falha ao enviar email para erick.baptista00@gmail.com: (553, b'Sender is not allowed to relay emails')

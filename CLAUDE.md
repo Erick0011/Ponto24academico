@@ -106,6 +106,4 @@ Commits in batches of 100. Always run with `--dry-run` first.
 
 Base template: `app/templates/base.html`. Provides navbar, flash toasts, email confirmation banner, and footer. All pages extend it.
 
-Error pages: `app/templates/errors/{404,403,500}.html`.
-
-Test route (dev only, to be removed before production): `GET /teste-erro/<code>` in `app/routes/main.py`.
+Error pages: `app/templates/errors/{404,403,429,500}.html`.
