@@ -74,6 +74,10 @@ def create_app(config_name: str = None):
     from app.models.atividade import AtividadeLog         # noqa: F401
     from app.models.pasta import Pasta                    # noqa: F401
     from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario  # noqa: F401
+    from app.models.comunidade import (                   # noqa: F401
+        ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
+        ComunidadeVoto, ComunidadeRelatorio,
+    )
 
     # User loader para Flask-Login
     from app.models.user import User
@@ -88,12 +92,14 @@ def create_app(config_name: str = None):
     from app.routes.materiais import materiais_bp
     from app.routes.admin import admin_bp
     from app.routes.notificacoes import notificacoes_bp
+    from app.routes.comunidade import comunidade_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(materiais_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(notificacoes_bp)
+    app.register_blueprint(comunidade_bp)
 
     # Bloqueio de conta após 7 dias sem confirmação de email
     from flask_login import current_user as _cu
@@ -168,10 +174,18 @@ def create_app(config_name: str = None):
                 if not _cu.email_verificado:
                     limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
                     dias_restantes = max(0, (limite - datetime.utcnow()).days)
-                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
+                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner(), "comunidade_imagem_url": _comunidade_imagem_url}
         except Exception:
             pass
-        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
+        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner(), "comunidade_imagem_url": _comunidade_imagem_url}
+
+    # URL de uma imagem de post da Comunidade (local ou R2)
+    def _comunidade_imagem_url(path_relativo):
+        if os.environ.get("R2_ENDPOINT"):
+            from app.services.r2_service import presigned_url
+            return presigned_url(path_relativo, expires=7200)
+        from flask import url_for as _url_for
+        return _url_for("static", filename=f"uploads/{path_relativo}")
 
     # Selecciona banner activo e resolve URL da imagem
     def _banner():
