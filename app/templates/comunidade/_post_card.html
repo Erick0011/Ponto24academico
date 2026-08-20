@@ -1,0 +1,50 @@
+{% set meu_voto = votos_posts.get(post.id) if votos_posts is defined else None %}
+<div class="p24-card d-flex gap-3">
+
+  <!-- Vote widget -->
+  <div class="d-flex flex-column align-items-center flex-shrink-0" style="width:44px">
+    <form action="{{ url_for('comunidade.votar_post', id=post.id) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="valor" value="1">
+      <button type="submit" class="btn btn-sm p-0 border-0 {% if meu_voto == 1 %}text-success{% else %}text-muted{% endif %}"
+              title="Votar a favor">
+        <i class="bi bi-caret-up-fill fs-5"></i>
+      </button>
+    </form>
+    <div class="fw-800 small {% if post.votos_score > 0 %}text-success{% elif post.votos_score < 0 %}text-danger{% else %}text-muted{% endif %}">
+      {{ post.votos_score }}
+    </div>
+    <form action="{{ url_for('comunidade.votar_post', id=post.id) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="valor" value="-1">
+      <button type="submit" class="btn btn-sm p-0 border-0 {% if meu_voto == -1 %}text-danger{% else %}text-muted{% endif %}"
+              title="Votar contra">
+        <i class="bi bi-caret-down-fill fs-5"></i>
+      </button>
+    </form>
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="flex-grow-1 min-w-0">
+    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+      {% if post.fixado %}
+      <span class="badge bg-warning text-dark fw-600"><i class="bi bi-pin-angle-fill me-1"></i>Fixado</span>
+      {% endif %}
+      <span class="badge bg-p24-light text-p24 fw-600">{{ post.tipo_label }}</span>
+    </div>
+    <a href="{{ url_for('comunidade.detalhe', id=post.id) }}" class="text-decoration-none text-dark">
+      <h6 class="fw-800 mb-1">{{ post.titulo }}</h6>
+    </a>
+    <p class="text-muted small mb-2" style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">
+      {{ post.corpo }}
+    </p>
+    <div class="d-flex align-items-center gap-3 text-muted" style="font-size:.78rem">
+      <span><i class="bi bi-person-fill me-1"></i>{{ post.autor.nome if post.autor else "Utilizador removido" }}</span>
+      <span>{{ post.criado_em.strftime('%d/%m/%Y') }}</span>
+      <span><i class="bi bi-chat-text me-1"></i>{{ post.respostas_count }}</span>
+      {% if post.imagens.count() %}
+      <span><i class="bi bi-image me-1"></i>{{ post.imagens.count() }}</span>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -15,6 +15,8 @@ from app.models.atividade import AtividadeLog
 from app.models.pasta import Pasta
 from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario
 from app.services import marketing_service
+from app.models.comunidade import ComunidadePost, ComunidadeResposta, ComunidadeRelatorio
+from app.routes.comunidade import eliminar_post_interno
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
@@ -1039,3 +1041,102 @@ def cancelar_campanha(id):
         db.session.commit()
         flash("Campanha cancelada. Os emails já enviados não são afetados.", "aviso")
     return redirect(url_for("admin.ver_campanha", id=campanha.id))
+
+
+# ── Comunidade (admin e moderadores) ──────────────────────────────────────────
+
+def _resolver_alvo_comunidade(relatorio):
+    """Devolve o post ou resposta denunciado (ou None se entretanto eliminado)."""
+    if relatorio.alvo_tipo == "post":
+        return ComunidadePost.query.get(relatorio.alvo_id)
+    return ComunidadeResposta.query.get(relatorio.alvo_id)
+
+
+@admin_bp.route("/comunidade/relatorios")
+@login_required
+@moderador_required
+def comunidade_relatorios():
+    status = request.args.get("status", "pendente")
+    page = request.args.get("page", 1, type=int)
+
+    query = ComunidadeRelatorio.query
+    if status and status != "todos":
+        query = query.filter_by(status=status)
+
+    relatorios_pag = query.order_by(ComunidadeRelatorio.criado_em.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+
+    counts = {
+        "todos":     ComunidadeRelatorio.query.count(),
+        "pendente":  ComunidadeRelatorio.query.filter_by(status=ComunidadeRelatorio.STATUS_PENDENTE).count(),
+        "resolvido": ComunidadeRelatorio.query.filter_by(status=ComunidadeRelatorio.STATUS_RESOLVIDO).count(),
+        "ignorado":  ComunidadeRelatorio.query.filter_by(status=ComunidadeRelatorio.STATUS_IGNORADO).count(),
+    }
+
+    alvos = {r.id: _resolver_alvo_comunidade(r) for r in relatorios_pag.items}
+
+    return render_template(
+        "admin/comunidade_relatorios.html",
+        relatorios=relatorios_pag, counts=counts, status=status, alvos=alvos,
+    )
+
+
+@admin_bp.route("/comunidade/relatorios/<int:id>/resolver", methods=["POST"])
+@login_required
+@moderador_required
+def resolver_comunidade_relatorio(id):
+    relatorio = ComunidadeRelatorio.query.get_or_404(id)
+    acao = request.form.get("acao", "resolvido")
+    relatorio.status = acao
+    registar_atividade(
+        AtividadeLog.EVENTO_COMUNIDADE_RELATORIO_RESOLVIDO,
+        utilizador_id=current_user.id, alvo_tipo="comunidade_relatorio", alvo_id=relatorio.id,
+        detalhes={"acao": acao},
+    )
+    db.session.commit()
+    flash("Denúncia atualizada.", "sucesso")
+    return redirect(request.referrer or url_for("admin.comunidade_relatorios"))
+
+
+@admin_bp.route("/comunidade/relatorios/<int:id>/eliminar-conteudo", methods=["POST"])
+@login_required
+@moderador_required
+def eliminar_conteudo_comunidade(id):
+    """A partir da fila de denúncias: elimina o post/resposta denunciado e
+    marca a denúncia como resolvida."""
+    relatorio = ComunidadeRelatorio.query.get_or_404(id)
+    alvo = _resolver_alvo_comunidade(relatorio)
+    if alvo is not None:
+        if relatorio.alvo_tipo == "post":
+            registar_atividade(
+                AtividadeLog.EVENTO_COMUNIDADE_POST_ELIMINADO,
+                utilizador_id=current_user.id, alvo_tipo="comunidade_post", alvo_id=alvo.id,
+                detalhes={"titulo": alvo.titulo, "via": "denuncia"},
+            )
+            eliminar_post_interno(alvo)
+        else:
+            post_pai = ComunidadePost.query.get(alvo.post_id)
+            if post_pai and post_pai.respostas_count > 0:
+                post_pai.respostas_count -= 1
+            registar_atividade(
+                AtividadeLog.EVENTO_COMUNIDADE_RESPOSTA_ELIMINADA,
+                utilizador_id=current_user.id, alvo_tipo="comunidade_resposta", alvo_id=alvo.id,
+                detalhes={"via": "denuncia"},
+            )
+            db.session.delete(alvo)
+    relatorio.status = ComunidadeRelatorio.STATUS_RESOLVIDO
+    db.session.commit()
+    flash("Conteúdo eliminado e denúncia resolvida.", "sucesso")
+    return redirect(request.referrer or url_for("admin.comunidade_relatorios"))
+
+
+@admin_bp.route("/comunidade/posts/<int:id>/fixar", methods=["POST"])
+@login_required
+@moderador_required
+def fixar_post_comunidade(id):
+    post = ComunidadePost.query.get_or_404(id)
+    post.fixado = not post.fixado
+    db.session.commit()
+    flash("Publicação fixada." if post.fixado else "Publicação desafixada.", "sucesso")
+    return redirect(request.referrer or url_for("comunidade.detalhe", id=post.id))

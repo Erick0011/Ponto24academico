@@ -46,6 +46,13 @@ class AtividadeLog(db.Model):
     EVENTO_CAMPANHA_CANCELADA = "campanha_cancelada"
     EVENTO_MARKETING_CANCELADO = "marketing_cancelado"  # utilizador cancelou subscrição
 
+    # Comunidade
+    EVENTO_COMUNIDADE_POST_CRIADO = "comunidade_post_criado"
+    EVENTO_COMUNIDADE_RESPOSTA_CRIADA = "comunidade_resposta_criada"
+    EVENTO_COMUNIDADE_POST_ELIMINADO = "comunidade_post_eliminado"
+    EVENTO_COMUNIDADE_RESPOSTA_ELIMINADA = "comunidade_resposta_eliminada"
+    EVENTO_COMUNIDADE_RELATORIO_RESOLVIDO = "comunidade_relatorio_resolvido"
+
     id = db.Column(db.Integer, primary_key=True)
     evento = db.Column(db.String(40), nullable=False, index=True)
     # Alvo polimórfico opcional (material, candidatura, user, lista_espera...) — sem FK,

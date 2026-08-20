@@ -103,6 +103,10 @@
              href="{{ url_for('materiais.listar') }}">Explorar</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link {% if request.endpoint and 'comunidade' in request.endpoint %}active{% endif %}"
+             href="{{ url_for('comunidade.feed') }}">Comunidade</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'main.provas_simuladas' %}active{% endif %}"
              href="{{ url_for('main.provas_simuladas') }}">Provas Simuladas</a>
         </li>
@@ -226,7 +230,9 @@
 {% endif %}
 
 <!-- ═══════════════════════════════════════ BANNER PUBLICITÁRIO ═══════════════════════════════════════ -->
-{% block banner %}{% include "partials/banner.html" %}{% endblock %}
+<!-- Deixou de ser sitewide (Fase 4) — só a Comunidade o inclui, como um
+     cartão "patrocinado" no topo do feed. Ver comunidade/feed.html. -->
+{% block banner %}{% endblock %}
 
 <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->
 {% block content %}{% endblock %}

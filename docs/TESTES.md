@@ -315,4 +315,62 @@
 
 ---
 
-**Total: 184 testes**
+---
+
+## 15. Comunidade — Fase 4
+
+### Publicações e respostas
+
+- [ ] **Criar publicação** — `/comunidade/novo` cria com sucesso, tipo (dúvida/discussão/aviso) gravado corretamente
+- [ ] **Criar publicação com fotos** — até 6 imagens anexadas, `ComunidadePostImagem` criada para cada uma, ficheiro gravado em `comunidade/{YYYY}/{MM}/`
+- [ ] **Ficheiro inválido não bloqueia o post** — anexar um ficheiro de extensão não permitida é ignorado silenciosamente, o post é criado na mesma
+- [ ] **Créditos ao publicar** — autor recebe `CREDITOS_POR_POST_COMUNIDADE`
+- [ ] **Responder a um post** — `respostas_count` incrementa, resposta aparece na lista, ordenação por data/votos funciona
+- [ ] **Créditos ao responder** — autor da resposta recebe `CREDITOS_POR_RESPOSTA_COMUNIDADE`
+- [ ] **Notificação ao autor do post** — ao receber uma resposta (exceto se o autor responder a si próprio)
+- [ ] **Honeypot bloqueia bots** — campo `website` preenchido em criar post/resposta é rejeitado
+- [ ] **Rate limit** — `/comunidade/novo` e `/comunidade/<id>/responder` respeitam os limites definidos
+
+### Votação
+
+- [ ] **Upvote soma +1** ao `votos_score` do post/resposta
+- [ ] **Downvote soma -1**
+- [ ] **Clicar no mesmo voto remove-o (toggle off)** — volta a 0
+- [ ] **Clicar no voto oposto troca-o** — delta de 2 aplicado corretamente
+- [ ] **Bloqueio de auto-voto** — autor não consegue votar no próprio post/resposta
+- [ ] **Votar a partir do feed mantém o utilizador no feed** (usa `request.referrer`)
+- [ ] **Ordenar por votados** — feed e respostas respeitam `votos_score` na ordenação
+
+### Denúncias e moderação
+
+- [ ] **Denunciar post/resposta** — cria `ComunidadeRelatorio` com o `alvo_tipo` correto
+- [ ] **Bloqueia denúncia duplicada** — mesmo utilizador não denuncia o mesmo alvo duas vezes enquanto pendente
+- [ ] **Fila de denúncias admin** — `/admin/comunidade/relatorios`, tabs de contagem, só admin/moderador acede (403 para utilizador normal)
+- [ ] **Resolver sem eliminar** — marca `resolvido`, conteúdo permanece
+- [ ] **Ignorar denúncia** — marca `ignorado`
+- [ ] **Eliminar conteúdo a partir da denúncia** — apaga o post/resposta denunciado, decrementa `respostas_count` do post pai quando aplicável, marca a denúncia como resolvida
+- [ ] **Denúncia de conteúdo já eliminado** — fila mostra "Conteúdo já eliminado" em vez de rebentar
+
+### Fixar, eliminar e permissões
+
+- [ ] **Fixar/desafixar post** (admin/moderador) — posts fixados aparecem sempre no topo do feed
+- [ ] **Autor elimina o próprio post/resposta**
+- [ ] **Moderador elimina post/resposta de outro utilizador**
+- [ ] **Utilizador normal não consegue eliminar conteúdo alheio** (403)
+- [ ] **Eliminar post remove as imagens do disco/R2**
+
+### Banner patrocinado (migração dos Anúncios)
+
+- [ ] **Banner deixa de aparecer sitewide** — `/`, `/materiais`, etc. não mostram mais o banner
+- [ ] **Banner aparece dentro da Comunidade** — `/comunidade/` inclui `partials/banner.html` sem alterações ao `Anuncio`/`_banner()`/rotas `/admin/anuncios*`
+
+### Navegação e regressão
+
+- [ ] **Nav mostra "Comunidade"** em todas as páginas, `active` no endpoint correto
+- [ ] **Feed público sem login**
+- [ ] **`flask db upgrade` limpo** numa BD nova e numa existente
+- [ ] **Logs de auditoria** — `comunidade_post_criado`, `comunidade_resposta_criada`, `comunidade_post_eliminado`, `comunidade_resposta_eliminada`, `comunidade_relatorio_resolvido`
+
+---
+
+**Total: 218 testes**

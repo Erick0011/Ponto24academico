@@ -30,3 +30,17 @@ def creditos_ao_registar(user: User):
     qtd = current_app.config.get("CREDITOS_INICIAIS", 10)
     user.creditos = qtd
     db.session.commit()
+
+
+def dar_creditos_comunidade_post(user: User):
+    """Dá créditos ao publicar um post na Comunidade."""
+    qtd = current_app.config.get("CREDITOS_POR_POST_COMUNIDADE", 2)
+    user.ganhar_creditos(qtd)
+    db.session.commit()
+
+
+def dar_creditos_comunidade_resposta(user: User):
+    """Dá créditos ao responder a um post na Comunidade."""
+    qtd = current_app.config.get("CREDITOS_POR_RESPOSTA_COMUNIDADE", 1)
+    user.ganhar_creditos(qtd)
+    db.session.commit()

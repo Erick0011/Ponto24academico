@@ -61,6 +61,7 @@ MAX_CONTENT_LENGTH_MB=20
 | `materiais` | `/materiais` | `app/routes/materiais.py` |
 | `admin` | `/admin` | `app/routes/admin.py` |
 | `notificacoes` | `/notificacoes` | `app/routes/notificacoes.py` |
+| `comunidade` | `/comunidade` | `app/routes/comunidade.py` |
 
 `__init__.py` also registers:
 - `before_request` hook that enforces the 7-day email confirmation deadline — redirects to `/auth/email-nao-confirmado` after the deadline, except for a whitelist of auth endpoints.
@@ -79,6 +80,7 @@ MAX_CONTENT_LENGTH_MB=20
 - **`upload_service.py`** — `guardar_ficheiro()` saves to `materiais/{cat_slug}/{YYYY}/{MM}/{uuid}.ext`, calculates SHA-256, generates 300×300 thumbnail for images into a `thumbs/` subfolder. `thumbnail_path` property on `Material` mirrors this structure.
 - **`tokens_service.py`** — `itsdangerous` HMAC tokens with separate salts for email confirmation (24h) and password recovery (1h).
 - **`mail_service.py`** — pure SMTP via `smtplib`, no Flask-Mail. Reads `EMAIL_USER`/`EMAIL_PASS` or `MAIL_USERNAME`/`MAIL_PASSWORD`. Silently skips if SMTP not configured. All emails use HTML templates in `app/templates/email/`. `enviar_email_marketing()` is the bulk-mail variant: multipart with a text/plain fallback plus `List-Unsubscribe`/`List-Unsubscribe-Post`/`Precedence` headers for deliverability.
+- **`comunidade_service.py`** — Reddit-style community: `ComunidadePost`/`ComunidadeResposta` (flat, no reply nesting) with real upvote/downvote scoring via `ComunidadeVoto` (polymorphic `alvo_tipo`/`alvo_id`, one row per user+target, toggles/flips on repeat votes). `ComunidadeRelatorio` mirrors `RelatorioMaterial`'s report-queue pattern. The old sitewide ad banner (`Anuncio`/`_banner()`/`partials/banner.html`, unchanged) now only renders inside `comunidade/feed.html` as a "sponsored" card — `base.html`'s `{% block banner %}` is empty by default.
 - **`marketing_service.py`** — sends `CampanhaEmail` (bulk marketing) campaigns in a background `threading.Thread` (no Celery/Redis). One `CampanhaEmailDestinatario` row per recipient makes sends resumable and idempotent. Throttled by `MARKETING_INTERVALO_SEGUNDOS` and capped by `MARKETING_LIMITE_DIARIO`/day; only targets `User.is_active and User.aceita_marketing`. Unsubscribe is handled by `main.cancelar_marketing` (public route, itsdangerous token, no expiry).
 - **`creditos_service.py`** — thin wrappers around `User.ganhar_creditos()` / `User.gastar_creditos()`. Amounts come from app config keys (`CREDITOS_INICIAIS=10`, `CREDITOS_POR_UPLOAD_APROVADO=5`, `CREDITOS_POR_DOWNLOAD=1`).
 - **`notificacoes_service.py`** — creates `Notificacao` rows; called from moderation approve/reject flows.
