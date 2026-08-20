@@ -1,0 +1,137 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Pastas — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-800 mb-1">Pastas</h4>
+      <p class="text-muted small mb-0">Organiza materiais aprovados numa hierarquia de pastas (ex: Universidade &gt; Curso &gt; Semestre &gt; Disciplina)</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-primary fw-600" data-bs-toggle="modal" data-bs-target="#criarPastaRaiz">
+        <i class="bi bi-folder-plus me-2"></i>Nova pasta de topo
+      </button>
+      <a href="{{ url_for('admin.painel') }}" class="btn btn-light fw-600">
+        <i class="bi bi-arrow-left me-2"></i>Voltar
+      </a>
+    </div>
+  </div>
+
+  <div class="p24-card p-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="p24-table w-100">
+        <thead>
+          <tr>
+            <th>Pasta</th>
+            <th>Materiais</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in pastas %}
+          <tr>
+            <td>
+              <span style="display:inline-block;width:{{ p.nivel * 20 }}px"></span>
+              <i class="bi bi-folder2 text-warning me-1"></i>
+              <span class="fw-600">{{ p.nome }}</span>
+            </td>
+            <td class="text-muted small">{{ p.materiais.count() }}</td>
+            <td class="text-center">
+              <div class="d-flex gap-1 justify-content-center">
+                <button type="button" class="btn btn-sm btn-outline-primary" title="Criar subpasta aqui"
+                        data-bs-toggle="modal" data-bs-target="#criarSubpasta{{ p.id }}">
+                  <i class="bi bi-folder-plus"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        title="{% if p.filhos.count() > 0 or p.materiais.count() > 0 %}Não pode eliminar (tem subpastas ou materiais){% else %}Eliminar{% endif %}"
+                        {% if p.filhos.count() > 0 or p.materiais.count() > 0 %}disabled{% else %}
+                        data-bs-toggle="modal" data-bs-target="#eliminarPasta{{ p.id }}"{% endif %}>
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3" class="text-center text-muted py-5">
+            <i class="bi bi-folder2-open fs-2 d-block mb-2"></i>Ainda não existem pastas.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: criar pasta de topo -->
+<div class="modal fade" id="criarPastaRaiz" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700">Nova pasta de topo</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('admin.criar_pasta') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <input type="text" name="nome" class="form-control" placeholder="Ex: ISAF" required>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-700">Criar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modais: criar subpasta / eliminar, por pasta -->
+{% for p in pastas %}
+<div class="modal fade" id="criarSubpasta{{ p.id }}" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700">Nova subpasta em "{{ p.nome }}"</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('admin.criar_pasta') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="parent_id" value="{{ p.id }}">
+        <div class="modal-body">
+          <input type="text" name="nome" class="form-control" placeholder="Ex: Informática de Gestão" required>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-700">Criar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% if p.filhos.count() == 0 and p.materiais.count() == 0 %}
+<div class="modal fade" id="eliminarPasta{{ p.id }}" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700 text-danger">Eliminar pasta</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted mb-0">Tens a certeza que queres eliminar a pasta <strong>{{ p.nome }}</strong>?</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+        <form action="{{ url_for('admin.eliminar_pasta', id=p.id) }}" method="post" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger btn-sm fw-700">Eliminar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

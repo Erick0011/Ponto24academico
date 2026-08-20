@@ -33,6 +33,13 @@ def upload_bytes(data: bytes, key: str, tipo: str) -> None:
     _client().put_object(Bucket=_bucket(), Key=key, Body=data, ContentType=ct)
 
 
+def copy_object(old_key: str, new_key: str) -> None:
+    """Copia um objeto para uma nova key. Levanta exceção em falha (não engole,
+    ao contrário de delete_object) — o caller precisa de saber se a cópia falhou
+    antes de apagar o original."""
+    _client().copy_object(Bucket=_bucket(), CopySource={"Bucket": _bucket(), "Key": old_key}, Key=new_key)
+
+
 def delete_object(key: str) -> None:
     try:
         _client().delete_object(Bucket=_bucket(), Key=key)

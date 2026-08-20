@@ -12,6 +12,10 @@ class AtividadeLog(db.Model):
     EVENTO_MATERIAL_REJEITADO = "material_rejeitado"
     EVENTO_MATERIAL_SUBMETIDO = "material_submetido"
 
+    # Pastas
+    EVENTO_PASTA_CRIADA = "pasta_criada"
+    EVENTO_MATERIAL_MOVIDO_PASTA = "material_movido_pasta"
+
     # Candidaturas
     EVENTO_CANDIDATURA_RECEBIDA = "candidatura_recebida"
     EVENTO_CANDIDATURA_APROVADA = "candidatura_aprovada"

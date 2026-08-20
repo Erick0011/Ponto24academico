@@ -12,8 +12,9 @@ from app.models.lista_espera import ListaEspera, RelatorioMaterial
 from app.models.anuncio import Anuncio
 from app.models.candidaturas import Candidatura
 from app.models.atividade import AtividadeLog
+from app.models.pasta import Pasta
 from app.services.creditos_service import dar_creditos_upload
-from app.services.upload_service import apagar_ficheiro
+from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
 from app.services.mail_service import email_material_aprovado, email_material_rejeitado, email_convite_acesso
 from app.services.tokens_service import gerar_token, SALT_CONVITE
@@ -298,6 +299,7 @@ def todos_materiais():
     return render_template(
         "admin/todos_materiais.html",
         materiais=materiais, counts=counts, status=status, q=q,
+        pastas_todas=_pastas_ordenadas(),
     )
 
 
@@ -449,6 +451,111 @@ def eliminar_categoria(id):
         db.session.commit()
         flash(f"Categoria '{nome}' eliminada.", "aviso")
     return redirect(url_for("admin.categorias"))
+
+
+# ── Pastas (admin e moderadores) ────────────────────────────────────────────────
+
+def _pastas_ordenadas():
+    """Todas as pastas, ordenadas topologicamente (pais antes de filhos), por
+    comparação numérica do caminho materializado — não ordenar a string
+    diretamente, pois "12" &lt; "3" como texto."""
+    return sorted(Pasta.query.all(), key=lambda p: [int(x) for x in p.caminho.split("/")])
+
+
+@admin_bp.route("/pastas")
+@login_required
+@moderador_required
+def pastas():
+    todas = _pastas_ordenadas()
+    return render_template("admin/pastas.html", pastas=todas)
+
+
+@admin_bp.route("/pastas/criar", methods=["POST"])
+@login_required
+@moderador_required
+def criar_pasta():
+    nome = request.form.get("nome", "").strip()
+    parent_id = request.form.get("parent_id", type=int)
+
+    if not nome:
+        flash("Indica um nome para a pasta.", "erro")
+        return redirect(url_for("admin.pastas"))
+
+    parent = Pasta.query.get(parent_id) if parent_id else None
+    nova = Pasta(
+        nome=nome,
+        parent_id=parent.id if parent else None,
+        criado_por_id=current_user.id,
+        nivel=(parent.nivel + 1) if parent else 0,
+        caminho="",
+    )
+    db.session.add(nova)
+    db.session.flush()
+    nova.caminho = f"{parent.caminho}/{nova.id}" if parent else str(nova.id)
+    registar_atividade(
+        AtividadeLog.EVENTO_PASTA_CRIADA,
+        utilizador_id=current_user.id, alvo_tipo="pasta", alvo_id=nova.id,
+        detalhes={"nome": nome, "parent_id": parent_id},
+    )
+    db.session.commit()
+    flash(f"Pasta '{nome}' criada.", "sucesso")
+    return redirect(url_for("admin.pastas"))
+
+
+@admin_bp.route("/pastas/<int:id>/eliminar", methods=["POST"])
+@login_required
+@moderador_required
+def eliminar_pasta(id):
+    pasta = Pasta.query.get_or_404(id)
+    if pasta.filhos.count() > 0:
+        flash("Não é possível eliminar uma pasta com subpastas. Elimina as subpastas primeiro.", "erro")
+    elif pasta.materiais.count() > 0:
+        flash("Não é possível eliminar uma pasta com materiais associados.", "erro")
+    else:
+        nome = pasta.nome
+        db.session.delete(pasta)
+        db.session.commit()
+        flash(f"Pasta '{nome}' eliminada.", "aviso")
+    return redirect(url_for("admin.pastas"))
+
+
+@admin_bp.route("/materiais/<int:id>/mover-pasta", methods=["POST"])
+@login_required
+@moderador_required
+def mover_material_pasta(id):
+    material = Material.query.get_or_404(id)
+    pasta_id = request.form.get("pasta_id", type=int)
+
+    grupo = (
+        Material.query.filter_by(grupo_upload=material.grupo_upload).order_by(Material.id).all()
+        if material.grupo_upload else [material]
+    )
+
+    if not pasta_id:
+        # "Sem pasta" — só limpa a associação; o ficheiro físico fica onde está.
+        for m in grupo:
+            m.pasta_id = None
+        db.session.commit()
+        flash("Material removido da pasta.", "aviso")
+        return redirect(request.referrer or url_for("admin.todos_materiais"))
+
+    pasta = Pasta.query.get_or_404(pasta_id)
+    resultado = mover_grupo_para_pasta(grupo, pasta)
+    if not resultado["ok"]:
+        flash(f"Falha ao mover ficheiros para a pasta: {resultado['erro']}", "erro")
+        return redirect(request.referrer or url_for("admin.todos_materiais"))
+
+    for m in grupo:
+        m.ficheiro_path = resultado["novos_paths"][m.id]
+        m.pasta_id = pasta.id
+    registar_atividade(
+        AtividadeLog.EVENTO_MATERIAL_MOVIDO_PASTA,
+        utilizador_id=current_user.id, alvo_tipo="material", alvo_id=material.id,
+        detalhes={"pasta_id": pasta.id, "pasta_nome": pasta.nome, "n_ficheiros": len(grupo)},
+    )
+    db.session.commit()
+    flash(f"Material movido para '{pasta.caminho_display}'.", "sucesso")
+    return redirect(request.referrer or url_for("admin.todos_materiais"))
 
 
 # ── Configurações da plataforma (só admin) ────────────────────────────────────
