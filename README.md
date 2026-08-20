@@ -1,13 +1,45 @@
 # Ponto 24 Académico
 
-Plataforma web para estudantes angolanos partilharem e descobrirem materiais académicos — provas, resumos, exercícios, apontamentos e gabaritos — organizados por instituição, curso, disciplina e ano. Inclui gamificação por créditos, um sistema de pastas para curadoria de conteúdo, uma secção de Comunidade estilo fórum e um painel administrativo completo.
+**A maior plataforma digital de materiais académicos para estudantes angolanos.**
 
-Construída em Flask (Python), com armazenamento local ou Cloudflare R2, pronta para produção com Gunicorn + PostgreSQL.
+---
+
+## O problema
+
+Todos os anos, milhares de provas, resumos e exercícios circulam entre estudantes angolanos —
+mas dispersos em grupos de WhatsApp, perdidos em chats antigos, sem contexto e sem forma de
+saber se valem a pena antes de abrir o ficheiro. Quem não tem os contactos certos simplesmente
+fica de fora. E quem contribui, contribui de graça, sem nada em troca.
+
+## O que é o Ponto 24
+
+O **Ponto 24 Académico** junta tudo isso num único lugar, organizado por instituição, curso,
+disciplina e ano — com pesquisa, pré-visualização antes de descarregar, e avaliações de quem já
+usou o material. Ninguém precisa de "conhecer alguém" para ter acesso a boas provas e resumos.
+
+Funciona com um sistema de **créditos**: ganha-se ao partilhar materiais aprovados, gasta-se ao
+descarregar. Quem dá, recebe primeiro — e a plataforma cresce com quem a usa, não apesar de quem
+a usa. Para além do acervo de materiais, há uma **Comunidade** onde estudantes tiram dúvidas,
+discutem e ajudam-se uns aos outros, com respostas votadas pela própria comunidade.
+
+Não é uma plataforma genérica traduzida para Angola — é feita a pensar em como os estudantes
+angolanos já partilham (WhatsApp, grupos, boca-a-boca) e no que lhes falta: organização, acesso
+justo e reconhecimento por quem contribui.
+
+**Website:** [ponto24academico.com](https://ponto24academico.com)
+
+---
+
+Este README tem duas partes: esta primeira, para quem quer perceber **o que é o projeto**; e a
+segunda, mais abaixo, para quem quer **correr o código**. Se és programador e só queres pôr isto
+a correr localmente, salta para a [instalação local](#instalação-local).
 
 ---
 
 ## Índice
 
+- [O problema](#o-problema)
+- [O que é o Ponto 24](#o-que-é-o-ponto-24)
 - [Funcionalidades](#funcionalidades)
 - [Stack tecnológica](#stack-tecnológica)
 - [Arquitetura](#arquitetura)
