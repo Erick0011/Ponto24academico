@@ -69,6 +69,7 @@ class Material(db.Model):
     # Chaves estrangeiras
     autor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     categoria_id = db.Column(db.Integer, db.ForeignKey("categorias.id"))
+    pasta_id = db.Column(db.Integer, db.ForeignKey("pastas.id"), nullable=True, index=True)
 
     # Timestamps
     criado_em = db.Column(db.DateTime, default=datetime.utcnow, index=True)
@@ -77,6 +78,7 @@ class Material(db.Model):
     # Relações
     autor = db.relationship("User", back_populates="materiais", foreign_keys=[autor_id])
     categoria = db.relationship("Categoria", back_populates="materiais")
+    pasta = db.relationship("Pasta", back_populates="materiais")
     avaliacoes = db.relationship("Avaliacao", back_populates="material", lazy="dynamic", cascade="all, delete-orphan")
     favoritos = db.relationship("Favorito", backref="material", lazy="dynamic", cascade="all, delete-orphan")
 

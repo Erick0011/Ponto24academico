@@ -225,4 +225,49 @@
 
 ---
 
-**Total: 132 testes**
+## 13. Sistema de Pastas — Fase 3
+
+### Gestão de pastas (admin/moderador)
+
+- [ ] **Criar pasta de topo** — `/admin/pastas`, criar pasta sem parent → aparece com nivel=0
+- [ ] **Criar subpasta** — criar pasta com parent_id de uma existente → aparece indentada, nivel = parent.nivel+1
+- [ ] **Criar hierarquia profunda** — criar 4+ níveis (ex: Universidade > Curso > Semestre > Disciplina) e confirmar indentação/caminho corretos em cada nível
+- [ ] **Eliminar pasta vazia** — pasta sem subpastas nem materiais elimina com sucesso
+- [ ] **Bloquear eliminação com subpastas** — pasta com filhos mostra botão desabilitado/erro e não elimina
+- [ ] **Bloquear eliminação com materiais** — pasta com `Material.pasta_id` apontando para ela mostra botão desabilitado/erro e não elimina
+- [ ] **Acesso restrito** — utilizador normal (não admin/moderador) recebe 403 em `/admin/pastas`
+- [ ] **Moderador tem acesso** — utilizador `is_moderador=True` (não admin) consegue criar/ver pastas
+
+### Mover materiais para pastas
+
+- [ ] **Mover material único (disco local)** — mover um material para uma pasta; confirmar `ficheiro_path` na BD aponta para o novo caminho e o ficheiro físico existe lá; confirmar o caminho antigo já não existe
+- [ ] **Mover material único (R2)** — se houver credenciais R2 no ambiente de teste, repetir o teste acima com `R2_ENDPOINT` configurado; sem credenciais, o ramo `copy_object` fica coberto só por revisão de código
+- [ ] **Mover thumbnail junto** — para um material de imagem, confirmar que `thumbs/{nome}` também foi movido e a thumbnail continua a carregar em `listar.html`
+- [ ] **Mover grupo_upload completo** — mover um material de um `grupo_upload` de 3+ páginas; confirmar que TODAS as páginas ficam com o mesmo `pasta_id`, nenhuma fica para trás
+- [ ] **Remover material de uma pasta** — usar a opção "Sem pasta" no modal; `pasta_id` volta a `NULL`, ficheiro físico permanece onde estava
+
+### Navegação pública de pastas
+
+- [ ] **Árvore raiz carrega** — `/materiais/pastas` mostra as pastas de topo sem erro, sem necessidade de login
+- [ ] **Navegar para subpasta** — clicar numa pasta filha mostra os seus filhos e breadcrumb atualizado
+- [ ] **Materiais de descendentes aparecem** — colocar um material numa subpasta de nível 3; confirmar que aparece na grelha ao visitar a pasta de nível 1 (ancestral), não só na pasta direta
+- [ ] **Só materiais aprovados aparecem** — material pendente/rejeitado numa pasta não aparece na navegação pública
+- [ ] **Breadcrumb correto** — caminho mostrado corresponde à hierarquia real
+
+### Pastas como filtro na pesquisa existente
+
+- [ ] **Filtro por pasta isolado** — `/materiais?pasta=<id>` devolve só materiais dessa pasta e descendentes
+- [ ] **Filtro pasta + categoria combinados** — `/materiais?pasta=<id>&categoria=<id>` aplica ambos os filtros em conjunto
+- [ ] **Badge de filtro ativo** — selecionar uma pasta mostra badge removível na barra de filtros ativos
+- [ ] **Paginação preserva o filtro de pasta** — navegar para página 2 com `pasta` na URL mantém o filtro
+
+### Migração e regressão
+
+- [ ] **`flask db upgrade` limpo** — aplica sem erros numa BD nova e numa BD existente com materiais
+- [ ] **Materiais antigos continuam visíveis** — materiais com `pasta_id=NULL` continuam a aparecer normalmente em `/materiais` sem filtro
+- [ ] **Log de auditoria — criar pasta** — cria `AtividadeLog` com `evento=pasta_criada`
+- [ ] **Log de auditoria — mover material** — cria `AtividadeLog` com `evento=material_movido_pasta`
+
+---
+
+**Total: 158 testes**

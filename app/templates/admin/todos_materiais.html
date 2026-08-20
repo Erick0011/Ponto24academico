@@ -96,6 +96,13 @@
                 <i class="bi bi-clipboard-check"></i>
               </a>
               {% endif %}
+              {% if m.status == 'aprovado' %}
+              <!-- Mover para pasta -->
+              <button type="button" class="btn btn-outline-primary btn-sm" title="Mover para pasta"
+                      data-bs-toggle="modal" data-bs-target="#mover{{ m.id }}">
+                <i class="bi bi-folder-symlink"></i>
+              </button>
+              {% endif %}
               <!-- Eliminar -->
               <button type="button" class="btn btn-outline-danger btn-sm" title="Eliminar"
                       data-bs-toggle="modal" data-bs-target="#eliminar{{ m.id }}">
@@ -161,6 +168,40 @@
     </div>
   </div>
 </div>
+{% endfor %}
+
+<!-- Modais de mover para pasta -->
+{% for m in materiais.items %}
+{% if m.status == 'aprovado' %}
+<div class="modal fade" id="mover{{ m.id }}" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h6 class="modal-title fw-700">Mover para pasta</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('admin.mover_material_pasta', id=m.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <p class="small text-muted mb-2">{{ m.titulo|truncate(50) }}</p>
+          <select name="pasta_id" class="form-select form-select-sm">
+            <option value="">Sem pasta</option>
+            {% for p in pastas_todas %}
+            <option value="{{ p.id }}" {% if m.pasta_id == p.id %}selected{% endif %}>
+              {{ '—' * p.nivel }} {{ p.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-700">Mover</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endfor %}
 {% endblock %}
 

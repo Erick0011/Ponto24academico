@@ -10,6 +10,7 @@ from flask_login import login_required, current_user
 from app import db, limiter
 from app.models.material import Material, Categoria, Avaliacao, Favorito
 from app.models.lista_espera import RelatorioMaterial
+from app.models.pasta import Pasta
 from app.services.upload_service import guardar_ficheiro, apagar_ficheiro, nome_download
 from app.services.creditos_service import cobrar_creditos_download
 from app.services.notificacoes_service import criar_notificacao
@@ -18,6 +19,32 @@ from app.models.atividade import AtividadeLog
 from app.services.atividade_service import registar_atividade
 
 materiais_bp = Blueprint("materiais", __name__, url_prefix="/materiais")
+
+
+def _grupo_metadados(materiais_items):
+    """Pré-carrega contagens e thumbnails de grupos (grupo_upload) para uma lista
+    de materiais — reutilizado por listar() e pela navegação por pastas."""
+    grupos_ids = [m.grupo_upload for m in materiais_items if m.grupo_upload]
+    grupo_counts = {}
+    grupo_thumbs = {}
+    if grupos_ids:
+        contagens = (
+            db.session.query(Material.grupo_upload, func.count(Material.id))
+            .filter(Material.grupo_upload.in_(grupos_ids), Material.status == Material.STATUS_APROVADO)
+            .group_by(Material.grupo_upload)
+            .all()
+        )
+        grupo_counts = {g: c for g, c in contagens}
+
+        membros = (
+            db.session.query(Material)
+            .filter(Material.grupo_upload.in_(grupos_ids), Material.status == Material.STATUS_APROVADO)
+            .order_by(Material.id)
+            .all()
+        )
+        for m in membros:
+            grupo_thumbs.setdefault(m.grupo_upload, []).append(m)
+    return grupo_counts, grupo_thumbs
 
 
 @materiais_bp.route("/")
@@ -33,6 +60,7 @@ def listar():
     disciplina = request.args.get("disciplina", "").strip()
     categoria_id = request.args.get("categoria", type=int)
     ano_letivo = request.args.get("ano_letivo", "").strip()
+    pasta_id = request.args.get("pasta", type=int)
     ordenar = request.args.get("ordenar", "recente")
 
     if busca:
@@ -52,6 +80,9 @@ def listar():
         query = query.filter(Material.categoria_id == categoria_id)
     if ano_letivo:
         query = query.filter(Material.ano_letivo.ilike(f"%{ano_letivo}%"))
+    pasta_sel = Pasta.query.get(pasta_id) if pasta_id else None
+    if pasta_sel:
+        query = query.filter(Material.pasta_id.in_(pasta_sel.ids_subquery()))
 
     # Deduplicar grupos: só mostrar o primeiro material de cada grupo
     lider_ids = (
@@ -100,26 +131,7 @@ def listar():
     url_params = {k: v for k, v in request.args.items() if k != "page"}
 
     # Pré-carregar contagens e thumbnails de grupos visíveis na página
-    grupos_ids = [m.grupo_upload for m in materiais.items if m.grupo_upload]
-    grupo_counts = {}
-    grupo_thumbs = {}
-    if grupos_ids:
-        contagens = (
-            db.session.query(Material.grupo_upload, func.count(Material.id))
-            .filter(Material.grupo_upload.in_(grupos_ids), Material.status == Material.STATUS_APROVADO)
-            .group_by(Material.grupo_upload)
-            .all()
-        )
-        grupo_counts = {g: c for g, c in contagens}
-
-        membros = (
-            db.session.query(Material)
-            .filter(Material.grupo_upload.in_(grupos_ids), Material.status == Material.STATUS_APROVADO)
-            .order_by(Material.id)
-            .all()
-        )
-        for m in membros:
-            grupo_thumbs.setdefault(m.grupo_upload, []).append(m)
+    grupo_counts, grupo_thumbs = _grupo_metadados(materiais.items)
 
     from app.models.user import User
     total_materiais_real = Material.query.filter_by(status=Material.STATUS_APROVADO).count()
@@ -143,6 +155,7 @@ def listar():
             "disciplina": disciplina,
             "categoria_id": categoria_id,
             "ano_letivo": ano_letivo,
+            "pasta_id": pasta_id,
         },
         ordenar=ordenar,
         grupo_counts=grupo_counts,
@@ -154,6 +167,60 @@ def listar():
         total_instituicoes=total_instituicoes,
         total_disciplinas_real=total_disciplinas_real,
         total_estudantes=total_estudantes,
+        pastas_raiz_lista=Pasta.query.filter_by(parent_id=None).order_by(Pasta.nome).all(),
+        pasta_selecionada=pasta_sel,
+    )
+
+
+@materiais_bp.route("/pastas")
+def pastas_raiz():
+    return _render_pasta(None)
+
+
+@materiais_bp.route("/pastas/<int:id>")
+def pastas_ver(id):
+    return _render_pasta(Pasta.query.get_or_404(id))
+
+
+def _render_pasta(pasta):
+    """Navegação pública (leitura) da árvore de pastas — reaproveita o mesmo
+    dedup de grupo_upload e metadados de grupo usados em listar()."""
+    page = request.args.get("page", 1, type=int)
+
+    breadcrumb = []
+    if pasta is None:
+        filhos = Pasta.query.filter_by(parent_id=None).order_by(Pasta.nome).all()
+        materiais = None
+        grupo_counts, grupo_thumbs = {}, {}
+    else:
+        no = pasta
+        while no is not None:
+            breadcrumb.append(no)
+            no = no.parent
+        breadcrumb.reverse()
+        filhos = pasta.filhos.order_by(Pasta.nome).all()
+        ids_subquery = pasta.ids_subquery()
+
+        lider_ids = (
+            db.session.query(func.min(Material.id))
+            .filter(Material.grupo_upload.isnot(None), Material.status == Material.STATUS_APROVADO,
+                    Material.pasta_id.in_(ids_subquery))
+            .group_by(Material.grupo_upload)
+        )
+        query = (
+            Material.query
+            .filter(Material.status == Material.STATUS_APROVADO)
+            .filter(Material.pasta_id.in_(ids_subquery))
+            .filter(db.or_(Material.grupo_upload.is_(None), Material.id.in_(lider_ids)))
+            .order_by(Material.criado_em.desc())
+        )
+        materiais = query.paginate(page=page, per_page=12, error_out=False)
+        grupo_counts, grupo_thumbs = _grupo_metadados(materiais.items)
+
+    return render_template(
+        "materials/pastas.html",
+        pasta_atual=pasta, filhos=filhos, materiais=materiais, breadcrumb=breadcrumb,
+        grupo_counts=grupo_counts, grupo_thumbs=grupo_thumbs,
     )
 
 

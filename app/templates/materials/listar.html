@@ -30,6 +30,21 @@
 
           <hr class="my-3">
 
+          <!-- Pastas -->
+          {% if pastas_raiz_lista %}
+          <h6>Pastas</h6>
+          <input type="hidden" name="pasta" value="{{ filtros.get('pasta_id') or '' }}">
+          {% for p in pastas_raiz_lista %}
+          <button type="button" class="p24-filter-item {% if filtros.get('pasta_id') == p.id %}active{% endif %}"
+                  onclick="setFiltro('pasta','{{ p.id }}');this.form.submit()">
+            <i class="bi bi-folder2"></i> {{ p.nome }}
+          </button>
+          {% endfor %}
+          <a href="{{ url_for('materiais.pastas_raiz') }}" class="d-block small text-orange fw-600 mt-1 mb-3">
+            Ver árvore completa <i class="bi bi-arrow-right"></i>
+          </a>
+          {% endif %}
+
           <!-- Instituição -->
           <h6>Instituição</h6>
           <select class="form-select form-select-sm mb-3" name="instituicao" onchange="this.form.submit()">
@@ -133,7 +148,13 @@
             <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('ano_letivo');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
           </span>
           {% endif %}
-          {% if not busca and not filtros.get('disciplina') and not filtros.get('instituicao') and not filtros.get('categoria_id') and not filtros.get('ano_letivo') %}
+          {% if pasta_selecionada %}
+          <span class="badge bg-p24-light text-p24 fw-600 d-flex align-items-center gap-1">
+            <i class="bi bi-folder2 me-1"></i>{{ pasta_selecionada.caminho_display }}
+            <a href="#" onclick="(function(){var p=new URLSearchParams(window.location.search);p.delete('pasta');p.delete('page');window.location='?'+p.toString();})();return false;" class="text-p24 ms-1"><i class="bi bi-x"></i></a>
+          </span>
+          {% endif %}
+          {% if not busca and not filtros.get('disciplina') and not filtros.get('instituicao') and not filtros.get('categoria_id') and not filtros.get('ano_letivo') and not pasta_selecionada %}
           <span class="text-muted small">Nenhum filtro activo</span>
           {% endif %}
         </div>
@@ -153,77 +174,7 @@
       {% if materiais.items %}
       <div class="row g-3 mb-4">
         {% for m in materiais.items %}
-        {% set is_grupo = m.grupo_upload and grupo_counts.get(m.grupo_upload, 1) > 1 %}
-        {% set thumbs = grupo_thumbs.get(m.grupo_upload, []) if is_grupo else [] %}
-        {% set npaginas = grupo_counts.get(m.grupo_upload, 1) if is_grupo else 1 %}
-        <div class="col-sm-6 col-xl-4">
-          <div class="p24-material-card d-flex flex-column" style="padding:0;overflow:hidden;">
-
-            <!-- Thumbnail / Preview -->
-            <a href="{{ url_for('materiais.detalhe', id=m.id) }}" class="text-decoration-none d-block position-relative"
-               style="background:#f1f3f5;height:140px;overflow:hidden;">
-
-              {% if is_grupo and thumbs %}
-                {# Grelha de thumbnails do grupo #}
-                {% set cols = [thumbs|length, 3]|min %}
-                <div style="display:grid;grid-template-columns:repeat({{ cols }},1fr);height:140px;gap:1px;background:#dee2e6;">
-                  {% for t in thumbs[:3] %}
-                    {% set t_thumb = thumb_url(t) %}
-                    {% if t_thumb %}
-                      <img src="{{ t_thumb }}"
-                           style="width:100%;height:140px;object-fit:cover;display:block;">
-                    {% else %}
-                      <div class="d-flex align-items-center justify-content-center h-100" style="background:#f8f9fa;font-size:2rem;">
-                        {% if t.ficheiro_tipo == 'pdf' %}<i class="bi bi-file-earmark-pdf text-danger"></i>
-                        {% else %}<i class="bi bi-file-earmark-word text-primary"></i>{% endif %}
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                </div>
-              {% elif thumb_url(m) %}
-                <img src="{{ thumb_url(m) }}"
-                     alt="{{ m.titulo_base }}"
-                     style="width:100%;height:140px;object-fit:cover;">
-              {% elif m.ficheiro_tipo == 'pdf' %}
-                <div class="d-flex align-items-center justify-content-center h-100">
-                  <i class="bi bi-file-earmark-pdf text-danger" style="font-size:3.5rem;opacity:.6"></i>
-                </div>
-              {% else %}
-                <div class="d-flex align-items-center justify-content-center h-100">
-                  <i class="bi bi-file-earmark-word text-primary" style="font-size:3.5rem;opacity:.6"></i>
-                </div>
-              {% endif %}
-
-              <span class="position-absolute top-0 end-0 m-2 p24-type-badge badge-{{ m.categoria.nome|lower if m.categoria else 'outro' }}">
-                {{ m.categoria.nome if m.categoria else 'Outro' }}
-              </span>
-              {% if is_grupo %}
-              <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75 text-white" style="font-size:.65rem">
-                <i class="bi bi-images me-1"></i>{{ npaginas }} páginas
-              </span>
-              {% endif %}
-            </a>
-
-            <!-- Info -->
-            <div class="p-3 flex-grow-1 d-flex flex-column">
-              <h6 class="mb-1" style="font-size:.85rem;line-height:1.3">
-                <a href="{{ url_for('materiais.detalhe', id=m.id) }}" class="text-decoration-none text-dark">
-                  {{ m.titulo_base }}
-                </a>
-              </h6>
-              <div class="p24-meta mb-1">{{ m.ano_letivo or '' }}{% if m.semestre %} • {{ m.semestre }}{% endif %}</div>
-              <div class="p24-meta mb-3">{{ m.instituicao }}</div>
-              <div class="p24-stats d-flex align-items-center justify-content-between mt-auto">
-                <div class="d-flex gap-3">
-                  <span><i class="bi bi-download me-1"></i>{{ m.downloads }}</span>
-                  <span><i class="bi bi-eye me-1"></i>{{ m.visualizacoes }}</span>
-                </div>
-                <a href="{{ url_for('materiais.detalhe', id=m.id) }}" class="btn btn-sm btn-light fw-600">Ver</a>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        {% include "materials/_card.html" %}
         {% endfor %}
       </div>
 

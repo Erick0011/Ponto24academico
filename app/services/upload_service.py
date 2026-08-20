@@ -1,5 +1,6 @@
 import io
 import os
+import shutil
 import uuid
 import hashlib
 import unicodedata
@@ -128,3 +129,90 @@ def apagar_ficheiro(path_relativo: str):
         thumb = os.path.join(upload_base, pasta, "thumbs", nome)
         if os.path.exists(thumb):
             os.remove(thumb)
+
+
+# ── Mover ficheiros para pastas (Sistema de Pastas) ─────────────────────────────
+
+def slugify(texto: str) -> str:
+    """Normaliza um nome livre (ex: nome de pasta) para um segmento de caminho seguro."""
+    s = texto.lower()
+    s = "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^\w]", "_", s).strip("_") or "pasta"
+
+
+def caminho_pasta_para_subfolder(pasta) -> str:
+    """Constrói o subfolder de armazenamento a partir da árvore de pastas,
+    ex: 'pastas/isaf/informatica/3_semestre'."""
+    nomes, no = [], pasta
+    while no is not None:
+        nomes.append(slugify(no.nome))
+        no = no.parent
+    return "pastas/" + "/".join(reversed(nomes))
+
+
+def mover_ficheiro(material, novo_subfolder: str) -> dict:
+    """Move o ficheiro (e a thumbnail, se for imagem) de um Material para um novo
+    subfolder. NÃO toca na base de dados — devolve o novo path_relativo para o
+    caller aplicar só depois de confirmado o sucesso aqui.
+
+    Levanta exceção em caso de falha; nesse caso nada foi alterado de forma
+    irreversível (local: shutil.move só corre no fim; R2: copy_object só é seguido
+    de delete_object depois de a cópia ter sido confirmada).
+    """
+    nome_ficheiro = os.path.basename(material.ficheiro_path)
+    novo_path = f"{novo_subfolder}/{nome_ficheiro}"
+    if novo_path == material.ficheiro_path:
+        return {"ficheiro_path": material.ficheiro_path}  # já está lá, no-op
+
+    if _usar_r2():
+        from app.services.r2_service import copy_object, delete_object
+        copy_object(material.ficheiro_path, novo_path)  # levanta exceção se falhar
+        if material.e_imagem:
+            old_thumb = f"{os.path.dirname(material.ficheiro_path)}/thumbs/{nome_ficheiro}"
+            try:
+                copy_object(old_thumb, f"{novo_subfolder}/thumbs/{nome_ficheiro}")
+            except Exception:
+                pass  # thumb é regenerável/opcional, não bloqueia o material principal
+        delete_object(material.ficheiro_path)
+        if material.e_imagem:
+            delete_object(f"{os.path.dirname(material.ficheiro_path)}/thumbs/{nome_ficheiro}")
+    else:
+        upload_base = current_app.config["UPLOAD_FOLDER"]
+        old_full = os.path.join(upload_base, material.ficheiro_path)
+        novo_dir = os.path.join(upload_base, novo_subfolder)
+        os.makedirs(novo_dir, exist_ok=True)
+        shutil.move(old_full, os.path.join(novo_dir, nome_ficheiro))  # levanta exceção se falhar
+        if material.e_imagem:
+            old_thumb = os.path.join(upload_base, os.path.dirname(material.ficheiro_path), "thumbs", nome_ficheiro)
+            if os.path.exists(old_thumb):
+                novo_thumb_dir = os.path.join(novo_dir, "thumbs")
+                os.makedirs(novo_thumb_dir, exist_ok=True)
+                shutil.move(old_thumb, os.path.join(novo_thumb_dir, nome_ficheiro))
+
+    return {"ficheiro_path": novo_path}
+
+
+def mover_grupo_para_pasta(materiais: list, pasta) -> dict:
+    """Move TODOS os ficheiros de um grupo (ou de um único material) para a pasta
+    destino. All-or-nothing: só devolve ok=True se TODOS moverem com sucesso; em
+    falha parcial tenta reverter (best-effort) os já movidos. O caller NUNCA deve
+    tocar na base de dados a não ser que 'ok' seja True.
+    """
+    subfolder = caminho_pasta_para_subfolder(pasta)
+    movidos = []  # [(material, path_antigo, path_novo)]
+    try:
+        for m in materiais:
+            path_antigo = m.ficheiro_path
+            resultado = mover_ficheiro(m, subfolder)
+            movidos.append((m, path_antigo, resultado["ficheiro_path"]))
+        return {"ok": True, "novos_paths": {m.id: novo for m, _, novo in movidos}}
+    except Exception as e:
+        for m, path_antigo, path_novo in movidos:
+            try:
+                subfolder_antigo = os.path.dirname(path_antigo)
+                m.ficheiro_path = path_novo  # temporário, para mover_ficheiro calcular a partir daqui
+                mover_ficheiro(m, subfolder_antigo)
+                m.ficheiro_path = path_antigo
+            except Exception:
+                pass  # rollback best-effort; o erro original é o que importa reportar
+        return {"ok": False, "erro": str(e)}
