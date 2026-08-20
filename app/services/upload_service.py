@@ -9,17 +9,15 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 
-ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "gif", "webp", "docx"}
-
-
 def _usar_r2() -> bool:
     return bool(os.environ.get("R2_ENDPOINT"))
 
 
 def extensao_permitida(filename: str) -> bool:
+    permitidas = current_app.config["ALLOWED_EXTENSIONS"]
     return (
         "." in filename
-        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+        and filename.rsplit(".", 1)[1].lower() in permitidas
     )
 
 

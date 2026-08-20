@@ -1,5 +1,5 @@
 from datetime import datetime
-from app import db  # ou from your_project import db
+from app import db
 import json
 
 

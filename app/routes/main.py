@@ -1,6 +1,6 @@
-import os
 import unicodedata
 from datetime import datetime
+from email_validator import validate_email, EmailNotValidError
 from flask import (
     Blueprint,
     render_template,
@@ -11,13 +11,15 @@ from flask import (
     Response,
 )
 from flask_login import login_required, current_user
-from app import db
+from app import db, limiter
 from app.models.material import Material, Categoria, Favorito
 from app.models.user import User
 from app.models.configuracao import Configuracao
 from app.models.lista_espera import ListaEspera
 import json
 from app.models import Candidatura
+from app.utils.honeypot import honeypot_preenchido
+from app.utils.validacao import senha_forte
 
 
 def _slugify(s):
@@ -56,7 +58,7 @@ def index():
         .distinct()
         .count()
     )
-    total_estudantes = User.query.filter_by(is_active=True).count() + 500
+    total_estudantes = User.query.filter_by(is_active=True).count()
     categorias = Categoria.query.all()
     recentes = (
         Material.query.filter_by(status=Material.STATUS_APROVADO)
@@ -80,6 +82,14 @@ def index():
                 cat_ids[key] = cat.id
                 break
 
+    # Contagens reais de materiais aprovados por categoria (para os cards do index)
+    cat_counts = {
+        slug: Material.query.filter_by(
+            status=Material.STATUS_APROVADO, categoria_id=cid
+        ).count()
+        for slug, cid in cat_ids.items()
+    }
+
     return render_template(
         "index.html",
         total_materiais=total_materiais,
@@ -90,6 +100,7 @@ def index():
         recentes=recentes,
         populares=populares,
         cat_ids=cat_ids,
+        cat_counts=cat_counts,
     )
 
 
@@ -215,8 +226,8 @@ def alterar_senha():
 
     if not current_user.check_password(senha_atual):
         flash("Senha atual incorreta.", "erro")
-    elif len(nova_senha) < 6:
-        flash("A nova senha deve ter pelo menos 6 caracteres.", "erro")
+    elif not senha_forte(nova_senha):
+        flash("A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e número.", "erro")
     elif nova_senha != confirmar:
         flash("As senhas não coincidem.", "erro")
     else:
@@ -237,9 +248,13 @@ def sobre_nos():
 
 
 @main_bp.route("/suporte", methods=["GET", "POST"])
+@limiter.limit("5 per hour", methods=["POST"])
 def suporte():
     """Página de suporte / contacto."""
     if request.method == "POST":
+        if honeypot_preenchido():
+            return redirect(url_for("main.suporte"))
+
         nome = request.form.get("nome", "").strip()
         email = request.form.get("email", "").strip()
         assunto = request.form.get("assunto", "").strip()
@@ -273,8 +288,12 @@ def suporte():
 
 
 @main_bp.route("/juntar-se", methods=["GET", "POST"])
+@limiter.limit("5 per hour", methods=["POST"])
 def juntar_se():
     if request.method == "POST":
+        if honeypot_preenchido():
+            return redirect(url_for("main.juntar_se"))
+
         # ── Coleta os dados ──
         nome = request.form.get("nome", "").strip()
         email = request.form.get("email", "").strip().lower()
@@ -302,7 +321,9 @@ def juntar_se():
         if not nome or len(nome) < 3:
             erros.append("O nome completo é obrigatório (mín. 3 caracteres).")
 
-        if not email or "@" not in email or "." not in email.split("@")[-1]:
+        try:
+            validate_email(email, check_deliverability=False)
+        except EmailNotValidError:
             erros.append("Introduz um email válido.")
 
         # Verifica duplicado (mesmo email)
@@ -356,9 +377,13 @@ def juntar_se():
 
 
 @main_bp.route("/acesso-antecipado", methods=["GET", "POST"])
+@limiter.limit("10 per hour", methods=["POST"])
 def acesso_antecipado():
     """Página de captação de interesse / lista de espera."""
     if request.method == "POST":
+        if honeypot_preenchido():
+            return redirect(url_for("main.acesso_antecipado"))
+
         nome = request.form.get("nome", "").strip()
         email = request.form.get("email", "").strip().lower()
         instituicao = request.form.get("instituicao", "").strip()

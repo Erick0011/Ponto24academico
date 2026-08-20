@@ -150,6 +150,26 @@
 - [ ] **Rota protegida sem login** — `/dashboard`, `/submeter`, etc. redirecionam para login
 - [ ] **SQL injection** — campo de pesquisa com `' OR 1=1 --` não quebra nada
 
+### 10a. Segurança — Fase 1 (rate limiting, honeypot, headers)
+
+- [ ] **Rate limit login** — 11+ tentativas de login em 1 minuto → 429 na 11ª (com `gunicorn -w 4` o limite real pode chegar a ~4x devido aos workers independentes)
+- [ ] **Rate limit registo** — 6+ registos em 1 hora do mesmo IP → 429
+- [ ] **Rate limit recuperação de senha** — 6+ pedidos em 1 hora → 429
+- [ ] **Rate limit suporte** — 6+ submissões em 1 hora → 429
+- [ ] **Rate limit candidatura** — 6+ submissões em 1 hora → 429
+- [ ] **Rate limit lista de espera** — 11+ submissões em 1 hora → 429
+- [ ] **Rate limit upload** — 21+ submissões em 1 hora → 429
+- [ ] **Página de erro 429** — mensagem amigável, sem stack trace
+- [ ] **Honeypot registo** — preencher campo `website` via devtools e submeter → não cria conta, sem erro visível ao "bot"
+- [ ] **Honeypot suporte/candidatura/lista de espera** — mesmo teste nos outros 3 formulários
+- [ ] **Cabeçalhos de segurança** — inspecionar resposta HTTP (`curl -I` ou devtools) e confirmar `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Content-Security-Policy`
+- [ ] **Cookie de sessão** — em produção (`FLASK_ENV=production`), confirmar flags `Secure`, `HttpOnly`, `SameSite=Lax` no cookie de sessão
+- [ ] **SECRET_KEY insegura bloqueia arranque em produção** — `FLASK_ENV=production` sem `SECRET_KEY` customizada no `.env` → app falha ao arrancar com `AssertionError`
+- [ ] **Política de senha unificada** — senha de 6-7 caracteres falha; 8+ sem maiúscula/número falha; 8+ com maiúscula, minúscula e número passa (testar em registo, redefinir senha e alterar senha)
+- [ ] **Email inválido em candidatura** — submeter `/juntar-se` com email mal formado → erro de validação
+- [ ] **Footer "Candidatar-se"** — link/botão visível no rodapé em qualquer página, navega para `/juntar-se`
+- [ ] **Números dinâmicos do index** — aprovar um novo material e confirmar que os contadores da home (topo e "Explorar por categoria") sobem de acordo
+
 ---
 
 ## 11. Funcionalidades Extra

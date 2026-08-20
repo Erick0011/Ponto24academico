@@ -7,11 +7,11 @@ from flask import (
     flash, request, current_app, send_from_directory, abort, jsonify
 )
 from flask_login import login_required, current_user
-from app import db
+from app import db, limiter
 from app.models.material import Material, Categoria, Avaliacao, Favorito
 from app.models.lista_espera import RelatorioMaterial
 from app.services.upload_service import guardar_ficheiro, apagar_ficheiro, nome_download
-from app.services.creditos_service import dar_creditos_upload, cobrar_creditos_download
+from app.services.creditos_service import cobrar_creditos_download
 from app.services.notificacoes_service import criar_notificacao
 from app.models.notificacao import Notificacao
 
@@ -226,6 +226,7 @@ def sugestoes():
 
 @materiais_bp.route("/submeter", methods=["GET", "POST"])
 @login_required
+@limiter.limit("20 per hour", methods=["POST"])
 def submeter():
     """Formulário de submissão de novo material."""
     categorias = Categoria.query.all()

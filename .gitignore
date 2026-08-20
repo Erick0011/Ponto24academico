@@ -22,6 +22,9 @@ instance/
 app/static/uploads/
 config/app/static/uploads/
 
+# Logs de execução
+logs/*.log
+
 # Variáveis de ambiente
 .env
 

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Demasiados pedidos — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center" style="min-height:75vh;padding:3rem 1rem">
+  <div class="text-center" style="max-width:480px">
+
+    <div class="mb-4 position-relative d-inline-block">
+      <span class="fw-800 d-block lh-1"
+            style="font-size:7rem;color:#e9ecef;letter-spacing:-.02em;user-select:none">429</span>
+      <i class="bi bi-hourglass-split position-absolute"
+         style="font-size:2.8rem;color:#fd7e14;top:50%;left:50%;transform:translate(-50%,-50%)"></i>
+    </div>
+
+    <h2 class="fw-800 mb-2">Calma aí!</h2>
+    <p class="text-muted mb-4">
+      Fizeste demasiados pedidos num curto espaço de tempo.<br>
+      Espera um pouco e tenta novamente.
+    </p>
+
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+      <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary fw-600 px-4">
+        <i class="bi bi-house me-2"></i>Página inicial
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

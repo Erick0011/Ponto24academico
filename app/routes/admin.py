@@ -1,7 +1,7 @@
 from functools import wraps
 from datetime import datetime, timedelta
 from sqlalchemy import func
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models.material import Material, Categoria
