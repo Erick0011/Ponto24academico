@@ -14,6 +14,8 @@ from app.services.upload_service import guardar_ficheiro, apagar_ficheiro, nome_
 from app.services.creditos_service import cobrar_creditos_download
 from app.services.notificacoes_service import criar_notificacao
 from app.models.notificacao import Notificacao
+from app.models.atividade import AtividadeLog
+from app.services.atividade_service import registar_atividade
 
 materiais_bp = Blueprint("materiais", __name__, url_prefix="/materiais")
 
@@ -321,6 +323,11 @@ def submeter():
             )
             db.session.add(material)
             db.session.flush()
+            registar_atividade(
+                AtividadeLog.EVENTO_MATERIAL_SUBMETIDO,
+                utilizador_id=current_user.id, alvo_tipo="material", alvo_id=material.id,
+                detalhes={"titulo": titulo_final, "disciplina": disciplina},
+            )
             if primeiro_id is None:
                 primeiro_id = material.id
 
@@ -386,6 +393,11 @@ def download(id):
             return redirect(url_for("materiais.detalhe", id=id))
 
     material.incrementar_downloads()
+    registar_atividade(
+        AtividadeLog.EVENTO_DOWNLOAD,
+        utilizador_id=current_user.id, alvo_tipo="material", alvo_id=material.id,
+        detalhes={"creditos_cobrados": not e_autor},
+    )
     db.session.commit()
 
     if os.environ.get("R2_ENDPOINT"):

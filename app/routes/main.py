@@ -20,6 +20,8 @@ import json
 from app.models import Candidatura
 from app.utils.honeypot import honeypot_preenchido
 from app.utils.validacao import senha_forte
+from app.models.atividade import AtividadeLog
+from app.services.atividade_service import registar_atividade
 
 
 def _slugify(s):
@@ -356,6 +358,13 @@ def juntar_se():
                 status="pendente",
             )
             db.session.add(nova)
+            db.session.flush()
+            registar_atividade(
+                AtividadeLog.EVENTO_CANDIDATURA_RECEBIDA,
+                utilizador_id=current_user.id if current_user.is_authenticated else None,
+                alvo_tipo="candidatura", alvo_id=nova.id,
+                detalhes={"nome": nome, "email": email},
+            )
             db.session.commit()
 
             flash(
@@ -394,13 +403,18 @@ def acesso_antecipado():
         elif ListaEspera.query.filter_by(email=email).first():
             flash("Este email já está na lista de espera!", "aviso")
         else:
-            db.session.add(
-                ListaEspera(
-                    nome=nome,
-                    email=email,
-                    instituicao=instituicao,
-                    mensagem=mensagem,
-                )
+            entrada = ListaEspera(
+                nome=nome,
+                email=email,
+                instituicao=instituicao,
+                mensagem=mensagem,
+            )
+            db.session.add(entrada)
+            db.session.flush()
+            registar_atividade(
+                AtividadeLog.EVENTO_LISTA_ESPERA,
+                utilizador_id=None, alvo_tipo="lista_espera", alvo_id=entrada.id,
+                detalhes={"nome": nome, "email": email},
             )
             db.session.commit()
             flash(

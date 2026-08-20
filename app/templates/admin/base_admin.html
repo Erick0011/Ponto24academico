@@ -1,2 +1,33 @@
 {% extends "base.html" %}
-{% block banner %}{% endblock %}
+
+{% block banner %}
+{% set admin_links = [
+  ('admin.painel', 'Painel', 'bi-speedometer2', False),
+  ('admin.moderacao', 'Moderação', 'bi-hourglass', False),
+  ('admin.candidaturas', 'Candidaturas', 'bi-person-lines-fill', True),
+  ('admin.utilizadores', 'Utilizadores', 'bi-people', True),
+  ('admin.categorias', 'Categorias', 'bi-tags', True),
+  ('admin.todos_materiais', 'Materiais', 'bi-file-earmark-text', True),
+  ('admin.relatorios', 'Relatórios', 'bi-flag', False),
+  ('admin.lista_espera', 'Lista de Espera', 'bi-people-fill', True),
+  ('admin.anuncios', 'Anúncios', 'bi-megaphone', True),
+  ('admin.kpi', 'KPI', 'bi-graph-up-arrow', True),
+  ('admin.configuracoes', 'Configurações', 'bi-gear', True),
+  ('admin.logs', 'Logs', 'bi-terminal', True),
+] %}
+<div class="border-bottom bg-white">
+  <div class="container-xl">
+    <nav class="nav flex-nowrap overflow-auto py-2">
+      {% for endpoint, label, icon, admin_only in admin_links %}
+        {% if not admin_only or current_user.is_admin %}
+        <a href="{{ url_for(endpoint) }}"
+           class="nav-link text-nowrap px-3 fw-600 {% if request.endpoint == endpoint %}active text-p24{% else %}text-muted{% endif %}"
+           style="font-size:.85rem">
+          <i class="bi {{ icon }} me-1"></i>{{ label }}
+        </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+  </div>
+</div>
+{% endblock %}
