@@ -1,4 +1,5 @@
 import os
+import re
 import smtplib
 import logging
 from email.mime.multipart import MIMEMultipart
@@ -22,6 +23,30 @@ def _smtp_config():
         "password": password,
         "sender":   os.environ.get("MAIL_DEFAULT_SENDER", username),
     }
+
+
+def _enviar_mime(msg, destinatario, cfg=None):
+    """Liga ao servidor SMTP e envia uma mensagem MIME já construída.
+    Função de baixo nível partilhada por enviar_email() e enviar_email_marketing()."""
+    cfg = cfg or _smtp_config()
+    with smtplib.SMTP(cfg["server"], cfg["port"]) as smtp:
+        if cfg["use_tls"]:
+            smtp.starttls()
+        smtp.login(cfg["username"], cfg["password"])
+        smtp.sendmail(cfg["sender"], destinatario, msg.as_string())
+
+
+def html_para_texto_simples(html: str) -> str:
+    """Conversão simples de HTML para texto — usada como alternativa
+    text/plain nos emails, o que reduz a probabilidade de o email ser
+    marcado como spam (emails só-HTML são um sinal comum de spam em massa)."""
+    texto = re.sub(r"(?is)<(script|style).*?>.*?(</\1>)", "", html)
+    texto = re.sub(r"(?i)<br\s*/?>", "\n", texto)
+    texto = re.sub(r"(?i)</p>|</div>|</tr>", "\n", texto)
+    texto = re.sub(r"<[^>]+>", "", texto)
+    texto = re.sub(r"[ \t]+", " ", texto)
+    texto = re.sub(r"\n{3,}", "\n\n", texto)
+    return texto.strip()
 
 
 def enviar_email(destinatario, assunto, template_html, contexto=None):
@@ -49,11 +74,7 @@ def enviar_email(destinatario, assunto, template_html, contexto=None):
         msg["To"]      = destinatario
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-        with smtplib.SMTP(cfg["server"], cfg["port"]) as smtp:
-            if cfg["use_tls"]:
-                smtp.starttls()
-            smtp.login(cfg["username"], cfg["password"])
-            smtp.sendmail(cfg["sender"], destinatario, msg.as_string())
+        _enviar_mime(msg, destinatario, cfg)
 
         logger.info("Email enviado para %s: %s", destinatario, assunto)
         return True
@@ -61,6 +82,42 @@ def enviar_email(destinatario, assunto, template_html, contexto=None):
     except Exception as e:
         logger.warning("Falha ao enviar email para %s: %s", destinatario, e)
         return False
+
+
+def enviar_email_marketing(destinatario, assunto, corpo_html_final, unsubscribe_url):
+    """
+    Envia um email de marketing/campanha já renderizado (corpo_html_final inclui
+    o footer com o link de cancelamento). Diferente de enviar_email():
+
+    - Multipart alternative com texto simples ANTES do HTML (boa prática contra spam).
+    - Cabeçalho List-Unsubscribe + List-Unsubscribe-Post (RFC 8058) — permite aos
+      clientes de email (Gmail, Outlook, Yahoo) oferecer um botão nativo de
+      cancelamento de subscrição, o que reduz drasticamente as queixas de spam
+      (o maior fator usado pelos provedores para bloquear remetentes em massa).
+    - Precedence: bulk e X-Auto-Response-Suppress — sinalizam explicitamente que é
+      um envio em massa e evitam respostas automáticas (out-of-office) que geram
+      tráfego de retorno e prejudicam a reputação do remetente.
+
+    Levanta exceção em falha — o caller (marketing_service) decide como registar.
+    """
+    cfg = _smtp_config()
+    if not cfg["server"] or not cfg["username"]:
+        raise RuntimeError("SMTP não configurado")
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = assunto
+    msg["From"] = f"Ponto 24 Académico <{cfg['sender']}>"
+    msg["To"] = destinatario
+    msg["Precedence"] = "bulk"
+    msg["X-Auto-Response-Suppress"] = "All"
+    msg["List-Unsubscribe"] = f"<mailto:{cfg['sender']}?subject=cancelar>, <{unsubscribe_url}>"
+    msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+
+    msg.attach(MIMEText(html_para_texto_simples(corpo_html_final), "plain", "utf-8"))
+    msg.attach(MIMEText(corpo_html_final, "html", "utf-8"))
+
+    _enviar_mime(msg, destinatario, cfg)
+    logger.info("Email de marketing enviado para %s: %s", destinatario, assunto)
 
 
 # ─── Funções de alto nível ───────────────────────────────────────────────────
@@ -116,6 +173,24 @@ def email_novo_material_pendente(material, moderador, url_rever):
         assunto=f"[P24] Novo material para moderar — {material.titulo_base}",
         template_html="email/novo_material.html",
         contexto={"material": material, "moderador": moderador, "url": url_rever},
+    )
+
+
+def email_candidatura_aprovada(candidatura):
+    enviar_email(
+        destinatario=candidatura.email,
+        assunto="A tua candidatura foi aprovada — Ponto 24 Académico",
+        template_html="email/candidatura_aprovada.html",
+        contexto={"candidatura": candidatura},
+    )
+
+
+def email_candidatura_rejeitada(candidatura):
+    enviar_email(
+        destinatario=candidatura.email,
+        assunto="Resposta à tua candidatura — Ponto 24 Académico",
+        template_html="email/candidatura_rejeitada.html",
+        contexto={"candidatura": candidatura},
     )
 
 

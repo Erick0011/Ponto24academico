@@ -73,6 +73,7 @@ def create_app(config_name: str = None):
     from app.models.anuncio import Anuncio               # noqa: F401
     from app.models.atividade import AtividadeLog         # noqa: F401
     from app.models.pasta import Pasta                    # noqa: F401
+    from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario  # noqa: F401
 
     # User loader para Flask-Login
     from app.models.user import User
@@ -115,6 +116,7 @@ def create_app(config_name: str = None):
         "static",
         "main.robots_txt",
         "main.sitemap_xml",
+        "main.cancelar_marketing",
     }
 
     @app.before_request

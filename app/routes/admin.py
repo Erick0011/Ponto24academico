@@ -13,10 +13,15 @@ from app.models.anuncio import Anuncio
 from app.models.candidaturas import Candidatura
 from app.models.atividade import AtividadeLog
 from app.models.pasta import Pasta
+from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario
+from app.services import marketing_service
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
-from app.services.mail_service import email_material_aprovado, email_material_rejeitado, email_convite_acesso
+from app.services.mail_service import (
+    email_material_aprovado, email_material_rejeitado, email_convite_acesso,
+    email_candidatura_aprovada, email_candidatura_rejeitada,
+)
 from app.services.tokens_service import gerar_token, SALT_CONVITE
 from app.services.atividade_service import registar_atividade, atividade_recente, contagem_por_evento
 
@@ -706,7 +711,8 @@ def aprovar_candidatura(id):
         detalhes={"nome": candidatura.nome, "email": candidatura.email},
     )
     db.session.commit()
-    flash(f"Candidatura de {candidatura.nome} aprovada.", "sucesso")
+    email_candidatura_aprovada(candidatura)
+    flash(f"Candidatura de {candidatura.nome} aprovada. Email enviado.", "sucesso")
     return redirect(request.referrer or url_for("admin.candidaturas"))
 
 
@@ -722,7 +728,8 @@ def rejeitar_candidatura(id):
         detalhes={"nome": candidatura.nome, "email": candidatura.email},
     )
     db.session.commit()
-    flash(f"Candidatura de {candidatura.nome} rejeitada.", "aviso")
+    email_candidatura_rejeitada(candidatura)
+    flash(f"Candidatura de {candidatura.nome} rejeitada. Email enviado.", "aviso")
     return redirect(request.referrer or url_for("admin.candidaturas"))
 
 
@@ -930,3 +937,105 @@ def eliminar_anuncio(id):
     db.session.commit()
     flash("Anúncio eliminado.", "aviso")
     return redirect(url_for("admin.anuncios"))
+
+
+# ── Marketing — email em massa (só admin) ─────────────────────────────────────
+
+@admin_bp.route("/marketing")
+@login_required
+@admin_required
+def marketing():
+    campanhas = CampanhaEmail.query.order_by(CampanhaEmail.criado_em.desc()).all()
+    return render_template("admin/marketing.html", campanhas=campanhas)
+
+
+@admin_bp.route("/marketing/criar", methods=["GET", "POST"])
+@login_required
+@admin_required
+def criar_campanha():
+    if request.method == "POST":
+        assunto = request.form.get("assunto", "").strip()
+        corpo_html = request.form.get("corpo_html", "").strip()
+        publico = request.form.get("publico", CampanhaEmail.PUBLICO_TODOS)
+
+        if not assunto or not corpo_html:
+            flash("Preenche o assunto e o conteúdo do email.", "danger")
+            return render_template("admin/marketing_form.html", assunto=assunto,
+                                    corpo_html=corpo_html, publico=publico)
+
+        campanha = CampanhaEmail(
+            assunto=assunto, corpo_html=corpo_html, publico=publico,
+            criado_por_id=current_user.id,
+        )
+        db.session.add(campanha)
+        db.session.flush()
+        registar_atividade(
+            AtividadeLog.EVENTO_CAMPANHA_CRIADA,
+            utilizador_id=current_user.id, alvo_tipo="campanha_email", alvo_id=campanha.id,
+            detalhes={"assunto": assunto, "publico": publico},
+        )
+        db.session.commit()
+        flash("Campanha criada como rascunho. Revê e envia quando estiveres pronto.", "sucesso")
+        return redirect(url_for("admin.ver_campanha", id=campanha.id))
+
+    return render_template("admin/marketing_form.html", assunto="", corpo_html="", publico=CampanhaEmail.PUBLICO_TODOS)
+
+
+@admin_bp.route("/marketing/<int:id>")
+@login_required
+@admin_required
+def ver_campanha(id):
+    campanha = CampanhaEmail.query.get_or_404(id)
+    publico_estimado = marketing_service.publico_query(campanha.publico).count()
+    preview_html = render_template(
+        "email/marketing_base.html", corpo_html=campanha.corpo_html,
+        user=current_user, url_cancelar="#",
+    )
+    return render_template(
+        "admin/marketing_detalhe.html", campanha=campanha,
+        publico_estimado=publico_estimado, preview_html=preview_html,
+    )
+
+
+@admin_bp.route("/marketing/<int:id>/estado")
+@login_required
+@admin_required
+def estado_campanha(id):
+    campanha = CampanhaEmail.query.get_or_404(id)
+    return {
+        "estado": campanha.estado,
+        "total": campanha.total_destinatarios,
+        "enviados": campanha.enviados,
+        "falhados": campanha.falhados,
+        "progresso_pct": campanha.progresso_pct,
+    }
+
+
+@admin_bp.route("/marketing/<int:id>/enviar", methods=["POST"])
+@login_required
+@admin_required
+def enviar_campanha(id):
+    campanha = CampanhaEmail.query.get_or_404(id)
+    if campanha.estado not in (CampanhaEmail.ESTADO_RASCUNHO, CampanhaEmail.ESTADO_PAUSADA):
+        flash("Esta campanha já foi enviada ou está em curso.", "aviso")
+        return redirect(url_for("admin.ver_campanha", id=campanha.id))
+
+    marketing_service.iniciar_envio(campanha, current_app._get_current_object(), request.url_root)
+    flash("Envio iniciado em segundo plano — a página atualiza o progresso automaticamente.", "sucesso")
+    return redirect(url_for("admin.ver_campanha", id=campanha.id))
+
+
+@admin_bp.route("/marketing/<int:id>/cancelar", methods=["POST"])
+@login_required
+@admin_required
+def cancelar_campanha(id):
+    campanha = CampanhaEmail.query.get_or_404(id)
+    if campanha.estado in (CampanhaEmail.ESTADO_ENVIANDO, CampanhaEmail.ESTADO_PAUSADA):
+        campanha.estado = CampanhaEmail.ESTADO_CANCELADA
+        registar_atividade(
+            AtividadeLog.EVENTO_CAMPANHA_CANCELADA,
+            utilizador_id=current_user.id, alvo_tipo="campanha_email", alvo_id=campanha.id,
+        )
+        db.session.commit()
+        flash("Campanha cancelada. Os emails já enviados não são afetados.", "aviso")
+    return redirect(url_for("admin.ver_campanha", id=campanha.id))

@@ -78,7 +78,8 @@ MAX_CONTENT_LENGTH_MB=20
 
 - **`upload_service.py`** — `guardar_ficheiro()` saves to `materiais/{cat_slug}/{YYYY}/{MM}/{uuid}.ext`, calculates SHA-256, generates 300×300 thumbnail for images into a `thumbs/` subfolder. `thumbnail_path` property on `Material` mirrors this structure.
 - **`tokens_service.py`** — `itsdangerous` HMAC tokens with separate salts for email confirmation (24h) and password recovery (1h).
-- **`mail_service.py`** — pure SMTP via `smtplib`, no Flask-Mail. Reads `EMAIL_USER`/`EMAIL_PASS` or `MAIL_USERNAME`/`MAIL_PASSWORD`. Silently skips if SMTP not configured. All emails use HTML templates in `app/templates/email/`.
+- **`mail_service.py`** — pure SMTP via `smtplib`, no Flask-Mail. Reads `EMAIL_USER`/`EMAIL_PASS` or `MAIL_USERNAME`/`MAIL_PASSWORD`. Silently skips if SMTP not configured. All emails use HTML templates in `app/templates/email/`. `enviar_email_marketing()` is the bulk-mail variant: multipart with a text/plain fallback plus `List-Unsubscribe`/`List-Unsubscribe-Post`/`Precedence` headers for deliverability.
+- **`marketing_service.py`** — sends `CampanhaEmail` (bulk marketing) campaigns in a background `threading.Thread` (no Celery/Redis). One `CampanhaEmailDestinatario` row per recipient makes sends resumable and idempotent. Throttled by `MARKETING_INTERVALO_SEGUNDOS` and capped by `MARKETING_LIMITE_DIARIO`/day; only targets `User.is_active and User.aceita_marketing`. Unsubscribe is handled by `main.cancelar_marketing` (public route, itsdangerous token, no expiry).
 - **`creditos_service.py`** — thin wrappers around `User.ganhar_creditos()` / `User.gastar_creditos()`. Amounts come from app config keys (`CREDITOS_INICIAIS=10`, `CREDITOS_POR_UPLOAD_APROVADO=5`, `CREDITOS_POR_DOWNLOAD=1`).
 - **`notificacoes_service.py`** — creates `Notificacao` rows; called from moderation approve/reject flows.
 

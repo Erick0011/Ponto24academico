@@ -1,0 +1,71 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Nova campanha — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <h4 class="fw-800 mb-1">Nova campanha</h4>
+      <p class="text-muted small mb-0">É guardada como rascunho — só sai quando clicares em "Enviar"</p>
+    </div>
+    <a href="{{ url_for('admin.marketing') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="p24-card">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-600">Assunto</label>
+            <input type="text" name="assunto" class="form-control" required maxlength="200"
+                   value="{{ assunto }}" placeholder="Ex: Novidades no Ponto 24 Académico">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-600">Público</label>
+            <select name="publico" class="form-select">
+              <option value="todos" {% if publico == 'todos' %}selected{% endif %}>Todos os utilizadores</option>
+              <option value="confirmados" {% if publico == 'confirmados' %}selected{% endif %}>Só emails confirmados</option>
+              <option value="ativos" {% if publico == 'ativos' %}selected{% endif %}>Só utilizadores com atividade (upload ou download)</option>
+            </select>
+            <small class="text-muted">Utilizadores inativos ou que cancelaram marketing nunca são incluídos.</small>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-600">Conteúdo (HTML)</label>
+            <textarea name="corpo_html" class="form-control" rows="12" required
+                      placeholder="&lt;p&gt;Olá! Temos novidades...&lt;/p&gt;" style="font-family:monospace;font-size:.85rem">{{ corpo_html }}</textarea>
+            <small class="text-muted">
+              É inserido dentro do template da marca (cabeçalho, rodapé e link de cancelamento
+              são adicionados automaticamente).
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary fw-700">
+            <i class="bi bi-save me-2"></i>Guardar rascunho
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="p24-card" style="background:#fff7f0;border:1px solid #ffd0a8">
+        <h6 class="fw-700 mb-3" style="color:#c45b00">
+          <i class="bi bi-shield-check me-2"></i>Boas práticas para não seres bloqueado
+        </h6>
+        <ul class="small mb-0" style="color:#c45b00;padding-left:1.1rem">
+          <li class="mb-2">Evita MAIÚSCULAS excessivas, muitos pontos de exclamação e palavras típicas de spam ("grátis", "urgente", "clica já").</li>
+          <li class="mb-2">Escreve um assunto claro e específico, sem ser sensacionalista.</li>
+          <li class="mb-2">O envio é automaticamente limitado por intervalo e por um máximo diário.</li>
+          <li class="mb-2">Só chega a utilizadores ativos que não cancelaram marketing.</li>
+          <li class="mb-0">Um número alto de cancelamentos numa campanha é sinal para reveres o conteúdo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

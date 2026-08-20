@@ -1,0 +1,110 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ campanha.assunto }} — Marketing — Admin{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-800 mb-1">{{ campanha.assunto }}</h4>
+      <p class="text-muted small mb-0">
+        Público: {% if campanha.publico == 'todos' %}Todos os utilizadores
+        {% elif campanha.publico == 'confirmados' %}Emails confirmados
+        {% else %}Utilizadores ativos{% endif %}
+        &middot; ~{{ publico_estimado }} destinatário(s) elegível(eis) neste momento
+      </p>
+    </div>
+    <a href="{{ url_for('admin.marketing') }}" class="btn btn-light fw-600">
+      <i class="bi bi-arrow-left me-2"></i>Voltar
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+
+      <!-- Estado / progresso -->
+      <div class="p24-card mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+          <span id="badge-estado">
+            {% if campanha.estado == 'rascunho' %}<span class="badge bg-secondary">Rascunho</span>
+            {% elif campanha.estado == 'enviando' %}<span class="badge bg-primary">A enviar</span>
+            {% elif campanha.estado == 'pausada_limite_diario' %}<span class="badge bg-warning text-dark">Pausada (limite diário)</span>
+            {% elif campanha.estado == 'concluida' %}<span class="badge bg-success">Concluída</span>
+            {% else %}<span class="badge bg-danger">Cancelada</span>{% endif %}
+          </span>
+          <span class="small text-muted" id="contagem">
+            {{ campanha.enviados }} enviados / {{ campanha.falhados }} falhados / {{ campanha.total_destinatarios }} total
+          </span>
+        </div>
+        <div class="progress" style="height:10px">
+          <div id="barra-progresso" class="progress-bar bg-p24" role="progressbar"
+               style="width:{{ campanha.progresso_pct }}%"></div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap mt-3">
+          {% if campanha.estado in ('rascunho', 'pausada_limite_diario') %}
+          <form action="{{ url_for('admin.enviar_campanha', id=campanha.id) }}" method="post"
+                onsubmit="return confirm('Iniciar o envio desta campanha?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary fw-700">
+              <i class="bi bi-send me-2"></i>{% if campanha.estado == 'rascunho' %}Enviar{% else %}Continuar envio{% endif %}
+            </button>
+          </form>
+          {% endif %}
+          {% if campanha.estado in ('enviando', 'pausada_limite_diario') %}
+          <form action="{{ url_for('admin.cancelar_campanha', id=campanha.id) }}" method="post"
+                onsubmit="return confirm('Cancelar esta campanha? Os emails já enviados não são afetados.')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-outline-danger fw-600">
+              <i class="bi bi-x-lg me-2"></i>Cancelar
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Pré-visualização -->
+      <div class="p24-card p-0 overflow-hidden">
+        <div class="px-3 py-2 border-bottom bg-light">
+          <span class="small fw-700 text-muted">Pré-visualização</span>
+        </div>
+        <iframe srcdoc="{{ preview_html|e }}" style="width:100%;min-height:420px;border:0"></iframe>
+      </div>
+
+    </div>
+
+    <div class="col-lg-4">
+      <div class="p24-card">
+        <h6 class="fw-700 mb-3">Detalhes</h6>
+        <p class="small mb-2"><strong>Criada por:</strong> {{ campanha.criado_por.nome if campanha.criado_por else '—' }}</p>
+        <p class="small mb-2"><strong>Criada em:</strong> {{ campanha.criado_em.strftime('%d/%m/%Y %H:%M') }}</p>
+        {% if campanha.iniciado_em %}<p class="small mb-2"><strong>Início do envio:</strong> {{ campanha.iniciado_em.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+        {% if campanha.concluido_em %}<p class="small mb-0"><strong>Concluída em:</strong> {{ campanha.concluido_em.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if campanha.estado in ('enviando', 'pausada_limite_diario') %}
+<script>
+(function poll() {
+  fetch("{{ url_for('admin.estado_campanha', id=campanha.id) }}")
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('contagem').textContent =
+        d.enviados + ' enviados / ' + d.falhados + ' falhados / ' + d.total + ' total';
+      document.getElementById('barra-progresso').style.width = d.progresso_pct + '%';
+      if (d.estado === 'enviando') {
+        setTimeout(poll, 4000);
+      } else {
+        setTimeout(() => location.reload(), 1000);
+      }
+    })
+    .catch(() => setTimeout(poll, 8000));
+})();
+</script>
+{% endif %}
+{% endblock %}
