@@ -1,5 +1,9 @@
-{% extends "base.html" %} {% block title %} Equipa Fundadora — Ponto 24
-Académico {% endblock %} {% block extra_css %}
+{% extends "base.html" %}
+{% block title %}Equipa Fundadora — Ponto 24 Académico{% endblock %}
+{% block meta_description %}Candidata-te à Equipa Fundadora do Ponto 24 Académico e ajuda a construir o maior acervo académico digital de Angola.{% endblock %}
+{% block og_title %}Equipa Fundadora — Ponto 24 Académico{% endblock %}
+{% block og_description %}Candidata-te à Equipa Fundadora do Ponto 24 Académico e ajuda a construir o maior acervo académico digital de Angola.{% endblock %}
+{% block extra_css %}
 <style>
   .hero-early {
     background: linear-gradient(135deg, #0f1b35 0%, #1a2f5a 60%, #ff6b00 100%);
@@ -257,6 +261,9 @@ Académico {% endblock %} {% block extra_css %}
     <div class="row align-items-center g-5">
       <!-- TEXTO -->
       <div class="col-lg-6 text-white">
+        <span class="badge-slot mb-4">
+          <i class="bi bi-rocket-takeoff-fill"></i> Candidaturas abertas
+        </span>
         <h1
           class="fw-800 mb-4"
           style="font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.15"
@@ -277,6 +284,22 @@ Académico {% endblock %} {% block extra_css %}
           construída por pessoas que acreditam que o conhecimento deve ser
           acessível.
         </p>
+
+        {% if total_candidaturas %}
+        <div class="d-flex flex-wrap gap-4 mb-4 pt-2 border-top border-white border-opacity-10">
+          <div>
+            <div class="fw-800 fs-3">{{ total_candidaturas }}{% if total_candidaturas >= 50 %}+{% endif %}</div>
+            <div class="small text-white-50">Candidaturas recebidas</div>
+          </div>
+          {% if total_universidades %}
+          <div>
+            <div class="fw-800 fs-3">{{ total_universidades }}{% if total_universidades >= 10 %}+{% endif %}</div>
+            <div class="small text-white-50">Universidades representadas</div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
         <div class="small text-white-50">
           <i class="bi bi-people-fill me-2"></i>
           Junta-te às primeiras pessoas a construir esta missão.
@@ -639,6 +662,81 @@ Académico {% endblock %} {% block extra_css %}
   </div>
 </section>
 
+<!-- SECÇÃO ÁREAS DE ATUAÇÃO -->
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill">Equipa Fundadora</span>
+      <h2 class="fw-800">Em que área te vês a contribuir?</h2>
+      <p class="text-muted mx-auto" style="max-width:560px">
+        Não precisas de saber tudo — escolhe a área com que mais te identificas
+        na candidatura. Ajustamos o resto ao longo do caminho.
+      </p>
+    </div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-4">
+      <div class="col">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+            <i class="bi bi-journal-bookmark-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Materiais académicos</h6>
+          <p class="text-muted small mb-0">
+            Ajuda a organizar, rever e moderar provas, resumos e exercícios
+            partilhados na plataforma.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-success bg-opacity-10 text-success">
+            <i class="bi bi-buildings fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Representar universidade</h6>
+          <p class="text-muted small mb-0">
+            Sê a ponte entre o Ponto 24 e os estudantes da tua instituição.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-warning bg-opacity-10 text-warning">
+            <i class="bi bi-megaphone-fill fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Marketing</h6>
+          <p class="text-muted small mb-0">
+            Cria conteúdo e campanhas para dar a conhecer o projeto a mais
+            estudantes.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-info bg-opacity-10 text-info">
+            <i class="bi bi-code-slash fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Tecnologia</h6>
+          <p class="text-muted small mb-0">
+            Ajuda a construir e melhorar a plataforma — código, design ou
+            produto.
+          </p>
+        </div>
+      </div>
+      <div class="col">
+        <div class="feature-card text-center p-4 h-100">
+          <div class="feature-icon bg-danger bg-opacity-10 text-danger">
+            <i class="bi bi-handshake fs-3"></i>
+          </div>
+          <h6 class="fw-bold mt-3">Parcerias</h6>
+          <p class="text-muted small mb-0">
+            Conecta o Ponto 24 a universidades, associações de estudantes e
+            empresas.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- SECÇÃO MISSÃO -->
 <section class="py-5 bg-light">
   <div class="container">
@@ -647,7 +745,7 @@ Académico {% endblock %} {% block extra_css %}
         class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill"
         >Vantagens</span
       >
-      <h3 class="fw-800">Porque fazer parte agora?</h3>
+      <h2 class="fw-800">Porque fazer parte agora?</h2>
       <p class="text-muted">
         As primeiras pessoas serão responsáveis por construir a base desta
         comunidade.
@@ -696,6 +794,51 @@ Académico {% endblock %} {% block extra_css %}
           <p class="text-muted small mb-0">
             Recebe reconhecimento pela tua contribuição.
           </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECÇÃO COMO FUNCIONA A CANDIDATURA -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2 rounded-pill">Processo</span>
+      <h2 class="fw-800">Como funciona a candidatura?</h2>
+      <p class="text-muted">Um processo simples, sem burocracia.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="text-center h-100">
+          <div class="fw-800 fs-3 text-primary rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center mx-auto mb-3"
+               style="width:56px;height:56px">1</div>
+          <h6 class="fw-bold">Preenches a candidatura</h6>
+          <p class="text-muted small mb-0">Cinco passos rápidos — leva menos de 5 minutos.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="text-center h-100">
+          <div class="fw-800 fs-3 text-primary rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center mx-auto mb-3"
+               style="width:56px;height:56px">2</div>
+          <h6 class="fw-bold">Analisamos o teu perfil</h6>
+          <p class="text-muted small mb-0">A equipa fundadora revê a tua candidatura e área de interesse.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="text-center h-100">
+          <div class="fw-800 fs-3 text-primary rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center mx-auto mb-3"
+               style="width:56px;height:56px">3</div>
+          <h6 class="fw-bold">Conversa rápida</h6>
+          <p class="text-muted small mb-0">Um contacto por email ou WhatsApp para nos conhecermos melhor.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="text-center h-100">
+          <div class="fw-800 fs-3 text-white rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-3"
+               style="width:56px;height:56px;background:linear-gradient(135deg,#ff6b00,#ff8533)">4</div>
+          <h6 class="fw-bold">Boas-vindas à equipa</h6>
+          <p class="text-muted small mb-0">Entras para o grupo da Equipa Fundadora e começas a contribuir.</p>
         </div>
       </div>
     </div>

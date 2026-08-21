@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ autor.nome }} — Ponto 24 Académico{% endblock %}
+{% block meta_description %}{{ meta_descricao }}{% endblock %}
+{% block og_title %}{{ autor.nome }} — Ponto 24 Académico{% endblock %}
+{% block og_description %}{{ meta_descricao }}{% endblock %}
+{% block og_type %}profile{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
@@ -24,7 +28,7 @@
             <i class="bi bi-person-fill"></i>
           {% endif %}
         </div>
-        <h5 class="fw-800 mb-1">{{ autor.nome }}</h5>
+        <h1 class="fw-800 mb-1" style="font-size:1.25rem">{{ autor.nome }}</h1>
         {% if autor.instituicao %}
         <div class="text-muted small mb-1">{{ autor.instituicao }}</div>
         {% endif %}
@@ -71,6 +75,11 @@
           <div class="progress-bar {{ nv.bg }}" style="width:100%"></div>
         </div>
         {% endif %}
+      </div>
+
+      <!-- Badges -->
+      <div class="mt-4">
+        {% include "partials/badges.html" %}
       </div>
     </div>
 

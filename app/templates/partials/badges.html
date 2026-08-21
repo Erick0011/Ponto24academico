@@ -1,0 +1,24 @@
+{# Grid de badges — espera uma variável `badges` (lista de dicts de
+   badges_do_utilizador). Usado no perfil próprio e no perfil público. #}
+{% set conquistados = badges | selectattr('tier') | list %}
+<div class="p24-card">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-700 mb-0"><i class="bi bi-award text-warning me-2"></i>Badges</h6>
+    <span class="text-muted small">{{ conquistados|length }} / {{ badges|length }}</span>
+  </div>
+  <div class="row row-cols-2 row-cols-sm-3 g-2">
+    {% for b in badges %}
+    <div class="col">
+      <div class="text-center p-2 rounded-3 {% if not b.tier %}opacity-50{% endif %}"
+           style="background:var(--p24-blue-light, #f1f5fb)"
+           title="{{ b.nome }} — {{ b.descricao }}: {{ b.valor }}{% if b.tier %} ({{ b.tier_info.nome }}){% if b.proximo %}, faltam {{ b.proximo.faltam }} para {{ b.proximo.tier|capitalize }}{% endif %}{% else %}, faltam {{ b.proximo.faltam }} para o 1º nível{% endif %}">
+        <i class="bi {{ b.icone }} fs-4 {% if b.tier %}{{ b.tier_info.cor }}{% else %}text-muted{% endif %}"></i>
+        <div class="fw-600 mt-1" style="font-size:.72rem">{{ b.nome }}</div>
+        <div class="text-muted" style="font-size:.65rem">
+          {% if b.tier %}{{ b.tier_info.nome }}{% else %}Por conquistar{% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
