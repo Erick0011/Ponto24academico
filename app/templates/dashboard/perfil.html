@@ -182,7 +182,7 @@
         {% endfor %}
         {% else %}
         <div class="text-center py-4">
-          <div style="font-size:2.5rem">📄</div>
+          <i class="bi bi-file-earmark-text text-muted" style="font-size:2.5rem"></i>
           <p class="text-muted small mt-2">Ainda não enviaste materiais.</p>
           <a href="{{ url_for('materiais.submeter') }}" class="btn btn-primary btn-sm fw-600">Enviar agora</a>
         </div>

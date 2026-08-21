@@ -193,7 +193,10 @@ def create_app(config_name: str = None):
     @app.after_request
     def set_security_headers(response):
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        # SAMEORIGIN (não DENY): a pré-visualização de materiais usa um <iframe>
+        # para PDFs (materials/detalhe.html), que o DENY bloqueava mesmo sendo
+        # a própria origem a carregar-se a si mesma.
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers.setdefault(
             "Content-Security-Policy",
