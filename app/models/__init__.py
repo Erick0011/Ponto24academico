@@ -9,10 +9,12 @@ from .comunidade import (
     ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
     ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag,
 )
+from .visita import VisitaLog
 
 __all__ = [
     "User", "Pasta", "Material", "Categoria", "Avaliacao", "Anuncio", "Candidatura",
     "AtividadeLog", "CampanhaEmail", "CampanhaEmailDestinatario",
     "ComunidadePost", "ComunidadePostImagem", "ComunidadeResposta",
     "ComunidadeVoto", "ComunidadeRelatorio", "ComunidadeTag",
+    "VisitaLog",
 ]

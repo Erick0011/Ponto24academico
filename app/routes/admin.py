@@ -16,6 +16,7 @@ from app.models.pasta import Pasta
 from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario
 from app.services import marketing_service
 from app.models.comunidade import ComunidadePost, ComunidadeResposta, ComunidadeRelatorio
+from app.models.visita import VisitaLog
 from app.routes.comunidade import eliminar_post_interno
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta
@@ -143,6 +144,21 @@ def kpi():
     atividade_feed = atividade_recente(20)
     acoes_por_tipo = contagem_por_evento(h30)
 
+    # ── Tráfego (todos os visitantes, mesmo sem conta) ──────────────────
+    visitas_30d = VisitaLog.query.filter(VisitaLog.criado_em >= h30).count()
+    visitantes_unicos_30d = (
+        db.session.query(VisitaLog.sessao_id)
+        .filter(VisitaLog.criado_em >= h30)
+        .distinct().count()
+    )
+    paginas_mais_visitadas = (
+        db.session.query(VisitaLog.caminho, func.count(VisitaLog.id).label("n"))
+        .filter(VisitaLog.criado_em >= h30)
+        .group_by(VisitaLog.caminho)
+        .order_by(func.count(VisitaLog.id).desc())
+        .limit(10).all()
+    )
+
     return render_template(
         "admin/kpi.html",
         total_pesquisas=total_pesquisas,
@@ -158,6 +174,9 @@ def kpi():
         candidaturas_pendentes=candidaturas_pendentes,
         atividade_feed=atividade_feed,
         acoes_por_tipo=acoes_por_tipo,
+        visitas_30d=visitas_30d,
+        visitantes_unicos_30d=visitantes_unicos_30d,
+        paginas_mais_visitadas=paginas_mais_visitadas,
     )
 
 
