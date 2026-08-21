@@ -169,9 +169,9 @@
           <div class="flex-shrink-0 text-end" style="min-width:64px">
             <span class="fw-700" style="font-size:.72rem;
               color:{% if m.status == 'aprovado' %}var(--p24-green){% elif m.status == 'pendente' %}#d97706{% else %}#dc2626{% endif %}">
-              {% if m.status == 'aprovado' %}✓ Aprovado
-              {% elif m.status == 'pendente' %}⏳ Pendente
-              {% else %}✗ Rejeitado{% endif %}
+              {% if m.status == 'aprovado' %}<i class="bi bi-check-circle-fill me-1"></i>Aprovado
+              {% elif m.status == 'pendente' %}<i class="bi bi-clock-fill me-1"></i>Pendente
+              {% else %}<i class="bi bi-x-circle-fill me-1"></i>Rejeitado{% endif %}
             </span>
             <div class="text-muted d-none d-sm-block" style="font-size:.68rem">
               {{ m.criado_em.strftime('%d/%m/%Y') }}
