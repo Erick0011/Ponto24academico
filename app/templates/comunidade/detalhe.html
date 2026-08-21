@@ -164,8 +164,8 @@
       </div>
       {% endif %}
 
-      {% for r in respostas.items %}
-      <div class="p24-card d-flex gap-3 mb-3">
+      {% macro resposta_card(r, post, nivel=0) %}
+      <div class="p24-card d-flex gap-3 mb-3" {% if nivel %}style="margin-left:2.5rem;background:var(--p24-blue-light,#f8fafc)"{% endif %}>
         <div class="d-flex flex-column align-items-center flex-shrink-0" style="width:36px">
           <form action="{{ url_for('comunidade.votar_resposta', id=r.id) }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -191,7 +191,13 @@
             <span><i class="bi bi-person-fill me-1"></i>{{ r.autor.nome if r.autor else "Utilizador removido" }}</span>
             <span>{{ r.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
           </div>
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-3 align-items-center">
+            {% if current_user.is_authenticated and not nivel %}
+            <button type="button" class="btn btn-sm btn-link text-muted p-0 fw-600" style="font-size:.78rem"
+                    data-bs-toggle="collapse" data-bs-target="#responderResposta{{ r.id }}">
+              <i class="bi bi-reply me-1"></i>Responder
+            </button>
+            {% endif %}
             {% if current_user.is_authenticated and current_user.id != r.autor_id %}
             <button type="button" class="btn btn-sm btn-link text-muted p-0 fw-600" style="font-size:.78rem"
                     data-bs-toggle="modal" data-bs-target="#denunciarResposta{{ r.id }}">
@@ -208,6 +214,20 @@
             </form>
             {% endif %}
           </div>
+
+          {% if current_user.is_authenticated and not nivel %}
+          <div class="collapse mt-2" id="responderResposta{{ r.id }}">
+            <form action="{{ url_for('comunidade.criar_resposta', id=post.id) }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="parent_id" value="{{ r.id }}">
+              {% include "partials/honeypot.html" %}
+              <textarea name="corpo" class="form-control form-control-sm mb-2" rows="2" required placeholder="Responder a {{ r.autor.nome.split()[0] if r.autor else 'este comentário' }}..."></textarea>
+              <button type="submit" class="btn btn-primary btn-sm fw-700">
+                <i class="bi bi-send me-1"></i>Enviar
+              </button>
+            </form>
+          </div>
+          {% endif %}
         </div>
       </div>
 
@@ -243,6 +263,13 @@
         </div>
       </div>
       {% endif %}
+      {% endmacro %}
+
+      {% for r in respostas.items %}
+        {{ resposta_card(r, post, 0) }}
+        {% for filha in r.replicas %}
+          {{ resposta_card(filha, post, 1) }}
+        {% endfor %}
       {% else %}
       <p class="text-muted text-center small py-4">Ainda sem respostas. Sê o primeiro a responder!</p>
       {% endfor %}

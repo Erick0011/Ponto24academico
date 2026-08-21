@@ -1051,6 +1051,65 @@ def _resolver_alvo_comunidade(relatorio):
     return ComunidadeResposta.query.get(relatorio.alvo_id)
 
 
+@admin_bp.route("/comunidade/moderar")
+@login_required
+@moderador_required
+def comunidade_moderar():
+    """Publicações da Comunidade ficam públicas de imediato (sem fila de
+    aprovação) — esta vista dá à moderação uma forma de rever as mais
+    recentes proativamente, sem depender só de denúncias de utilizadores."""
+    estado = request.args.get("estado", "por_rever")
+    page = request.args.get("page", 1, type=int)
+
+    query = ComunidadePost.query
+    if estado == "por_rever":
+        query = query.filter_by(revisto=False)
+    elif estado == "revistos":
+        query = query.filter_by(revisto=True)
+
+    posts_pag = query.order_by(ComunidadePost.criado_em.desc()).paginate(page=page, per_page=20, error_out=False)
+
+    counts = {
+        "todos":     ComunidadePost.query.count(),
+        "por_rever": ComunidadePost.query.filter_by(revisto=False).count(),
+        "revistos":  ComunidadePost.query.filter_by(revisto=True).count(),
+    }
+
+    return render_template(
+        "admin/comunidade_moderar.html",
+        posts=posts_pag, counts=counts, estado=estado,
+    )
+
+
+@admin_bp.route("/comunidade/posts/<int:id>/marcar-revisto", methods=["POST"])
+@login_required
+@moderador_required
+def marcar_revisto_comunidade(id):
+    post = ComunidadePost.query.get_or_404(id)
+    post.revisto = True
+    post.revisto_por_id = current_user.id
+    post.revisto_em = datetime.utcnow()
+    db.session.commit()
+    flash("Publicação marcada como revista.", "sucesso")
+    return redirect(request.referrer or url_for("admin.comunidade_moderar"))
+
+
+@admin_bp.route("/comunidade/posts/<int:id>/eliminar", methods=["POST"])
+@login_required
+@moderador_required
+def eliminar_post_comunidade_admin(id):
+    post = ComunidadePost.query.get_or_404(id)
+    registar_atividade(
+        AtividadeLog.EVENTO_COMUNIDADE_POST_ELIMINADO,
+        utilizador_id=current_user.id, alvo_tipo="comunidade_post", alvo_id=post.id,
+        detalhes={"titulo": post.titulo, "via": "moderacao"},
+    )
+    eliminar_post_interno(post)
+    db.session.commit()
+    flash("Publicação eliminada.", "aviso")
+    return redirect(request.referrer or url_for("admin.comunidade_moderar"))
+
+
 @admin_bp.route("/comunidade/relatorios")
 @login_required
 @moderador_required
