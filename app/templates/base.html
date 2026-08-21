@@ -385,8 +385,12 @@
       </div>
 
     </div>
-    <div class="border-top border-white border-opacity-10 py-3 d-flex justify-content-between align-items-center">
+    <div class="border-top border-white border-opacity-10 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
       <small class="text-white-50">© 2026 Ponto 24 Académico. Todos os direitos reservados.</small>
+      <div class="d-flex gap-3 flex-wrap">
+        <a href="{{ url_for('main.termos') }}" class="text-white-50 text-decoration-none small">Termos de Uso</a>
+        <a href="{{ url_for('main.privacidade') }}" class="text-white-50 text-decoration-none small">Política de Privacidade</a>
+      </div>
       <small class="text-white-50">Feito com <i class="bi bi-heart-fill text-danger"></i> para estudantes angolanos</small>
     </div>
   </div>

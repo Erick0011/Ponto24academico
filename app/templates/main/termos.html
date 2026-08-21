@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Termos de Uso — Ponto 24 Académico{% endblock %}
+{% block meta_description %}Termos e condições de utilização da plataforma Ponto 24 Académico.{% endblock %}
+{% block og_title %}Termos de Uso — Ponto 24 Académico{% endblock %}
+{% block og_description %}Termos e condições de utilização da plataforma Ponto 24 Académico.{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:820px">
+
+  <div class="mb-5">
+    <h1 class="fw-800 mb-2">Termos de Uso</h1>
+    <p class="text-muted small mb-0">Última atualização: 21 de agosto de 2026</p>
+  </div>
+
+  <div class="mb-4 p-3 rounded-3" style="background:var(--p24-blue-light,#f1f5fb);font-size:.85rem">
+    Ao criar uma conta ou utilizar o Ponto 24 Académico, aceitas estes Termos de Uso e a nossa
+    <a href="{{ url_for('main.privacidade') }}" class="fw-600">Política de Privacidade</a>. Se não concordares, por favor não utilizes a plataforma.
+  </div>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">1. O que é o Ponto 24 Académico</h2>
+    <p class="text-muted" style="line-height:1.8">
+      O Ponto 24 Académico é uma plataforma digital que permite a estudantes partilhar, organizar e descarregar
+      materiais académicos (provas, resumos, exercícios), participar numa secção de Comunidade estilo fórum,
+      e candidatar-se a materiais adicionais. O acesso à maioria das funcionalidades requer registo.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">2. Conta e elegibilidade</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Precisas de fornecer dados verdadeiros no registo (nome, email, instituição) e és responsável por manter a
+      confidencialidade da tua senha e por toda a atividade realizada na tua conta. Podemos suspender ou eliminar
+      contas que forneçam informação falsa, sejam usadas de forma fraudulenta, ou violem estes termos.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">3. Conteúdo submetido pelos utilizadores</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Ao submeter um material ou publicar na Comunidade, garantes que tens o direito de o partilhar e concedes ao
+      Ponto 24 Académico uma licença não exclusiva para o alojar, apresentar e disponibilizar para download a outros
+      utilizadores da plataforma. Continuas a ser o titular dos direitos sobre o teu conteúdo.
+    </p>
+    <p class="text-muted" style="line-height:1.8">
+      Todos os materiais passam por moderação humana antes de ficarem públicos. Podemos rejeitar ou remover
+      qualquer conteúdo que viole direitos de autor, seja ofensivo, spam, ou não cumpra as regras da plataforma —
+      com ou sem aviso prévio, consoante a gravidade.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">4. Regras da Comunidade</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Na secção Comunidade, é proibido: discurso de ódio, assédio a outros utilizadores, spam ou publicidade não
+      autorizada, partilha de conteúdo ilegal ou sexualmente explícito, e qualquer tentativa de fazer-se passar por
+      um moderador ou administrador. Publicações e respostas podem ser denunciadas pelos utilizadores e são revistas
+      pela equipa de moderação, que pode eliminar conteúdo e suspender contas — temporária ou permanentemente —
+      em caso de incumprimento.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">5. Sistema de créditos</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Os créditos ganham-se ao submeter materiais aprovados e gastam-se ao descarregar materiais de outros
+      utilizadores. Os créditos <strong>não têm valor monetário</strong>, não são convertíveis em dinheiro e existem
+      apenas para incentivar a partilha justa de conteúdo dentro da plataforma.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">6. Isenção de responsabilidade</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Os materiais disponibilizados são submetidos por estudantes e podem conter erros. O Ponto 24 Académico não
+      garante a exatidão, atualidade ou adequação de nenhum material para fins de avaliação académica, e não se
+      responsabiliza pelo uso que fizeres desse conteúdo.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">7. Alterações aos termos</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Podemos atualizar estes termos periodicamente para refletir mudanças na plataforma ou na lei aplicável.
+      A data no topo desta página indica a última atualização. O uso continuado da plataforma após uma alteração
+      significa que aceitas os novos termos.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">8. Lei aplicável e contacto</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Estes termos são regidos pela lei angolana. Para questões sobre estes termos, contacta-nos através da
+      <a href="{{ url_for('main.suporte') }}">página de suporte</a>{% if cfg.get('email_suporte') %} ou por email para
+      <a href="mailto:{{ cfg.email_suporte }}">{{ cfg.email_suporte }}</a>{% endif %}.
+    </p>
+  </section>
+
+</div>
+{% endblock %}
