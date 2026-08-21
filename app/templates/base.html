@@ -11,11 +11,17 @@
   <!-- Open Graph (WhatsApp, Facebook, LinkedIn) -->
   <meta property="og:title" content="{% block og_title %}Ponto 24 Académico{% endblock %}">
   <meta property="og:description" content="{% block og_description %}O maior acervo digital de materiais académicos em Angola. Provas, resumos, exercícios e apontamentos organizados por universidade e disciplina.{% endblock %}">
-  <meta property="og:image" content="{{ url_for('static', filename='img/P24.png', _external=True) }}">
+  <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='img/P24.png', _external=True) }}{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:site_name" content="Ponto 24 Académico">
   <meta property="og:locale" content="pt_AO">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.og_title() }}">
+  <meta name="twitter:description" content="{{ self.og_description() }}">
+  <meta name="twitter:image" content="{{ self.og_image() }}">
 
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/P24.png') }}">
 
@@ -28,6 +34,35 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/ponto24.css') }}" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <!-- Dados estruturados (schema.org) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Ponto 24 Académico",
+    "url": "{{ url_for('main.index', _external=True) }}",
+    "logo": "{{ url_for('static', filename='img/P24.png', _external=True) }}",
+    "description": "O maior acervo digital de materiais académicos em Angola. Provas, resumos, exercícios e apontamentos organizados por universidade e disciplina.",
+    {% if cfg.get('email_suporte') or cfg.get('whatsapp') -%}
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support"
+      {%- if cfg.get('email_suporte') %},
+      "email": "{{ cfg.email_suporte }}"
+      {%- endif %}
+      {%- if cfg.get('whatsapp') %},
+      "telephone": "{{ cfg.whatsapp }}"
+      {%- endif %}
+    },
+    {% endif -%}
+    "sameAs": [
+      {%- if cfg.get('instagram') %}"https://instagram.com/{{ cfg.instagram | replace('@','') }}"{% endif -%}
+      {%- if cfg.get('facebook') %}{% if cfg.get('instagram') %},{% endif %}"https://facebook.com/{{ cfg.facebook }}"{% endif -%}
+    ]
+  }
+  </script>
+  {% block structured_data %}{% endblock %}
 
   {% block extra_css %}{% endblock %}
 </head>
@@ -306,11 +341,7 @@
       <div class="col-6 col-lg-2">
         <h6 class="text-white fw-700 mb-3">Conta</h6>
         <ul class="list-unstyled mb-0">
-          {% if cfg.modo_pre_lancamento == '1' %}
-          <li class="mb-1"><a href="{{ url_for('main.acesso_antecipado') }}" class="text-white-50 text-decoration-none small">Acesso antecipado</a></li>
-          {% else %}
           <li class="mb-1"><a href="{{ url_for('auth.registar') }}" class="text-white-50 text-decoration-none small">Registar</a></li>
-          {% endif %}
           <li class="mb-1"><a href="{{ url_for('auth.entrar') }}" class="text-white-50 text-decoration-none small">Entrar</a></li>
           <li class="mb-1"><a href="{{ url_for('materiais.submeter') }}" class="text-white-50 text-decoration-none small">Enviar material</a></li>
           <li class="mb-1"><a href="{{ url_for('main.juntar_se') }}" class="text-white-50 text-decoration-none small">Candidatar-se</a></li>

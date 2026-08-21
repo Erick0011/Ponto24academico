@@ -1,5 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{% if pasta_atual %}{{ pasta_atual.nome }} — {% endif %}Explorar por pastas — Ponto 24 Académico{% endblock %}
+{% block title %}{% if sem_pasta %}Sem pasta — {% elif pasta_atual %}{{ pasta_atual.nome }} — {% endif %}Explorar por pastas — Ponto 24 Académico{% endblock %}
+{% block meta_description %}{{ meta_descricao }}{% endblock %}
+{% block og_title %}{% if sem_pasta %}Sem pasta — {% elif pasta_atual %}{{ pasta_atual.nome }} — {% endif %}Explorar por pastas — Ponto 24 Académico{% endblock %}
+{% block og_description %}{{ meta_descricao }}{% endblock %}
+{% block meta_robots %}{% if sem_pasta %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
@@ -19,6 +23,12 @@
         <p class="text-muted small mb-0">Sem subpastas.</p>
         {% endfor %}
 
+        {% if not pasta_atual and not sem_pasta and sem_pasta_count %}
+        <a href="{{ url_for('materiais.pastas_sem_pasta') }}" class="p24-filter-item d-block text-decoration-none">
+          <i class="bi bi-folder-x"></i> Sem pasta <span class="text-muted">({{ sem_pasta_count }})</span>
+        </a>
+        {% endif %}
+
         {% if pasta_atual %}
         <hr class="my-3">
         <a href="{{ url_for('materiais.listar', pasta=pasta_atual.id) }}" class="btn btn-p24-blue w-100 fw-700 btn-sm">
@@ -35,6 +45,9 @@
       <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb p24-breadcrumb mb-0">
           <li class="breadcrumb-item"><a href="{{ url_for('materiais.pastas_raiz') }}">Pastas</a></li>
+          {% if sem_pasta %}
+          <li class="breadcrumb-item active" aria-current="page">Sem pasta</li>
+          {% endif %}
           {% for a in breadcrumb %}
             {% if loop.last %}
             <li class="breadcrumb-item active" aria-current="page">{{ a.nome }}</li>
@@ -46,9 +59,13 @@
       </nav>
 
       <div class="mb-4">
-        <h4 class="fw-800 mb-1">{{ pasta_atual.nome if pasta_atual else "Explorar por pastas" }}</h4>
+        <h1 class="fw-800 mb-1" style="font-size:1.5rem">
+          {% if sem_pasta %}Sem pasta{% elif pasta_atual %}{{ pasta_atual.nome }}{% else %}Explorar por pastas{% endif %}
+        </h1>
         <p class="text-muted small mb-0">
-          {% if pasta_atual %}
+          {% if sem_pasta %}
+          Materiais aprovados que ainda não foram organizados em nenhuma pasta — continuam disponíveis normalmente em <a href="{{ url_for('materiais.listar') }}">Explorar</a>, é só uma vista de arrumação para quem modera.
+          {% elif pasta_atual %}
           Materiais aprovados nesta pasta e nas suas subpastas.
           {% else %}
           Navega pela hierarquia de pastas criada pelos administradores e moderadores.
@@ -96,8 +113,13 @@
       {% else %}
       <div class="text-center py-5">
         <i class="bi bi-inbox text-muted" style="font-size:3rem"></i>
+        {% if sem_pasta %}
+        <h5 class="mt-3 fw-700">Está tudo organizado</h5>
+        <p class="text-muted">Já não há materiais aprovados por atribuir a uma pasta.</p>
+        {% else %}
         <h5 class="mt-3 fw-700">Nenhum material nesta pasta</h5>
         <p class="text-muted">Ainda não há materiais aprovados atribuídos a esta pasta.</p>
+        {% endif %}
       </div>
       {% endif %}
 

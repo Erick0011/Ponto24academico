@@ -27,10 +27,16 @@
   <!-- Conteúdo -->
   <div class="flex-grow-1 min-w-0">
     <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-      {% if post.fixado %}
-      <span class="badge bg-warning text-dark fw-600"><i class="bi bi-pin-angle-fill me-1"></i>Fixado</span>
+      {% if post.esta_fixado_ativo %}
+      <span class="badge bg-warning text-dark fw-600" title="{% if post.fixado_ate %}Fixado até {{ post.fixado_ate.strftime('%d/%m/%Y') }}{% else %}Fixado sem prazo{% endif %}">
+        <i class="bi bi-pin-angle-fill me-1"></i>Fixado{% if post.fixado_ate %} até {{ post.fixado_ate.strftime('%d/%m') }}{% endif %}
+      </span>
       {% endif %}
+      {% if post.tipo == 'aviso' %}
+      <span class="badge bg-danger fw-600"><i class="bi bi-patch-check-fill me-1"></i>Aviso oficial</span>
+      {% else %}
       <span class="badge bg-p24-light text-p24 fw-600">{{ post.tipo_label }}</span>
+      {% endif %}
     </div>
     <a href="{{ url_for('comunidade.detalhe', id=post.id) }}" class="text-decoration-none text-dark">
       <h6 class="fw-800 mb-1">{{ post.titulo }}</h6>
@@ -38,6 +44,14 @@
     <p class="text-muted small mb-2" style="overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">
       {{ post.corpo }}
     </p>
+    {% if post.tags %}
+    <div class="d-flex flex-wrap gap-1 mb-2">
+      {% for tag in post.tags %}
+      <a href="{{ url_for('comunidade.feed', tag=tag.slug) }}"
+         class="badge bg-light text-muted fw-500 text-decoration-none">#{{ tag.nome }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
     <div class="d-flex align-items-center gap-3 text-muted" style="font-size:.78rem">
       <span><i class="bi bi-person-fill me-1"></i>{{ post.autor.nome if post.autor else "Utilizador removido" }}</span>
       <span>{{ post.criado_em.strftime('%d/%m/%Y') }}</span>

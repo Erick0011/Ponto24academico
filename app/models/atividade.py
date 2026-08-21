@@ -52,6 +52,9 @@ class AtividadeLog(db.Model):
     EVENTO_COMUNIDADE_POST_ELIMINADO = "comunidade_post_eliminado"
     EVENTO_COMUNIDADE_RESPOSTA_ELIMINADA = "comunidade_resposta_eliminada"
     EVENTO_COMUNIDADE_RELATORIO_RESOLVIDO = "comunidade_relatorio_resolvido"
+    EVENTO_COMUNIDADE_POST_FIXADO = "comunidade_post_fixado"
+    EVENTO_COMUNIDADE_USER_SUSPENSO = "comunidade_user_suspenso"
+    EVENTO_COMUNIDADE_USER_REATIVADO = "comunidade_user_reativado"
 
     id = db.Column(db.Integer, primary_key=True)
     evento = db.Column(db.String(40), nullable=False, index=True)
