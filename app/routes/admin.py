@@ -493,7 +493,8 @@ def _pastas_ordenadas():
 @moderador_required
 def pastas():
     todas = _pastas_ordenadas()
-    return render_template("admin/pastas.html", pastas=todas)
+    raizes = [p for p in todas if p.parent_id is None]
+    return render_template("admin/pastas.html", pastas=todas, raizes=raizes)
 
 
 @admin_bp.route("/pastas/criar", methods=["POST"])
