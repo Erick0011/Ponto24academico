@@ -31,6 +31,14 @@ def _slugify(s):
     return "".join(c for c in s if unicodedata.category(c) != "Mn")
 
 
+def _truncar(texto, limite=157):
+    """Corta texto no limite de caracteres sem partir palavras (para meta description)."""
+    texto = " ".join((texto or "").split())
+    if len(texto) <= limite:
+        return texto
+    return texto[:limite].rsplit(" ", 1)[0].rstrip(",.;") + "…"
+
+
 main_bp = Blueprint("main", __name__)
 
 
@@ -112,6 +120,8 @@ def index():
 @login_required
 def dashboard():
     """Dashboard do utilizador autenticado."""
+    from app.services.recomendacao_service import materiais_para_utilizador, posts_para_utilizador
+
     meus_materiais = (
         current_user.materiais.order_by(Material.criado_em.desc()).limit(5).all()
     )
@@ -133,6 +143,8 @@ def dashboard():
         meus_materiais=meus_materiais,
         recentes=recentes,
         populares=populares,
+        recomendados=materiais_para_utilizador(current_user),
+        posts_recomendados=posts_para_utilizador(current_user, limite=4),
     )
 
 
@@ -140,6 +152,8 @@ def dashboard():
 @login_required
 def perfil():
     """Perfil do utilizador atual."""
+    from app.services.badges_service import badges_do_utilizador
+
     todos_materiais = current_user.materiais.order_by(Material.criado_em.desc()).all()
     materiais_favoritos = [
         f.material
@@ -150,6 +164,7 @@ def perfil():
         "dashboard/perfil.html",
         materiais=todos_materiais,
         favoritos=materiais_favoritos,
+        badges=badges_do_utilizador(current_user),
     )
 
 
@@ -193,6 +208,8 @@ def provas_simuladas():
 @main_bp.route("/utilizador/<int:id>")
 def ver_perfil(id):
     """Perfil público de qualquer utilizador."""
+    from app.services.badges_service import badges_do_utilizador
+
     autor = User.query.get_or_404(id)
     materiais = (
         autor.materiais.filter_by(status=Material.STATUS_APROVADO)
@@ -200,11 +217,19 @@ def ver_perfil(id):
         .all()
     )
     total_downloads = sum(m.downloads for m in materiais)
+    partes = [autor.nome]
+    if autor.instituicao:
+        partes.append(autor.instituicao)
+    meta_descricao = _truncar(
+        f"{' — '.join(partes)}. {len(materiais)} materiais partilhados no Ponto 24 Académico."
+    )
     return render_template(
         "main/perfil_publico.html",
         autor=autor,
         materiais=materiais,
         total_downloads=total_downloads,
+        meta_descricao=meta_descricao,
+        badges=badges_do_utilizador(autor),
     )
 
 
@@ -291,6 +316,21 @@ def suporte():
     return render_template("main/suporte.html", cfg=cfg)
 
 
+def _stats_candidatura():
+    """Números para a secção de prova social da página de candidatura."""
+    total_candidaturas = Candidatura.query.count()
+    total_universidades = (
+        db.session.query(Candidatura.universidade)
+        .filter(Candidatura.universidade.isnot(None), Candidatura.universidade != "")
+        .distinct()
+        .count()
+    )
+    return {
+        "total_candidaturas": total_candidaturas,
+        "total_universidades": total_universidades,
+    }
+
+
 @main_bp.route("/juntar-se", methods=["GET", "POST"])
 @limiter.limit("5 per hour", methods=["POST"])
 def juntar_se():
@@ -339,7 +379,7 @@ def juntar_se():
             for erro in erros:
                 flash(erro, "danger")
             # Volta para o formulário com os dados preenchidos (opcional)
-            return render_template("main/juntar_se.html"), 400
+            return render_template("main/juntar_se.html", **_stats_candidatura()), 400
 
         # ── Cria e guarda ──
         try:
@@ -381,10 +421,10 @@ def juntar_se():
                 "Ocorreu um erro ao guardar a candidatura. Tenta novamente.", "danger"
             )
             # Em dev podes logar: app.logger.error(e)
-            return render_template("main/juntar_se.html"), 500
+            return render_template("main/juntar_se.html", **_stats_candidatura()), 500
 
     # GET
-    return render_template("main/juntar_se.html")
+    return render_template("main/juntar_se.html", **_stats_candidatura())
 
 
 @main_bp.route("/acesso-antecipado", methods=["GET", "POST"])
@@ -445,7 +485,13 @@ def robots_txt():
         "Disallow: /admin/",
         "Disallow: /auth/",
         "Disallow: /notificacoes/",
+        "Disallow: /dashboard",
+        "Disallow: /perfil",
         "Disallow: /materiais/submeter",
+        "Disallow: /materiais/*/preview",
+        "Disallow: /materiais/*/download",
+        "Disallow: /comunidade/novo",
+        "Disallow: /marketing/cancelar/",
         "",
         f"Sitemap: {url_for('main.sitemap_xml', _external=True)}",
     ]
@@ -454,29 +500,91 @@ def robots_txt():
 
 @main_bp.route("/sitemap.xml")
 def sitemap_xml():
+    """Sitemap gerado dinamicamente a partir dos dados — nunca escrito à mão,
+    para não desatualizar à medida que materiais, pastas, posts e perfis mudam.
+    Só inclui páginas públicas e efetivamente indexáveis (200, sem noindex,
+    sem exigir login)."""
     now = datetime.utcnow().strftime("%Y-%m-%d")
-    paginas_estaticas = [
-        (url_for("main.index", _external=True), now, "weekly", "1.0"),
-        (url_for("main.sobre_nos", _external=True), now, "monthly", "0.8"),
-        (url_for("main.como_funciona", _external=True), now, "monthly", "0.7"),
-        (url_for("main.provas_simuladas", _external=True), now, "weekly", "0.8"),
+    urls = [
+        # (loc, lastmod, changefreq, priority)
+        (url_for("main.index", _external=True), now, "daily", "1.0"),
         (url_for("materiais.listar", _external=True), now, "daily", "0.9"),
+        (url_for("materiais.pastas_raiz", _external=True), now, "weekly", "0.6"),
+        (url_for("comunidade.feed", _external=True), now, "daily", "0.7"),
+        (url_for("main.como_funciona", _external=True), now, "monthly", "0.6"),
+        (url_for("main.sobre_nos", _external=True), now, "monthly", "0.5"),
+        (url_for("main.anunciar", _external=True), now, "monthly", "0.4"),
+        (url_for("main.suporte", _external=True), now, "yearly", "0.3"),
+        (url_for("main.juntar_se", _external=True), now, "monthly", "0.3"),
+        # Nota: "/provas-simuladas" fica de fora — página "em construção",
+        # sem conteúdo real ainda (ver meta_robots noindex no próprio template).
     ]
+
     materiais = (
         Material.query.filter_by(status=Material.STATUS_APROVADO)
         .order_by(Material.criado_em.desc())
-        .limit(1000)
+        .limit(2000)
         .all()
     )
-    urls = paginas_estaticas + [
+    urls += [
         (
             url_for("materiais.detalhe", id=m.id, _external=True),
-            m.criado_em.strftime("%Y-%m-%d"),
+            (m.atualizado_em or m.criado_em).strftime("%Y-%m-%d"),
             "monthly",
             "0.6",
         )
         for m in materiais
     ]
+
+    from app.models.pasta import Pasta
+    pastas = Pasta.query.order_by(Pasta.id).limit(1000).all()
+    urls += [
+        (
+            url_for("materiais.pastas_ver", id=p.id, _external=True),
+            p.criado_em.strftime("%Y-%m-%d"),
+            "weekly",
+            "0.5",
+        )
+        for p in pastas
+    ]
+
+    from app.models.comunidade import ComunidadePost
+    posts = (
+        ComunidadePost.query.order_by(ComunidadePost.criado_em.desc())
+        .limit(1000)
+        .all()
+    )
+    urls += [
+        (
+            url_for("comunidade.detalhe", id=p.id, _external=True),
+            (p.atualizado_em or p.criado_em).strftime("%Y-%m-%d"),
+            "weekly",
+            "0.5",
+        )
+        for p in posts
+    ]
+
+    # Perfis públicos: só de utilizadores ativos com pelo menos 1 material
+    # aprovado (evita indexar perfis vazios / sem conteúdo real).
+    autores_ids = (
+        db.session.query(Material.autor_id)
+        .filter(Material.status == Material.STATUS_APROVADO)
+        .distinct()
+    )
+    autores = (
+        User.query.filter(User.id.in_(autores_ids), User.is_active.is_(True))
+        .all()
+    )
+    urls += [
+        (
+            url_for("main.ver_perfil", id=u.id, _external=True),
+            now,
+            "monthly",
+            "0.3",
+        )
+        for u in autores
+    ]
+
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
     for loc, lastmod, changefreq, priority in urls:

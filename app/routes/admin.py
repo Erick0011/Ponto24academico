@@ -575,7 +575,6 @@ def configuracoes():
         campos = [
             "email_suporte", "whatsapp", "instagram", "telegram",
             "facebook", "endereco", "texto_suporte",
-            "modo_pre_lancamento",
         ]
         for campo in campos:
             Configuracao.set(campo, request.form.get(campo, "").strip())
@@ -1131,12 +1130,116 @@ def eliminar_conteudo_comunidade(id):
     return redirect(request.referrer or url_for("admin.comunidade_relatorios"))
 
 
+DURACOES_COMUNIDADE = {
+    "1d": timedelta(days=1),
+    "3d": timedelta(days=3),
+    "7d": timedelta(days=7),
+    "30d": timedelta(days=30),
+    "permanente": None,
+}
+
+
 @admin_bp.route("/comunidade/posts/<int:id>/fixar", methods=["POST"])
 @login_required
 @moderador_required
 def fixar_post_comunidade(id):
     post = ComunidadePost.query.get_or_404(id)
-    post.fixado = not post.fixado
+
+    if post.esta_fixado_ativo:
+        post.fixado = False
+        post.fixado_ate = None
+        mensagem = "Publicação desafixada."
+    else:
+        duracao_key = request.form.get("duracao", "7d")
+        delta = DURACOES_COMUNIDADE.get(duracao_key, timedelta(days=7))
+        post.fixado = True
+        post.fixado_ate = (datetime.utcnow() + delta) if delta else None
+        mensagem = "Publicação fixada."
+
+    registar_atividade(
+        AtividadeLog.EVENTO_COMUNIDADE_POST_FIXADO,
+        utilizador_id=current_user.id, alvo_tipo="comunidade_post", alvo_id=post.id,
+        detalhes={"fixado": post.fixado,
+                  "fixado_ate": post.fixado_ate.isoformat() if post.fixado_ate else None},
+    )
     db.session.commit()
-    flash("Publicação fixada." if post.fixado else "Publicação desafixada.", "sucesso")
+    flash(mensagem, "sucesso")
     return redirect(request.referrer or url_for("comunidade.detalhe", id=post.id))
+
+
+# ── Restrição de utilizadores na Comunidade (admin e moderadores) ─────────────
+
+@admin_bp.route("/comunidade/utilizadores")
+@login_required
+@moderador_required
+def comunidade_utilizadores():
+    q = request.args.get("q", "").strip()
+    resultados = []
+    if q:
+        like = f"%{q}%"
+        resultados = (
+            User.query.filter(db.or_(User.nome.ilike(like), User.email.ilike(like)))
+            .order_by(User.nome).limit(30).all()
+        )
+
+    suspensos = (
+        User.query.filter(db.or_(
+            User.comunidade_banido.is_(True),
+            db.and_(User.comunidade_suspenso_ate.isnot(None),
+                    User.comunidade_suspenso_ate > datetime.utcnow()),
+        )).order_by(User.nome).all()
+    )
+
+    return render_template(
+        "admin/comunidade_utilizadores.html",
+        resultados=resultados, suspensos=suspensos, q=q,
+    )
+
+
+@admin_bp.route("/comunidade/utilizadores/<int:id>/suspender", methods=["POST"])
+@login_required
+@moderador_required
+def suspender_utilizador_comunidade(id):
+    user = User.query.get_or_404(id)
+    if user.is_admin or user.is_moderador:
+        flash("Não é possível suspender um administrador ou moderador.", "erro")
+        return redirect(request.referrer or url_for("admin.comunidade_utilizadores"))
+
+    duracao_key = request.form.get("duracao", "7d")
+    motivo = request.form.get("motivo", "").strip()
+
+    if duracao_key == "permanente":
+        user.comunidade_banido = True
+        user.comunidade_suspenso_ate = None
+    else:
+        delta = DURACOES_COMUNIDADE.get(duracao_key, timedelta(days=7))
+        user.comunidade_banido = False
+        user.comunidade_suspenso_ate = datetime.utcnow() + delta
+    user.comunidade_suspensao_motivo = motivo or None
+
+    registar_atividade(
+        AtividadeLog.EVENTO_COMUNIDADE_USER_SUSPENSO,
+        utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
+        detalhes={"duracao": duracao_key, "motivo": motivo},
+    )
+    db.session.commit()
+    flash(f"{user.nome} foi suspenso(a) da Comunidade.", "sucesso")
+    return redirect(request.referrer or url_for("admin.comunidade_utilizadores"))
+
+
+@admin_bp.route("/comunidade/utilizadores/<int:id>/reativar", methods=["POST"])
+@login_required
+@moderador_required
+def reativar_utilizador_comunidade(id):
+    user = User.query.get_or_404(id)
+    user.comunidade_banido = False
+    user.comunidade_suspenso_ate = None
+    user.comunidade_suspensao_motivo = None
+
+    registar_atividade(
+        AtividadeLog.EVENTO_COMUNIDADE_USER_REATIVADO,
+        utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
+    )
+    db.session.commit()
+    flash(f"{user.nome} pode voltar a participar na Comunidade.", "sucesso")
+    return redirect(request.referrer or url_for("admin.comunidade_utilizadores"))

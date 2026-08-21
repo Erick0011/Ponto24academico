@@ -109,6 +109,12 @@
                   <i class="bi bi-x"></i>
                 </button>
               </form>
+              {% if alvo and alvo.autor %}
+              <a href="{{ url_for('admin.comunidade_utilizadores', q=alvo.autor.email) }}"
+                 class="btn btn-sm btn-outline-danger fw-600" title="Gerir/suspender autor">
+                <i class="bi bi-person-x"></i>
+              </a>
+              {% endif %}
             </div>
             {% else %}
             <span class="text-muted small">—</span>

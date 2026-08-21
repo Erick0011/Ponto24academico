@@ -16,6 +16,7 @@
             {% set t_thumb = thumb_url(t) %}
             {% if t_thumb %}
               <img src="{{ t_thumb }}"
+                   alt="{{ m.titulo_base }}"
                    style="width:100%;height:140px;object-fit:cover;display:block;">
             {% else %}
               <div class="d-flex align-items-center justify-content-center h-100" style="background:#f8f9fa;font-size:2rem;">

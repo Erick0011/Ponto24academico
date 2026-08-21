@@ -76,7 +76,7 @@ def create_app(config_name: str = None):
     from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario  # noqa: F401
     from app.models.comunidade import (                   # noqa: F401
         ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
-        ComunidadeVoto, ComunidadeRelatorio,
+        ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag,
     )
 
     # User loader para Flask-Login
@@ -107,37 +107,6 @@ def create_app(config_name: str = None):
 
     PRAZO_CONFIRMACAO = 7  # dias
 
-    # Endpoints acessíveis sem conta em modo pré-lançamento
-    _ENDPOINTS_PUBLICOS_PRE = {
-        "main.acesso_antecipado",
-        "main.suporte",
-        "auth.entrar",
-        "auth.registar",
-        "auth.confirmar_email",
-        "auth.reenviar_confirmacao",
-        "auth.email_nao_confirmado",
-        "auth.recuperar_senha",
-        "auth.redefinir_senha",
-        "auth.sair",
-        "static",
-        "main.robots_txt",
-        "main.sitemap_xml",
-        "main.cancelar_marketing",
-    }
-
-    @app.before_request
-    def bloquear_pre_lancamento():
-        """Redireciona utilizadores não autenticados para a lista de espera quando activo."""
-        if _cu.is_authenticated:
-            return  # utilizadores com sessão passam sempre
-        endpoint = flask_request.endpoint or ""
-        if endpoint in _ENDPOINTS_PUBLICOS_PRE:
-            return
-        from app.models.configuracao import Configuracao as Cfg
-        if Cfg.get("modo_pre_lancamento", "0") == "1":
-            from flask import redirect, url_for
-            return redirect(url_for("main.acesso_antecipado"))
-
     @app.before_request
     def verificar_email_confirmado():
         if not _cu.is_authenticated:
@@ -164,7 +133,6 @@ def create_app(config_name: str = None):
             "email_suporte": Cfg.get("email_suporte", "suporte@ponto24academico.com"),
             "whatsapp":      Cfg.get("whatsapp", ""),
             "instagram":     Cfg.get("instagram", ""),
-            "modo_pre_lancamento": Cfg.get("modo_pre_lancamento", "0"),
         }
         try:
             if _cu.is_authenticated:

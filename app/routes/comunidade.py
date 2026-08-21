@@ -1,3 +1,5 @@
+import re
+import unicodedata
 from datetime import datetime
 from flask import (
     Blueprint, render_template, redirect, url_for, flash, request, abort,
@@ -6,7 +8,7 @@ from flask_login import login_required, current_user
 from app import db, limiter
 from app.models.comunidade import (
     ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
-    ComunidadeVoto, ComunidadeRelatorio,
+    ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag,
 )
 from app.models.notificacao import Notificacao
 from app.models.atividade import AtividadeLog
@@ -15,22 +17,68 @@ from app.services.notificacoes_service import criar_notificacao
 from app.services.creditos_service import dar_creditos_comunidade_post, dar_creditos_comunidade_resposta
 from app.services.upload_service import guardar_ficheiro, apagar_ficheiro
 from app.services.comunidade_service import aplicar_voto, voto_do_utilizador, feed_query
+from app.services.recomendacao_service import posts_relacionados
 from app.utils.honeypot import honeypot_preenchido
 
 comunidade_bp = Blueprint("comunidade", __name__, url_prefix="/comunidade")
+
+
+def _truncar(texto, limite=157):
+    """Corta texto no limite de caracteres sem partir palavras (para meta description)."""
+    texto = " ".join((texto or "").split())
+    if len(texto) <= limite:
+        return texto
+    return texto[:limite].rsplit(" ", 1)[0].rstrip(",.;") + "…"
 
 
 def _pode_moderar() -> bool:
     return current_user.is_authenticated and (current_user.is_admin or current_user.is_moderador)
 
 
+def _tipos_disponiveis():
+    """"Aviso" só pode ser escolhido por quem modera — é o canal de
+    comunicados oficiais da equipa, não uma etiqueta livre para qualquer post."""
+    if _pode_moderar():
+        return ComunidadePost.TIPOS
+    return [t for t in ComunidadePost.TIPOS if t[0] != ComunidadePost.TIPO_AVISO]
+
+
+def _slugify_tag(texto: str) -> str:
+    texto = unicodedata.normalize("NFD", texto.strip().lower())
+    texto = "".join(c for c in texto if unicodedata.category(c) != "Mn")
+    texto = re.sub(r"[^a-z0-9]+", "-", texto).strip("-")
+    return texto[:40]
+
+
+def _obter_ou_criar_tags(bruto: str, limite: int = 5):
+    """Converte "cálculo, provas, exame" em ComunidadeTag existentes ou novas
+    (folksonomia — sem curadoria de admin)."""
+    nomes = [n.strip() for n in (bruto or "").split(",")]
+    nomes = [n for n in nomes if n][:limite]
+    tags, vistos = [], set()
+    for nome in nomes:
+        slug = _slugify_tag(nome)
+        if not slug or slug in vistos:
+            continue
+        vistos.add(slug)
+        tag = ComunidadeTag.query.filter_by(slug=slug).first()
+        if not tag:
+            tag = ComunidadeTag(slug=slug, nome=nome[:40])
+            db.session.add(tag)
+            db.session.flush()
+        tags.append(tag)
+    return tags
+
+
 @comunidade_bp.route("/")
 def feed():
     tipo = request.args.get("tipo", "").strip() or None
+    tag = request.args.get("tag", "").strip() or None
+    busca = request.args.get("q", "").strip()
     ordenar = request.args.get("ordenar", "recentes")
     page = request.args.get("page", 1, type=int)
 
-    posts = feed_query(tipo=tipo, ordenar=ordenar).paginate(page=page, per_page=12, error_out=False)
+    posts = feed_query(tipo=tipo, tag=tag, busca=busca, ordenar=ordenar).paginate(page=page, per_page=12, error_out=False)
 
     votos_posts = {}
     if current_user.is_authenticated:
@@ -38,7 +86,7 @@ def feed():
             votos_posts[p.id] = voto_do_utilizador(current_user, ComunidadeVoto.ALVO_POST, p.id)
 
     return render_template(
-        "comunidade/feed.html", posts=posts, tipo=tipo, ordenar=ordenar,
+        "comunidade/feed.html", posts=posts, tipo=tipo, tag=tag, busca=busca, ordenar=ordenar,
         tipos=ComunidadePost.TIPOS, votos_posts=votos_posts,
     )
 
@@ -47,6 +95,10 @@ def feed():
 @login_required
 @limiter.limit("10 per hour", methods=["POST"])
 def criar_post():
+    if current_user.suspenso_da_comunidade:
+        flash("A tua conta está suspensa na Comunidade e não podes publicar.", "erro")
+        return redirect(url_for("comunidade.feed"))
+
     if request.method == "POST":
         if honeypot_preenchido():
             flash("Não foi possível publicar. Tenta novamente.", "erro")
@@ -57,12 +109,16 @@ def criar_post():
         tipo = request.form.get("tipo", ComunidadePost.TIPO_DISCUSSAO)
         if tipo not in dict(ComunidadePost.TIPOS):
             tipo = ComunidadePost.TIPO_DISCUSSAO
+        if tipo == ComunidadePost.TIPO_AVISO and not _pode_moderar():
+            flash("Só a equipa pode publicar Avisos oficiais — a tua publicação foi criada como Discussão.", "aviso")
+            tipo = ComunidadePost.TIPO_DISCUSSAO
 
         if not titulo or not corpo:
             flash("Preenche o título e o conteúdo da publicação.", "erro")
-            return render_template("comunidade/post_form.html", tipos=ComunidadePost.TIPOS)
+            return render_template("comunidade/post_form.html", tipos=_tipos_disponiveis())
 
         post = ComunidadePost(titulo=titulo, corpo=corpo, tipo=tipo, autor_id=current_user.id)
+        post.tags = _obter_ou_criar_tags(request.form.get("tags", ""))
         db.session.add(post)
         db.session.flush()
 
@@ -87,7 +143,7 @@ def criar_post():
         flash("Publicação criada!", "sucesso")
         return redirect(url_for("comunidade.detalhe", id=post.id))
 
-    return render_template("comunidade/post_form.html", tipos=ComunidadePost.TIPOS)
+    return render_template("comunidade/post_form.html", tipos=_tipos_disponiveis())
 
 
 @comunidade_bp.route("/<int:id>")
@@ -109,10 +165,14 @@ def detalhe(id):
         for r in respostas.items:
             votos_respostas[r.id] = voto_do_utilizador(current_user, ComunidadeVoto.ALVO_RESPOSTA, r.id)
 
+    meta_descricao = _truncar(post.corpo) or f"Publicação de {post.autor.nome} na Comunidade Ponto 24 Académico."
+
     return render_template(
         "comunidade/detalhe.html", post=post, respostas=respostas, ordenar=ordenar,
         voto_post=voto_post, votos_respostas=votos_respostas, pode_moderar=_pode_moderar(),
+        meta_descricao=meta_descricao,
         motivos=ComunidadeRelatorio.MOTIVOS,
+        relacionados=posts_relacionados(post),
     )
 
 
@@ -121,6 +181,9 @@ def detalhe(id):
 @limiter.limit("30 per hour")
 def criar_resposta(id):
     post = ComunidadePost.query.get_or_404(id)
+    if current_user.suspenso_da_comunidade:
+        flash("A tua conta está suspensa na Comunidade e não podes responder.", "erro")
+        return redirect(url_for("comunidade.detalhe", id=id))
     if honeypot_preenchido():
         flash("Não foi possível publicar a resposta. Tenta novamente.", "erro")
         return redirect(url_for("comunidade.detalhe", id=id))

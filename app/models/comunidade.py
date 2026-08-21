@@ -2,6 +2,30 @@ from datetime import datetime
 from app import db
 
 
+# Tabela de associação da relação N:N entre posts e tags.
+comunidade_post_tags = db.Table(
+    "comunidade_post_tags",
+    db.Column("post_id", db.Integer, db.ForeignKey("comunidade_posts.id"), primary_key=True),
+    db.Column("tag_id", db.Integer, db.ForeignKey("comunidade_tags.id"), primary_key=True),
+)
+
+
+class ComunidadeTag(db.Model):
+    """Tag livre associada a publicações da Comunidade — folksonomia: criada
+    pelos próprios utilizadores ao escrever (sem curadoria de admin), reaproveitada
+    quando o mesmo slug já existe."""
+
+    __tablename__ = "comunidade_tags"
+
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(40), unique=True, nullable=False, index=True)
+    nome = db.Column(db.String(40), nullable=False)  # como foi escrita da 1ª vez (com acentos/maiúsculas)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<ComunidadeTag {self.slug}>"
+
+
 class ComunidadePost(db.Model):
     """Publicação da secção Comunidade — pergunta, discussão ou aviso."""
 
@@ -23,6 +47,11 @@ class ComunidadePost(db.Model):
 
     autor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     fixado = db.Column(db.Boolean, default=False, nullable=False)
+    # Prazo do destaque — None só é válido enquanto fixado=False; ao fixar,
+    # a rota admin.fixar_post_comunidade define sempre uma data (ou permanente,
+    # que também fica None mas é escolha explícita do moderador). Ver
+    # esta_fixado_ativo, que é a fonte de verdade para mostrar o destaque.
+    fixado_ate = db.Column(db.DateTime, nullable=True)
 
     respostas_count = db.Column(db.Integer, default=0, nullable=False)
     votos_score = db.Column(db.Integer, default=0, nullable=False, index=True)
@@ -39,10 +68,22 @@ class ComunidadePost(db.Model):
         "ComunidadePostImagem", back_populates="post", lazy="dynamic",
         cascade="all, delete-orphan",
     )
+    tags = db.relationship(
+        "ComunidadeTag", secondary=comunidade_post_tags,
+        backref=db.backref("posts", lazy="dynamic"),
+    )
 
     @property
     def tipo_label(self) -> str:
         return dict(self.TIPOS).get(self.tipo, self.tipo)
+
+    @property
+    def esta_fixado_ativo(self) -> bool:
+        """Fonte de verdade para mostrar o destaque "Fixado": só True se
+        `fixado` estiver ligado E ainda dentro do prazo (ou sem prazo = permanente)."""
+        if not self.fixado:
+            return False
+        return self.fixado_ate is None or self.fixado_ate > datetime.utcnow()
 
     def __repr__(self):
         return f"<ComunidadePost {self.id} '{self.titulo}'>"

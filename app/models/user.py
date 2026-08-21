@@ -34,6 +34,12 @@ class User(UserMixin, db.Model):
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     ultimo_login = db.Column(db.DateTime)
 
+    # Moderação da Comunidade — suspensão temporária (até uma data) ou permanente
+    # (comunidade_banido=True). Ver User.suspenso_da_comunidade.
+    comunidade_banido = db.Column(db.Boolean, default=False)
+    comunidade_suspenso_ate = db.Column(db.DateTime, nullable=True)
+    comunidade_suspensao_motivo = db.Column(db.String(300), nullable=True)
+
     # Relações
     materiais      = db.relationship("Material",      back_populates="autor",     foreign_keys="Material.autor_id",        lazy="dynamic")
     avaliacoes     = db.relationship("Avaliacao",     back_populates="utilizador", lazy="dynamic")
@@ -56,6 +62,14 @@ class User(UserMixin, db.Model):
 
     def ganhar_creditos(self, quantidade: int):
         self.creditos += quantidade
+
+    @property
+    def suspenso_da_comunidade(self) -> bool:
+        """True se o utilizador está banido permanentemente ou dentro do
+        prazo de uma suspensão temporária da Comunidade."""
+        if self.comunidade_banido:
+            return True
+        return bool(self.comunidade_suspenso_ate and self.comunidade_suspenso_ate > datetime.utcnow())
 
     @property
     def nivel(self):

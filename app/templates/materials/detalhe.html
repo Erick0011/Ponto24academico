@@ -1,5 +1,37 @@
 {% extends "base.html" %}
 {% block title %}{{ material.titulo }} — Ponto 24 Académico{% endblock %}
+{% block meta_description %}{{ meta_descricao }}{% endblock %}
+{% block og_title %}{{ material.titulo }} — Ponto 24 Académico{% endblock %}
+{% block og_description %}{{ meta_descricao }}{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LearningResource",
+  "name": {{ material.titulo | tojson }},
+  "description": {{ meta_descricao | tojson }},
+  "url": "{{ request.url }}",
+  "learningResourceType": {{ (material.categoria.nome if material.categoria else "Material académico") | tojson }},
+  "educationalLevel": {{ (material.ano_escolar or "Ensino superior") | tojson }},
+  "dateCreated": "{{ material.criado_em.strftime('%Y-%m-%d') }}",
+  "dateModified": "{{ (material.atualizado_em or material.criado_em).strftime('%Y-%m-%d') }}",
+  "inLanguage": "pt",
+  "author": {
+    "@type": "Person",
+    "name": {{ material.autor.nome | tojson }}
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "Ponto 24 Académico",
+    "url": "{{ url_for('main.index', _external=True) }}"
+  }
+  {%- if material.instituicao %},
+  "about": {{ material.instituicao | tojson }}
+  {%- endif %}
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <div class="container-xl py-4">
@@ -31,7 +63,7 @@
             <i class="bi bi-file-earmark-pdf fs-5"></i>
           </div>
           <div class="flex-grow-1 min-width-0">
-            <h4 class="fw-800 mb-1" style="font-size:clamp(1rem,3vw,1.4rem)">{{ material.titulo }}</h4>
+            <h1 class="fw-800 mb-1" style="font-size:clamp(1rem,3vw,1.4rem)">{{ material.titulo }}</h1>
             <div class="text-muted small">
               {% if material.ano_letivo %}{{ material.ano_letivo }}{% endif %}
               {% if material.semestre %} • {{ material.semestre }}º Semestre{% endif %}
@@ -328,6 +360,19 @@
 
     </div>
   </div>
+
+  <!-- Materiais relacionados -->
+  {% if relacionados %}
+  <div class="mt-4">
+    <h2 class="fw-800 mb-3" style="font-size:1.25rem">Materiais relacionados</h2>
+    <div class="row g-3">
+      {% for m in relacionados %}
+      {% include "materials/_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 
 <!-- Modal: Avaliar -->

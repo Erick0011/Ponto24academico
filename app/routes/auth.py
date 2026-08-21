@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db, limiter
 from app.models.user import User
-from app.models.configuracao import Configuracao
 from app.models.lista_espera import ListaEspera
 from app.services.creditos_service import creditos_ao_registar
 from app.services.mail_service import (
@@ -26,19 +25,11 @@ def registar():
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
 
-    # Modo pré-lançamento: só quem tem convite pode registar
-    modo_pre = Configuracao.get("modo_pre_lancamento", "0") == "1"
+    # Convite opcional (enviado a partir da Lista de Espera, em admin.lista_espera):
+    # se o link for válido, pré-preenche e valida o email — mas o registo está
+    # sempre aberto a qualquer pessoa, com ou sem convite.
     invite_token = request.args.get("token", "").strip()
-    email_convite = None
-
-    if modo_pre:
-        if invite_token:
-            email_convite = verificar_token(invite_token, SALT_CONVITE, max_age=604800)  # 7 dias
-            if not email_convite:
-                flash("Este link de convite é inválido ou expirou.", "erro")
-                return redirect(url_for("main.acesso_antecipado"))
-        else:
-            return redirect(url_for("main.acesso_antecipado"))
+    email_convite = verificar_token(invite_token, SALT_CONVITE, max_age=604800) if invite_token else None
 
     if request.method == "POST":
         if honeypot_preenchido():
@@ -51,8 +42,8 @@ def registar():
         instituicao = request.form.get("instituicao", "").strip()
         curso       = request.form.get("curso", "").strip()
 
-        # Em modo pré-lançamento, o email deve coincidir com o do convite
-        if modo_pre and email_convite and email != email_convite:
+        # Se veio de um link de convite válido, o email deve coincidir com o do convite
+        if email_convite and email != email_convite:
             flash("Usa o email para o qual recebeste o convite.", "erro")
             return render_template("auth/registar.html",
                                    email_convite=email_convite, invite_token=invite_token)

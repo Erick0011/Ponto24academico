@@ -7,12 +7,12 @@ from .atividade import AtividadeLog
 from .campanha_email import CampanhaEmail, CampanhaEmailDestinatario
 from .comunidade import (
     ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
-    ComunidadeVoto, ComunidadeRelatorio,
+    ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag,
 )
 
 __all__ = [
     "User", "Pasta", "Material", "Categoria", "Avaliacao", "Anuncio", "Candidatura",
     "AtividadeLog", "CampanhaEmail", "CampanhaEmailDestinatario",
     "ComunidadePost", "ComunidadePostImagem", "ComunidadeResposta",
-    "ComunidadeVoto", "ComunidadeRelatorio",
+    "ComunidadeVoto", "ComunidadeRelatorio", "ComunidadeTag",
 ]

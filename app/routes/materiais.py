@@ -17,8 +17,29 @@ from app.services.notificacoes_service import criar_notificacao
 from app.models.notificacao import Notificacao
 from app.models.atividade import AtividadeLog
 from app.services.atividade_service import registar_atividade
+from app.services.pesquisa_service import condicoes_e_pontuacao
+from app.services.recomendacao_service import materiais_relacionados
 
 materiais_bp = Blueprint("materiais", __name__, url_prefix="/materiais")
+
+
+def _truncar(texto, limite=157):
+    """Corta texto no limite de caracteres sem partir palavras (para meta description)."""
+    texto = " ".join((texto or "").split())
+    if len(texto) <= limite:
+        return texto
+    return texto[:limite].rsplit(" ", 1)[0].rstrip(",.;") + "…"
+
+
+def _meta_descricao_material(material):
+    """Gera uma meta description única (120-160 caracteres) a partir dos dados do material."""
+    partes = [material.categoria.nome if material.categoria else "Material académico", material.disciplina]
+    if material.instituicao:
+        partes.append(material.instituicao)
+    base = " — ".join(p for p in partes if p)
+    resumo = (material.descricao or "").strip()
+    texto = f"{base}. {resumo}" if resumo else f"{base}. Descarrega grátis no Ponto 24 Académico."
+    return _truncar(texto)
 
 
 def _grupo_metadados(materiais_items):
@@ -63,15 +84,14 @@ def listar():
     pasta_id = request.args.get("pasta", type=int)
     ordenar = request.args.get("ordenar", "recente")
 
+    relevancia = None
     if busca:
-        like = f"%{busca}%"
-        query = query.filter(
-            db.or_(
-                Material.titulo.ilike(like),
-                Material.disciplina.ilike(like),
-                Material.descricao.ilike(like),
-            )
-        )
+        condicao, relevancia = condicoes_e_pontuacao(busca, [
+            (Material.titulo, 5), (Material.disciplina, 3),
+            (Material.instituicao, 2), (Material.curso, 2), (Material.descricao, 1),
+        ])
+        if condicao is not None:
+            query = query.filter(condicao)
     if instituicao:
         query = query.filter(Material.instituicao.ilike(f"%{instituicao}%"))
     if disciplina:
@@ -94,15 +114,17 @@ def listar():
         db.or_(Material.grupo_upload.is_(None), Material.id.in_(lider_ids))
     )
 
-    # Ordenação
-    if ordenar == "popular":
-        query = query.order_by(Material.downloads.desc())
-    elif ordenar == "avaliado":
-        query = query.order_by(Material.nota_media.desc(), Material.downloads.desc())
-    elif ordenar == "visitado":
-        query = query.order_by(Material.visualizacoes.desc())
+    # Ordenação — havendo pesquisa, a relevância manda primeiro e o critério
+    # escolhido (recente/popular/avaliado/visitado) serve de desempate.
+    colunas_ordenar = {
+        "popular":  [Material.downloads.desc()],
+        "avaliado": [Material.nota_media.desc(), Material.downloads.desc()],
+        "visitado": [Material.visualizacoes.desc()],
+    }.get(ordenar, [Material.criado_em.desc()])
+    if relevancia is not None:
+        query = query.order_by(relevancia.desc(), *colunas_ordenar)
     else:
-        query = query.order_by(Material.criado_em.desc())
+        query = query.order_by(*colunas_ordenar)
 
     materiais = query.paginate(page=page, per_page=12, error_out=False)
 
@@ -145,6 +167,19 @@ def listar():
     ).distinct().count()
     total_estudantes = User.query.filter_by(is_active=True).count() + 500
 
+    # Meta description dinâmica: reflete os filtros ativos para não repetir a
+    # mesma description em cada combinação de pesquisa indexada.
+    if busca:
+        meta_descricao = _truncar(f'Resultados para "{busca}" — {materiais.total} materiais encontrados no Ponto 24 Académico.')
+    elif disciplina or instituicao:
+        alvo = " — ".join(p for p in (disciplina, instituicao) if p)
+        meta_descricao = _truncar(f"Materiais de {alvo} disponíveis para download no Ponto 24 Académico.")
+    else:
+        meta_descricao = _truncar(
+            f"Explora {total_materiais_real} materiais académicos aprovados: provas, resumos, exercícios e "
+            f"apontamentos de {total_instituicoes} instituições angolanas."
+        )
+
     return render_template(
         "materials/listar.html",
         materiais=materiais,
@@ -157,6 +192,7 @@ def listar():
             "ano_letivo": ano_letivo,
             "pasta_id": pasta_id,
         },
+        meta_descricao=meta_descricao,
         ordenar=ordenar,
         grupo_counts=grupo_counts,
         grupo_thumbs=grupo_thumbs,
@@ -182,16 +218,41 @@ def pastas_ver(id):
     return _render_pasta(Pasta.query.get_or_404(id))
 
 
-def _render_pasta(pasta):
+@materiais_bp.route("/pastas/sem-pasta")
+def pastas_sem_pasta():
+    """Materiais aprovados sem pasta atribuída — sobretudo os que já existiam
+    antes das pastas serem criadas (pasta_id é opcional, nunca foi obrigatório,
+    por isso nada parte para eles: continuam a aparecer em /materiais/ e nas
+    pesquisas normalmente, só não apareciam na navegação por pastas até agora)."""
+    return _render_pasta(None, sem_pasta=True)
+
+
+def _render_pasta(pasta, sem_pasta=False):
     """Navegação pública (leitura) da árvore de pastas — reaproveita o mesmo
     dedup de grupo_upload e metadados de grupo usados em listar()."""
     page = request.args.get("page", 1, type=int)
 
     breadcrumb = []
-    if pasta is None:
+    sem_pasta_count = 0
+    if sem_pasta:
+        filhos = []
+        query = (
+            Material.query
+            .filter(Material.status == Material.STATUS_APROVADO, Material.pasta_id.is_(None))
+            .order_by(Material.criado_em.desc())
+        )
+        materiais = query.paginate(page=page, per_page=12, error_out=False)
+        grupo_counts, grupo_thumbs = _grupo_metadados(materiais.items)
+    elif pasta is None:
         filhos = Pasta.query.filter_by(parent_id=None).order_by(Pasta.nome).all()
         materiais = None
         grupo_counts, grupo_thumbs = {}, {}
+        # Para não "perder" materiais antigos/sem pasta na navegação — continuam
+        # 100% acessíveis em /materiais/, isto é só para não ficarem esquecidos
+        # de quem navega exclusivamente por pastas.
+        sem_pasta_count = Material.query.filter(
+            Material.status == Material.STATUS_APROVADO, Material.pasta_id.is_(None)
+        ).count()
     else:
         no = pasta
         while no is not None:
@@ -217,10 +278,18 @@ def _render_pasta(pasta):
         materiais = query.paginate(page=page, per_page=12, error_out=False)
         grupo_counts, grupo_thumbs = _grupo_metadados(materiais.items)
 
+    if sem_pasta:
+        meta_descricao = _truncar("Materiais aprovados que ainda não foram organizados em nenhuma pasta.")
+    elif pasta is not None:
+        meta_descricao = _truncar(f"Materiais em {pasta.caminho_display} — explora e descarrega no Ponto 24 Académico.")
+    else:
+        meta_descricao = _truncar("Navega os materiais académicos do Ponto 24 Académico organizados por pastas: universidade, curso, disciplina e ano.")
+
     return render_template(
         "materials/pastas.html",
         pasta_atual=pasta, filhos=filhos, materiais=materiais, breadcrumb=breadcrumb,
-        grupo_counts=grupo_counts, grupo_thumbs=grupo_thumbs,
+        grupo_counts=grupo_counts, grupo_thumbs=grupo_thumbs, meta_descricao=meta_descricao,
+        sem_pasta=sem_pasta, sem_pasta_count=sem_pasta_count,
     )
 
 
@@ -265,6 +334,11 @@ def detalhe(id):
         avaliacao_user=avaliacao_user,
         grupo_materiais=grupo_materiais,
         favorito_ativo=favorito_ativo,
+        meta_descricao=_meta_descricao_material(material),
+        relacionados=materiais_relacionados(material),
+        # _card.html (reaproveitado nos "Materiais relacionados") espera estas
+        # duas variáveis para agrupar uploads múltiplos — aqui não há grupos.
+        grupo_counts={}, grupo_thumbs={},
     )
 
 
