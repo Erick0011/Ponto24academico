@@ -56,10 +56,18 @@ class ComunidadePost(db.Model):
     respostas_count = db.Column(db.Integer, default=0, nullable=False)
     votos_score = db.Column(db.Integer, default=0, nullable=False, index=True)
 
+    # Publicações ficam públicas de imediato (sem fila de aprovação) — estes campos
+    # dão à moderação uma forma de "dar visto" a posts recentes proativamente,
+    # sem depender só de denúncias de outros utilizadores.
+    revisto = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    revisto_por_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    revisto_em = db.Column(db.DateTime, nullable=True)
+
     criado_em = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     autor = db.relationship("User", foreign_keys=[autor_id])
+    revisto_por = db.relationship("User", foreign_keys=[revisto_por_id])
     respostas = db.relationship(
         "ComunidadeResposta", back_populates="post", lazy="dynamic",
         cascade="all, delete-orphan", order_by="ComunidadeResposta.criado_em",
@@ -103,12 +111,16 @@ class ComunidadePostImagem(db.Model):
 
 
 class ComunidadeResposta(db.Model):
-    """Resposta a um post da Comunidade — sem threading (nível único)."""
+    """Resposta a um post da Comunidade. Suporta um único nível de threading:
+    uma resposta pode ser direta ao post (parent_id=None) ou uma réplica a
+    outra resposta (parent_id definido) — réplicas a réplicas não são permitidas,
+    para manter a UI simples (mostram-se sempre indentadas sob o comentário-pai)."""
 
     __tablename__ = "comunidade_respostas"
 
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey("comunidade_posts.id"), nullable=False, index=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey("comunidade_respostas.id"), nullable=True, index=True)
     autor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     corpo = db.Column(db.Text, nullable=False)
     votos_score = db.Column(db.Integer, default=0, nullable=False)
@@ -116,6 +128,10 @@ class ComunidadeResposta(db.Model):
 
     post = db.relationship("ComunidadePost", back_populates="respostas")
     autor = db.relationship("User", foreign_keys=[autor_id])
+    parent = db.relationship("ComunidadeResposta", remote_side=[id], backref=db.backref(
+        "replicas", lazy="dynamic", order_by="ComunidadeResposta.criado_em",
+        cascade="all, delete-orphan", single_parent=True,
+    ))
 
     def __repr__(self):
         return f"<ComunidadeResposta {self.id} post={self.post_id}>"

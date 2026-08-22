@@ -66,6 +66,24 @@
         </div>
       </div>
     </div>
+    <div class="col-6 col-lg-3">
+      <div class="p24-admin-stat">
+        <div class="icon-box bg-primary-subtle"><i class="bi bi-eye text-primary"></i></div>
+        <div>
+          <div class="val text-primary">{{ visitas_30d }}</div>
+          <div class="lbl">Visitas (30d)</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="p24-admin-stat">
+        <div class="icon-box bg-success-subtle"><i class="bi bi-person-check text-success"></i></div>
+        <div>
+          <div class="val text-success">{{ visitantes_unicos_30d }}</div>
+          <div class="lbl">Visitantes únicos (30d)</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="row g-4 mb-4">
@@ -205,8 +223,45 @@
 
   <div class="row g-4 mt-1">
 
+    <!-- ── Páginas mais visitadas ── -->
+    <div class="col-lg-4">
+      <div class="p24-card h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:32px;height:32px;background:var(--p24-blue-lt)">
+            <i class="bi bi-eye text-p24" style="font-size:.85rem"></i>
+          </div>
+          <div>
+            <div class="fw-800" style="font-size:.95rem">Páginas mais visitadas</div>
+            <div class="text-muted" style="font-size:.72rem">Inclui visitantes sem conta — últimos 30 dias</div>
+          </div>
+        </div>
+        {% if paginas_mais_visitadas %}
+        {% set max_v = paginas_mais_visitadas[0][1] %}
+        <div class="d-flex flex-column gap-2">
+          {% for caminho, n in paginas_mais_visitadas %}
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-600 text-truncate" style="font-size:.82rem;max-width:75%;font-family:monospace">{{ caminho }}</span>
+              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
+            </div>
+            <div class="progress" style="height:4px;border-radius:2px">
+              <div class="progress-bar" style="width:{{ (n / max_v * 100)|int }}%;background:var(--p24-blue)"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-eye fs-3 d-block mb-2"></i>
+          Ainda não há visitas registadas.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
     <!-- ── Ações por tipo (log de auditoria) ── -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <div class="p24-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
           <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
@@ -243,7 +298,7 @@
     </div>
 
     <!-- ── Atividade recente ── -->
-    <div class="col-lg-6">
+    <div class="col-lg-4">
       <div class="p24-card h-100">
         <div class="fw-800 mb-3" style="font-size:.95rem">
           <i class="bi bi-clock-history me-2 text-secondary"></i>Atividade recente

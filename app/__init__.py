@@ -78,6 +78,7 @@ def create_app(config_name: str = None):
         ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
         ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag,
     )
+    from app.models.visita import VisitaLog                # noqa: F401
 
     # User loader para Flask-Login
     from app.models.user import User
@@ -189,11 +190,54 @@ def create_app(config_name: str = None):
         args["page"] = str(page)
         return "?" + urlencode(args)
 
+    # ── Estatísticas de tráfego (todos os visitantes, mesmo sem conta) ───────────
+    # Cookie técnico anónimo — só um identificador aleatório, sem dados pessoais —
+    # para contar visitas/visitantes únicos. Ver privacidade.html, secção "Cookies".
+    COOKIE_VISITANTE = "p24_vid"
+    PREFIXOS_IGNORADOS_TRACKING = ("admin.", "static")  # tráfego interno/estático não conta
+
+    @app.before_request
+    def registar_visita():
+        from flask import g
+        endpoint = flask_request.endpoint
+        if not endpoint or flask_request.method != "GET":
+            return
+        if endpoint.startswith(PREFIXOS_IGNORADOS_TRACKING):
+            return
+
+        sessao_id = flask_request.cookies.get(COOKIE_VISITANTE)
+        g.visita_sessao_nova = sessao_id is None
+        if sessao_id is None:
+            from app.models.visita import novo_sessao_id
+            sessao_id = novo_sessao_id()
+        g.visita_sessao_id = sessao_id
+
+        try:
+            from app.models.visita import VisitaLog
+            db.session.add(VisitaLog(
+                sessao_id=sessao_id,
+                utilizador_id=_cu.id if _cu.is_authenticated else None,
+                caminho=flask_request.path[:255],
+            ))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
     # Cabeçalhos de segurança em toda a resposta
     @app.after_request
     def set_security_headers(response):
+        from flask import g
+        if getattr(g, "visita_sessao_nova", False):
+            response.set_cookie(
+                COOKIE_VISITANTE, g.visita_sessao_id,
+                max_age=365 * 24 * 3600, httponly=True, samesite="Lax",
+                secure=not app.debug,
+            )
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        # SAMEORIGIN (não DENY): a pré-visualização de materiais usa um <iframe>
+        # para PDFs (materials/detalhe.html), que o DENY bloqueava mesmo sendo
+        # a própria origem a carregar-se a si mesma.
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers.setdefault(
             "Content-Security-Policy",

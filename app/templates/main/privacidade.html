@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Política de Privacidade — Ponto 24 Académico{% endblock %}
+{% block meta_description %}Como o Ponto 24 Académico recolhe, usa e protege os teus dados pessoais.{% endblock %}
+{% block og_title %}Política de Privacidade — Ponto 24 Académico{% endblock %}
+{% block og_description %}Como o Ponto 24 Académico recolhe, usa e protege os teus dados pessoais.{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:820px">
+
+  <div class="mb-5">
+    <h1 class="fw-800 mb-2">Política de Privacidade</h1>
+    <p class="text-muted small mb-0">Última atualização: 21 de agosto de 2026</p>
+  </div>
+
+  <div class="mb-4 p-3 rounded-3" style="background:var(--p24-blue-light,#f1f5fb);font-size:.85rem">
+    Esta política explica que dados recolhemos, porquê, e como podes exercer os teus direitos sobre eles.
+    Aplica-se a todos os visitantes da plataforma, mesmo sem conta criada.
+  </div>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">1. Que dados recolhemos</h2>
+    <p class="text-muted mb-2" style="line-height:1.8"><strong>Ao criares conta:</strong> nome, email, instituição, curso e senha (guardada de forma encriptada, nunca em texto simples).</p>
+    <p class="text-muted mb-2" style="line-height:1.8"><strong>Conteúdo que submetes:</strong> materiais, publicações e respostas na Comunidade, bio de perfil.</p>
+    <p class="text-muted mb-2" style="line-height:1.8"><strong>Dados de utilização:</strong> pesquisas realizadas, downloads, votos e denúncias, para calcularmos estatísticas agregadas (ex: quais materiais faltam na plataforma).</p>
+    <p class="text-muted mb-0" style="line-height:1.8"><strong>Estatísticas de visitas anónimas:</strong> mesmo sem sessão iniciada, registamos visitas às páginas através de um identificador aleatório guardado num cookie técnico — sem nome, email ou qualquer dado que te identifique diretamente. Serve apenas para sabermos quantas pessoas usam a plataforma e quais páginas são mais visitadas.</p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">2. Para que usamos os teus dados</h2>
+    <ul class="text-muted" style="line-height:1.9">
+      <li>Criar e gerir a tua conta, incluindo confirmação de email e recuperação de senha;</li>
+      <li>Mostrar e distribuir os materiais e publicações que submetes;</li>
+      <li>Calcular créditos, badges e nível de gamificação;</li>
+      <li>Moderar conteúdo e aplicar as regras da Comunidade;</li>
+      <li>Enviar emails transacionais (confirmações, notificações) e, apenas se aceitares, emails de marketing — que podes cancelar a qualquer momento;</li>
+      <li>Entender como a plataforma é usada, para a melhorar (estatísticas agregadas e anónimas).</li>
+    </ul>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">3. Partilha com terceiros</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Não vendemos nem partilhamos os teus dados pessoais com terceiros para fins publicitários. Os teus dados
+      podem ser processados por fornecedores técnicos que nos ajudam a operar a plataforma (ex: alojamento de
+      ficheiros, envio de emails), sempre sob obrigação de confidencialidade, ou divulgados quando exigido por lei.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">4. Cookies</h2>
+    <p class="text-muted mb-2" style="line-height:1.8"><strong>Cookie de sessão / autenticação:</strong> necessário para manteres a sessão iniciada.</p>
+    <p class="text-muted mb-0" style="line-height:1.8"><strong>Cookie técnico anónimo de estatísticas:</strong> um identificador aleatório, sem dados pessoais, usado apenas para medir visitas. Não é partilhado com redes de publicidade nem usado para te seguir noutros sites.</p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">5. Quanto tempo guardamos os dados</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Guardamos os dados da tua conta enquanto esta estiver ativa. Se pedires a eliminação da conta, removemos os
+      teus dados pessoais, exceto o que formos legalmente obrigados a reter. Os registos de visitas anónimas são
+      mantidos apenas pelo tempo necessário para fins estatísticos.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">6. Os teus direitos</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Podes a qualquer momento pedir para aceder, corrigir ou eliminar os teus dados pessoais, e cancelar a
+      subscrição de emails de marketing através do link presente em cada email. Para exercer estes direitos,
+      contacta-nos através da <a href="{{ url_for('main.suporte') }}">página de suporte</a>{% if cfg.get('email_suporte') %} ou por email para
+      <a href="mailto:{{ cfg.email_suporte }}">{{ cfg.email_suporte }}</a>{% endif %}.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">7. Segurança</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Usamos práticas técnicas razoáveis para proteger os teus dados (senhas encriptadas, ligação segura HTTPS,
+      cabeçalhos de segurança). Nenhum sistema é 100% infalível, mas trabalhamos para minimizar riscos.
+    </p>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="fw-700 fs-5 mb-2">8. Alterações a esta política</h2>
+    <p class="text-muted" style="line-height:1.8">
+      Podemos atualizar esta política periodicamente. A data no topo da página indica a última revisão. Alterações
+      relevantes serão comunicadas na plataforma.
+    </p>
+  </section>
+
+</div>
+{% endblock %}

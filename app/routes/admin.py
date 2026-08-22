@@ -16,6 +16,7 @@ from app.models.pasta import Pasta
 from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario
 from app.services import marketing_service
 from app.models.comunidade import ComunidadePost, ComunidadeResposta, ComunidadeRelatorio
+from app.models.visita import VisitaLog
 from app.routes.comunidade import eliminar_post_interno
 from app.services.creditos_service import dar_creditos_upload
 from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta
@@ -143,6 +144,21 @@ def kpi():
     atividade_feed = atividade_recente(20)
     acoes_por_tipo = contagem_por_evento(h30)
 
+    # ── Tráfego (todos os visitantes, mesmo sem conta) ──────────────────
+    visitas_30d = VisitaLog.query.filter(VisitaLog.criado_em >= h30).count()
+    visitantes_unicos_30d = (
+        db.session.query(VisitaLog.sessao_id)
+        .filter(VisitaLog.criado_em >= h30)
+        .distinct().count()
+    )
+    paginas_mais_visitadas = (
+        db.session.query(VisitaLog.caminho, func.count(VisitaLog.id).label("n"))
+        .filter(VisitaLog.criado_em >= h30)
+        .group_by(VisitaLog.caminho)
+        .order_by(func.count(VisitaLog.id).desc())
+        .limit(10).all()
+    )
+
     return render_template(
         "admin/kpi.html",
         total_pesquisas=total_pesquisas,
@@ -158,6 +174,9 @@ def kpi():
         candidaturas_pendentes=candidaturas_pendentes,
         atividade_feed=atividade_feed,
         acoes_por_tipo=acoes_por_tipo,
+        visitas_30d=visitas_30d,
+        visitantes_unicos_30d=visitantes_unicos_30d,
+        paginas_mais_visitadas=paginas_mais_visitadas,
     )
 
 
@@ -474,7 +493,8 @@ def _pastas_ordenadas():
 @moderador_required
 def pastas():
     todas = _pastas_ordenadas()
-    return render_template("admin/pastas.html", pastas=todas)
+    raizes = [p for p in todas if p.parent_id is None]
+    return render_template("admin/pastas.html", pastas=todas, raizes=raizes)
 
 
 @admin_bp.route("/pastas/criar", methods=["POST"])
@@ -1049,6 +1069,65 @@ def _resolver_alvo_comunidade(relatorio):
     if relatorio.alvo_tipo == "post":
         return ComunidadePost.query.get(relatorio.alvo_id)
     return ComunidadeResposta.query.get(relatorio.alvo_id)
+
+
+@admin_bp.route("/comunidade/moderar")
+@login_required
+@moderador_required
+def comunidade_moderar():
+    """Publicações da Comunidade ficam públicas de imediato (sem fila de
+    aprovação) — esta vista dá à moderação uma forma de rever as mais
+    recentes proativamente, sem depender só de denúncias de utilizadores."""
+    estado = request.args.get("estado", "por_rever")
+    page = request.args.get("page", 1, type=int)
+
+    query = ComunidadePost.query
+    if estado == "por_rever":
+        query = query.filter_by(revisto=False)
+    elif estado == "revistos":
+        query = query.filter_by(revisto=True)
+
+    posts_pag = query.order_by(ComunidadePost.criado_em.desc()).paginate(page=page, per_page=20, error_out=False)
+
+    counts = {
+        "todos":     ComunidadePost.query.count(),
+        "por_rever": ComunidadePost.query.filter_by(revisto=False).count(),
+        "revistos":  ComunidadePost.query.filter_by(revisto=True).count(),
+    }
+
+    return render_template(
+        "admin/comunidade_moderar.html",
+        posts=posts_pag, counts=counts, estado=estado,
+    )
+
+
+@admin_bp.route("/comunidade/posts/<int:id>/marcar-revisto", methods=["POST"])
+@login_required
+@moderador_required
+def marcar_revisto_comunidade(id):
+    post = ComunidadePost.query.get_or_404(id)
+    post.revisto = True
+    post.revisto_por_id = current_user.id
+    post.revisto_em = datetime.utcnow()
+    db.session.commit()
+    flash("Publicação marcada como revista.", "sucesso")
+    return redirect(request.referrer or url_for("admin.comunidade_moderar"))
+
+
+@admin_bp.route("/comunidade/posts/<int:id>/eliminar", methods=["POST"])
+@login_required
+@moderador_required
+def eliminar_post_comunidade_admin(id):
+    post = ComunidadePost.query.get_or_404(id)
+    registar_atividade(
+        AtividadeLog.EVENTO_COMUNIDADE_POST_ELIMINADO,
+        utilizador_id=current_user.id, alvo_tipo="comunidade_post", alvo_id=post.id,
+        detalhes={"titulo": post.titulo, "via": "moderacao"},
+    )
+    eliminar_post_interno(post)
+    db.session.commit()
+    flash("Publicação eliminada.", "aviso")
+    return redirect(request.referrer or url_for("admin.comunidade_moderar"))
 
 
 @admin_bp.route("/comunidade/relatorios")

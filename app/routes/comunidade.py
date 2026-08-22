@@ -152,7 +152,9 @@ def detalhe(id):
     page = request.args.get("page", 1, type=int)
     ordenar = request.args.get("ordenar", "recentes")
 
-    query = post.respostas
+    # Só o nível de topo é paginado — as réplicas (1 nível) vêm sempre juntas
+    # com o comentário-pai, senão a paginação partia threads a meio.
+    query = post.respostas.filter_by(parent_id=None)
     if ordenar == "votados":
         query = query.order_by(ComunidadeResposta.votos_score.desc(), ComunidadeResposta.criado_em.asc())
     else:
@@ -164,6 +166,8 @@ def detalhe(id):
     if current_user.is_authenticated:
         for r in respostas.items:
             votos_respostas[r.id] = voto_do_utilizador(current_user, ComunidadeVoto.ALVO_RESPOSTA, r.id)
+            for rep in r.replicas:
+                votos_respostas[rep.id] = voto_do_utilizador(current_user, ComunidadeVoto.ALVO_RESPOSTA, rep.id)
 
     meta_descricao = _truncar(post.corpo) or f"Publicação de {post.autor.nome} na Comunidade Ponto 24 Académico."
 
@@ -193,7 +197,19 @@ def criar_resposta(id):
         flash("Escreve uma resposta antes de enviar.", "erro")
         return redirect(url_for("comunidade.detalhe", id=id))
 
-    resposta = ComunidadeResposta(post_id=post.id, autor_id=current_user.id, corpo=corpo)
+    # Réplica a um comentário (1 nível só): se o alvo já for ele próprio uma
+    # réplica, a nova resposta "sobe" para ficar sob o comentário de topo.
+    parent = None
+    parent_id = request.form.get("parent_id", type=int)
+    if parent_id:
+        parent = ComunidadeResposta.query.filter_by(id=parent_id, post_id=post.id).first()
+        if parent and parent.parent_id is not None:
+            parent = parent.parent
+
+    resposta = ComunidadeResposta(
+        post_id=post.id, parent_id=parent.id if parent else None,
+        autor_id=current_user.id, corpo=corpo,
+    )
     db.session.add(resposta)
     post.respostas_count += 1
 
@@ -203,6 +219,14 @@ def criar_resposta(id):
         detalhes={"post_id": post.id},
     )
 
+    if parent and parent.autor_id not in (current_user.id, post.autor_id):
+        criar_notificacao(
+            utilizador_id=parent.autor_id,
+            tipo=Notificacao.TIPO_COMUNIDADE_RESPOSTA,
+            titulo="Alguém respondeu ao teu comentário",
+            mensagem=f"{current_user.nome.split()[0]} respondeu-te em \"{post.titulo}\".",
+            url=url_for("comunidade.detalhe", id=post.id),
+        )
     if post.autor_id != current_user.id:
         criar_notificacao(
             utilizador_id=post.autor_id,
@@ -326,8 +350,11 @@ def eliminar_resposta(id):
 
     post_id = resposta.post_id
     post = ComunidadePost.query.get(post_id)
-    if post and post.respostas_count > 0:
-        post.respostas_count -= 1
+    # Eliminar um comentário de topo arrasta consigo as réplicas (cascade do modelo) —
+    # o contador do post tem de descer o mesmo número.
+    total_eliminado = 1 + resposta.replicas.count()
+    if post:
+        post.respostas_count = max(0, post.respostas_count - total_eliminado)
 
     registar_atividade(
         AtividadeLog.EVENTO_COMUNIDADE_RESPOSTA_ELIMINADA,

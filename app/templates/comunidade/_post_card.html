@@ -1,4 +1,5 @@
 {% set meu_voto = votos_posts.get(post.id) if votos_posts is defined else None %}
+{% set primeira_imagem = post.imagens.first() %}
 <div class="p24-card d-flex gap-3">
 
   <!-- Vote widget -->
@@ -23,6 +24,14 @@
       </button>
     </form>
   </div>
+
+  {% if primeira_imagem %}
+  <a href="{{ url_for('comunidade.detalhe', id=post.id) }}" class="flex-shrink-0">
+    <img src="{{ comunidade_imagem_url(primeira_imagem.path_relativo) }}" alt=""
+         class="rounded-3" style="width:64px;height:64px;object-fit:cover"
+         loading="lazy">
+  </a>
+  {% endif %}
 
   <!-- Conteúdo -->
   <div class="flex-grow-1 min-w-0">

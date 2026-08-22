@@ -276,6 +276,16 @@ def sobre_nos():
     return render_template("main/sobre.html", secao=secao, titulo=titulos[secao])
 
 
+@main_bp.route("/termos")
+def termos():
+    return render_template("main/termos.html")
+
+
+@main_bp.route("/privacidade")
+def privacidade():
+    return render_template("main/privacidade.html")
+
+
 @main_bp.route("/suporte", methods=["GET", "POST"])
 @limiter.limit("5 per hour", methods=["POST"])
 def suporte():
