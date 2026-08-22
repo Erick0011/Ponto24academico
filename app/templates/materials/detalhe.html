@@ -34,6 +34,9 @@
 {% endblock %}
 
 {% block content %}
+{% set src = url_for('materiais.preview', id=material.id) %}
+{% set download = url_for('materiais.download', id=material.id) %}
+{% set titulo = material.titulo %}
 <div class="container-xl py-4">
 
   <!-- Breadcrumb -->
@@ -136,11 +139,7 @@
                style="max-height:600px;object-fit:contain;background:#000;">
 
         {% elif material.ficheiro_tipo == 'pdf' %}
-          <iframe src="{{ url_for('materiais.preview', id=material.id) }}"
-                  width="100%" height="620"
-                  style="border:none;display:block;"
-                  title="{{ material.titulo }}">
-          </iframe>
+          {% include "partials/pdf_viewer.html" with context %}
 
         {% else %}
           <div class="d-flex align-items-center justify-content-center text-center py-5" style="min-height:220px;background:#f8f9fa;">
@@ -477,6 +476,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/pdf-viewer.js') }}" defer></script>
 <script>
 // Botão Guardar (favoritos)
 const GUARDAR_URL = "{{ url_for('materiais.guardar', id=material.id) }}";

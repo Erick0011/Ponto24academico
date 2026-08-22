@@ -209,6 +209,43 @@ def create_app(config_name: str = None):
             return presigned_url(thumb_key, expires=7200)
         return flask_request.url_root.rstrip("/") + "/static/uploads/" + p.parent.as_posix() + "/thumbs/" + p.name
 
+    # Jinja2 filtro: "há 3 horas" em vez de "22/08/2026 14:07".
+    #
+    # Na Comunidade a idade relativa diz muito mais do que a data absoluta —
+    # é o que permite perceber de relance se uma dúvida ainda está quente.
+    # Todas as datas do modelo são gravadas com datetime.utcnow(), por isso a
+    # comparação é feita também em UTC.
+    @app.template_filter("tempo_relativo")
+    def tempo_relativo(quando):
+        from datetime import datetime as _dt
+        if not quando:
+            return ""
+        segundos = (_dt.utcnow() - quando).total_seconds()
+
+        # Relógios ligeiramente adiantados dariam "há -4 segundos".
+        if segundos < 60:
+            return "agora mesmo"
+        minutos = segundos / 60
+        if minutos < 60:
+            n = int(minutos)
+            return f"há {n} minuto{'s' if n != 1 else ''}"
+        horas = minutos / 60
+        if horas < 24:
+            n = int(horas)
+            return f"há {n} hora{'s' if n != 1 else ''}"
+        dias = horas / 24
+        if dias < 7:
+            n = int(dias)
+            return f"há {n} dia{'s' if n != 1 else ''}"
+        if dias < 30:
+            n = int(dias / 7)
+            return f"há {n} semana{'s' if n != 1 else ''}"
+        if dias < 365:
+            n = int(dias / 30)
+            return f"há {n} {'meses' if n != 1 else 'mês'}"
+        # A partir de um ano a data exata volta a ser mais informativa.
+        return quando.strftime("%d/%m/%Y")
+
     # Jinja2 global: constrói URL da página atual com `page` substituído
     @app.template_global()
     def paginate_url(page):
@@ -274,6 +311,14 @@ def create_app(config_name: str = None):
                 # cobre também o endereçamento virtual-hosted (bucket.<host>)
                 _csp_frame_src += f" https://*.{_r2_dominio_pai}"
 
+    # Rotas que devolvem o ficheiro cru (PDF, imagem, docx) em vez de HTML.
+    # A CSP da aplicação NÃO pode ser aplicada a estas respostas: quando um PDF
+    # é servido com "default-src 'self'", o object-src herda 'self' e o Chrome
+    # recusa-se a instanciar o seu visualizador interno de PDF (que vive numa
+    # origem chrome-extension://) — o resultado é um painel completamente
+    # branco, sem erro visível. Era esta a causa de "os PDFs não abrem".
+    _ENDPOINTS_FICHEIRO_CRU = {"materiais.preview", "materiais.download"}
+
     # Cabeçalhos de segurança em toda a resposta
     @app.after_request
     def set_security_headers(response):
@@ -290,15 +335,25 @@ def create_app(config_name: str = None):
         # a própria origem a carregar-se a si mesma.
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers.setdefault(
-            "Content-Security-Policy",
-            "default-src 'self'; "
-            "img-src 'self' data: https:; "
-            f"frame-src {_csp_frame_src}; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
-            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:;"
-        )
+
+        if flask_request.endpoint in _ENDPOINTS_FICHEIRO_CRU:
+            # Sem CSP: o "nosniff" acima já garante que o ficheiro nunca é
+            # interpretado como HTML, por isso não há aqui superfície de XSS
+            # para a CSP proteger — só o visualizador de PDF a perder.
+            response.headers.pop("Content-Security-Policy", None)
+        else:
+            response.headers.setdefault(
+                "Content-Security-Policy",
+                "default-src 'self'; "
+                "img-src 'self' data: blob: https:; "
+                f"frame-src {_csp_frame_src}; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                # O pdf.js corre a descodificação num Web Worker e, em alguns
+                # browsers, arranca-o a partir de um blob: URL.
+                "worker-src 'self' blob:; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+                "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:;"
+            )
         if not app.debug:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response

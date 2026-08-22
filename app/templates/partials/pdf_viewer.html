@@ -1,0 +1,78 @@
+{#
+  Visualizador de PDF (pdf.js) — parâmetros:
+    src       : URL do ficheiro
+    titulo    : título para acessibilidade
+    download  : URL do download (opcional, usado no fallback)
+    altura    : altura da área de leitura (default 620px em desktop)
+
+  Porquê pdf.js e não <iframe src="ficheiro.pdf">: o Chrome no Android e o
+  Safari no iOS não renderizam PDFs dentro de um iframe — mostram um painel
+  branco ou forçam o download. Como a maioria dos nossos utilizadores está no
+  telemóvel, o iframe nunca ia funcionar para eles. O pdf.js desenha as páginas
+  num <canvas>, o que funciona igual em todo o lado.
+#}
+<div class="p24-pdf"
+     data-pdf-src="{{ src }}"
+     data-pdf-worker="{{ url_for('static', filename='vendor/pdfjs/pdf.worker.min.js') }}"
+     data-pdf-lib="{{ url_for('static', filename='vendor/pdfjs/pdf.min.js') }}"
+     style="--p24-pdf-altura: {{ altura|default('620px') }}">
+
+  <div class="p24-pdf-toolbar">
+    <div class="p24-pdf-nav">
+      <button type="button" class="btn btn-sm btn-light p24-pdf-anterior" disabled
+              aria-label="Página anterior">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <span class="p24-pdf-contador" aria-live="polite">
+        <span class="p24-pdf-pagina">–</span> / <span class="p24-pdf-total">–</span>
+      </span>
+      <button type="button" class="btn btn-sm btn-light p24-pdf-seguinte" disabled
+              aria-label="Página seguinte">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+
+    <div class="p24-pdf-acoes">
+      <button type="button" class="btn btn-sm btn-light p24-pdf-menos" disabled
+              aria-label="Reduzir zoom">
+        <i class="bi bi-zoom-out"></i>
+      </button>
+      <button type="button" class="btn btn-sm btn-light p24-pdf-mais" disabled
+              aria-label="Aumentar zoom">
+        <i class="bi bi-zoom-in"></i>
+      </button>
+      <a href="{{ src }}" target="_blank" rel="noopener"
+         class="btn btn-sm btn-light" aria-label="Abrir noutro separador"
+         title="Abrir noutro separador">
+        <i class="bi bi-box-arrow-up-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="p24-pdf-palco">
+    <div class="p24-pdf-estado">
+      <div class="spinner-border spinner-border-sm text-p24" role="status" aria-hidden="true"></div>
+      <span class="small text-muted ms-2">A preparar a pré-visualização…</span>
+    </div>
+    <canvas class="p24-pdf-canvas" role="img"
+            aria-label="Pré-visualização de {{ titulo|default('documento') }}"></canvas>
+  </div>
+
+  {# Só aparece se o pdf.js falhar (ficheiro corrompido, rede, browser antigo). #}
+  <div class="p24-pdf-fallback d-none">
+    <i class="bi bi-file-earmark-pdf text-danger d-block mb-2" style="font-size:2.25rem"></i>
+    <p class="text-muted small mb-3">
+      Não foi possível mostrar a pré-visualização aqui.
+    </p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+      <a href="{{ src }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-600">
+        <i class="bi bi-box-arrow-up-right me-1"></i>Abrir PDF
+      </a>
+      {% if download %}
+      <a href="{{ download }}" class="btn btn-primary btn-sm fw-700">
+        <i class="bi bi-download me-1"></i>Download
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>

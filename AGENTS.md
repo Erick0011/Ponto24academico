@@ -111,7 +111,24 @@ pasta/
 ```
 Commits in batches of 100. Always run with `--dry-run` first.
 
+### Assets estáticos
+
+- `app/static/js/pdf-viewer.js` + `app/static/vendor/pdfjs/` — **pdf.js vendorizado localmente** (build `legacy` da v3, UMD). A pré-visualização de PDFs desenha as páginas num `<canvas>`; **não** usar `<iframe src="ficheiro.pdf">`, que o Chrome/Android e o Safari/iOS não renderizam (painel branco). O worker tem de ser servido da própria origem — browsers recusam workers cross-origin, por isso não trocar por CDN. A biblioteca só é carregada quando o visualizador entra no ecrã (IntersectionObserver).
+- `app/static/js/comunidade.js` — votos por `fetch`. Os `<form>` continuam a funcionar sem JS (POST + redirect); o JS interceta o submit e envia `X-Requested-With: fetch`, ao que `comunidade._votar()` responde em JSON (`{ok, score, meu_voto}`).
+
+**Cuidado com a CSP e ficheiros crus:** `set_security_headers` em `app/__init__.py` remove o cabeçalho `Content-Security-Policy` das respostas de `materiais.preview`/`materiais.download` (lista `_ENDPOINTS_FICHEIRO_CRU`). Servir um PDF com `default-src 'self'` faz o `object-src` herdar `'self'` e o Chrome recusa instanciar o seu visualizador interno — resulta em painel branco sem erro visível. O `X-Content-Type-Options: nosniff` mantém-se e é o que garante que o ficheiro nunca é interpretado como HTML.
+
 ### Templates
+
+Partials reutilizáveis (todos por `{% with ... %}{% include ... %}{% endwith %}`):
+
+| Partial | Parâmetros |
+|---------|-----------|
+| `partials/pdf_viewer.html` | `src`, `titulo`, `download`, `altura` |
+| `partials/comunidade_voto.html` | `accao`, `score`, `meu_voto`, `tamanho` |
+| `partials/avatar.html` | `utilizador`, `tam`, `ligar` |
+
+Filtro Jinja `tempo_relativo` (registado em `app/__init__.py`): "há 3 horas" a partir de um `datetime` em UTC; acima de um ano volta à data absoluta.
 
 Base template: `app/templates/base.html`. Provides navbar, flash toasts, email confirmation banner, and footer. All pages extend it.
 

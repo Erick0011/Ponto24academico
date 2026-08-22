@@ -58,41 +58,83 @@
           <a href="{{ url_for('main.perfil') }}">Ver todos</a>
         </div>
         {% if meus_materiais %}
-        <table class="p24-table w-100">
-          <thead>
-            <tr>
-              <th>Título</th>
-              <th>Tipo</th>
-              <th>Status</th>
-              <th>Data</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for m in meus_materiais %}
-            <tr>
-              <td>
-                <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
-                   class="text-decoration-none fw-600 text-dark">
-                  <i class="bi bi-file-earmark-pdf text-danger me-2"></i>{{ m.titulo }}
-                </a>
-              </td>
-              <td>
+
+        {# Ícone por tipo de ficheiro — reutilizado nas duas vistas. #}
+        {% macro icone_ficheiro(m) -%}
+          {%- if m.ficheiro_tipo == 'pdf' -%}
+            <i class="bi bi-file-earmark-pdf text-danger"></i>
+          {%- elif m.ficheiro_tipo in ('png', 'jpg', 'jpeg', 'gif', 'webp') -%}
+            <i class="bi bi-file-earmark-image text-p24"></i>
+          {%- elif m.ficheiro_tipo == 'docx' -%}
+            <i class="bi bi-file-earmark-word text-primary"></i>
+          {%- else -%}
+            <i class="bi bi-file-earmark-text text-muted"></i>
+          {%- endif -%}
+        {%- endmacro %}
+
+        {% macro estado_badge(m) -%}
+          <span class="badge-{{ m.status }}">
+            {%- if m.status == 'aprovado' %}<i class="bi bi-check-lg me-1"></i>Aprovado
+            {%- elif m.status == 'pendente' %}<i class="bi bi-hourglass-split me-1"></i>Em análise
+            {%- else %}<i class="bi bi-x-lg me-1"></i>Rejeitado{% endif -%}
+          </span>
+        {%- endmacro %}
+
+        {# ── Mobile: lista empilhada ──────────────────────────────────────
+           A tabela de 4 colunas não cabe num ecrã de 360px: os títulos longos
+           esticavam-na e empurravam o cartão (e a página) para fora do ecrã.
+           Abaixo de md mostramos a mesma informação empilhada, que quebra
+           linha em vez de transbordar. ── #}
+        <div class="d-md-none">
+          {% for m in meus_materiais %}
+          <div class="p24-lista-item">
+            <div class="flex-shrink-0 fs-5 lh-1 mt-1">{{ icone_ficheiro(m) }}</div>
+            <div class="p24-lista-corpo">
+              <a href="{{ url_for('materiais.detalhe', id=m.id) }}" class="p24-lista-titulo">{{ m.titulo }}</a>
+              <div class="p24-lista-meta">
+                {{ estado_badge(m) }}
                 <span class="p24-type-badge badge-{{ m.categoria.nome|lower if m.categoria else 'outro' }}">
                   {{ m.categoria.nome if m.categoria else '—' }}
                 </span>
-              </td>
-              <td>
-                <span class="badge-{{ m.status }}">
-                  {% if m.status == 'aprovado' %}<i class="bi bi-check-lg me-1"></i>Aprovado
-                  {% elif m.status == 'pendente' %}<i class="bi bi-hourglass-split me-1"></i>Em análise
-                  {% else %}<i class="bi bi-x-lg me-1"></i>Rejeitado{% endif %}
-                </span>
-              </td>
-              <td class="text-muted small">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                <span>{{ m.criado_em.strftime('%d/%m/%Y') }}</span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {# ── Desktop: tabela ── #}
+        <div class="p24-table-wrap d-none d-md-block">
+          <table class="p24-table w-100">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in meus_materiais %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('materiais.detalhe', id=m.id) }}"
+                     class="text-decoration-none fw-600 text-dark">
+                    <span class="me-2">{{ icone_ficheiro(m) }}</span>{{ m.titulo }}
+                  </a>
+                </td>
+                <td>
+                  <span class="p24-type-badge badge-{{ m.categoria.nome|lower if m.categoria else 'outro' }}">
+                    {{ m.categoria.nome if m.categoria else '—' }}
+                  </span>
+                </td>
+                <td>{{ estado_badge(m) }}</td>
+                <td class="text-muted small text-nowrap">{{ m.criado_em.strftime('%d/%m/%Y') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
         {% else %}
         <div class="text-center py-4">
           <i class="bi bi-cloud-upload text-muted" style="font-size:2.5rem"></i>

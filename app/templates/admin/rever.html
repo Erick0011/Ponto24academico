@@ -45,9 +45,12 @@
                alt="{{ material.titulo }}"
                style="width:100%;max-height:680px;object-fit:contain;background:#f1f3f5;display:block">
         {% elif material.ficheiro_tipo == 'pdf' %}
-          <iframe src="{{ url_for('materiais.preview', id=material.id) }}"
-                  style="width:100%;height:680px;border:0"
-                  title="{{ material.titulo }}"></iframe>
+          {% with src = url_for('materiais.preview', id=material.id),
+                  download = url_for('materiais.download', id=material.id),
+                  titulo = material.titulo,
+                  altura = '680px' %}
+            {% include "partials/pdf_viewer.html" %}
+          {% endwith %}
         {% else %}
           <div class="d-flex flex-column align-items-center justify-content-center py-5 text-center"
                style="min-height:400px;background:#f8f9fa">
@@ -255,3 +258,6 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pdf-viewer.js') }}" defer></script>
+{% endblock %}

@@ -70,28 +70,15 @@
       </a>
 
       <!-- ═══ POST ═══ -->
-      <div class="p24-card d-flex gap-3 mb-4">
+      <div class="p24-card p24-post-card mb-4">
 
         <!-- Vote widget -->
-        <div class="d-flex flex-column align-items-center flex-shrink-0" style="width:44px">
-          <form action="{{ url_for('comunidade.votar_post', id=post.id) }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="valor" value="1">
-            <button type="submit" class="btn btn-sm p-0 border-0 {% if voto_post == 1 %}text-success{% else %}text-muted{% endif %}">
-              <i class="bi bi-caret-up-fill fs-4"></i>
-            </button>
-          </form>
-          <div class="fw-800 {% if post.votos_score > 0 %}text-success{% elif post.votos_score < 0 %}text-danger{% else %}text-muted{% endif %}">
-            {{ post.votos_score }}
-          </div>
-          <form action="{{ url_for('comunidade.votar_post', id=post.id) }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="valor" value="-1">
-            <button type="submit" class="btn btn-sm p-0 border-0 {% if voto_post == -1 %}text-danger{% else %}text-muted{% endif %}">
-              <i class="bi bi-caret-down-fill fs-4"></i>
-            </button>
-          </form>
-        </div>
+        {% with accao = url_for('comunidade.votar_post', id=post.id),
+                score = post.votos_score,
+                meu_voto = voto_post,
+                tamanho = 'grande' %}
+          {% include "partials/comunidade_voto.html" %}
+        {% endwith %}
 
         <div class="flex-grow-1 min-w-0">
           <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
@@ -141,9 +128,19 @@
           </div>
           {% endif %}
 
-          <div class="d-flex align-items-center gap-3 text-muted mb-2" style="font-size:.8rem">
-            <span><i class="bi bi-person-fill me-1"></i>{{ post.autor.nome if post.autor else "Utilizador removido" }}</span>
-            <span>{{ post.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+          <div class="p24-post-rodape mb-2">
+            {% if post.autor %}
+            <a href="{{ url_for('main.ver_perfil', id=post.autor.id) }}" class="p24-post-autor">
+              {% with utilizador = post.autor, tam = 26 %}{% include "partials/avatar.html" %}{% endwith %}
+              <span class="nome fw-600">{{ post.autor.nome }}</span>
+            </a>
+            {% else %}
+            <span class="p24-post-autor">
+              {% with utilizador = none, tam = 26 %}{% include "partials/avatar.html" %}{% endwith %}
+              <span class="nome">Utilizador removido</span>
+            </span>
+            {% endif %}
+            <span title="{{ post.criado_em.strftime('%d/%m/%Y %H:%M') }}">{{ post.criado_em|tempo_relativo }}</span>
           </div>
 
           <div class="comunidade-reacoes mb-2">
@@ -277,26 +274,12 @@
       {% endif %}
 
       {% macro resposta_card(r, post, nivel=0) %}
-      <div class="p24-card d-flex gap-3 mb-3" {% if nivel %}style="margin-left:2.5rem;background:var(--p24-blue-light,#f8fafc)"{% endif %}>
-        <div class="d-flex flex-column align-items-center flex-shrink-0" style="width:36px">
-          <form action="{{ url_for('comunidade.votar_resposta', id=r.id) }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="valor" value="1">
-            <button type="submit" class="btn btn-sm p-0 border-0 {% if votos_respostas.get(r.id) == 1 %}text-success{% else %}text-muted{% endif %}">
-              <i class="bi bi-caret-up-fill"></i>
-            </button>
-          </form>
-          <div class="fw-800 small {% if r.votos_score > 0 %}text-success{% elif r.votos_score < 0 %}text-danger{% else %}text-muted{% endif %}">
-            {{ r.votos_score }}
-          </div>
-          <form action="{{ url_for('comunidade.votar_resposta', id=r.id) }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="valor" value="-1">
-            <button type="submit" class="btn btn-sm p-0 border-0 {% if votos_respostas.get(r.id) == -1 %}text-danger{% else %}text-muted{% endif %}">
-              <i class="bi bi-caret-down-fill"></i>
-            </button>
-          </form>
-        </div>
+      <div class="p24-card p24-post-card mb-3 {% if nivel %}p24-resposta-aninhada{% endif %}">
+        {% with accao = url_for('comunidade.votar_resposta', id=r.id),
+                score = r.votos_score,
+                meu_voto = votos_respostas.get(r.id) %}
+          {% include "partials/comunidade_voto.html" %}
+        {% endwith %}
         <div class="flex-grow-1 min-w-0">
           {% if r.parent_id and r.parent %}
           <div class="p-2 mb-2 rounded-3 text-muted small" style="background:rgba(0,0,0,.035);border-left:3px solid var(--p24-border)">
@@ -317,9 +300,19 @@
             {% endfor %}
           </div>
           {% endif %}
-          <div class="d-flex align-items-center gap-3 text-muted mb-2" style="font-size:.75rem">
-            <span><i class="bi bi-person-fill me-1"></i>{{ r.autor.nome if r.autor else "Utilizador removido" }}</span>
-            <span>{{ r.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+          <div class="p24-post-rodape mb-2">
+            {% if r.autor %}
+            <a href="{{ url_for('main.ver_perfil', id=r.autor.id) }}" class="p24-post-autor">
+              {% with utilizador = r.autor, tam = 22 %}{% include "partials/avatar.html" %}{% endwith %}
+              <span class="nome fw-600">{{ r.autor.nome }}</span>
+            </a>
+            {% else %}
+            <span class="p24-post-autor">
+              {% with utilizador = none, tam = 22 %}{% include "partials/avatar.html" %}{% endwith %}
+              <span class="nome">Utilizador removido</span>
+            </span>
+            {% endif %}
+            <span title="{{ r.criado_em.strftime('%d/%m/%Y %H:%M') }}">{{ r.criado_em|tempo_relativo }}</span>
             {% if r.editado %}<span class="fst-italic">editado</span>{% endif %}
             {% if r.e_melhor_resposta %}
             <span class="badge bg-success-subtle text-success fw-600"><i class="bi bi-award-fill me-1"></i>Melhor resposta</span>
@@ -543,6 +536,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/comunidade.js') }}" defer></script>
 <script>
 // Pré-visualização das fotos anexadas a um comentário/resposta — aplica-se
 // ao formulário principal e a cada formulário de "Responder" (1 por comentário).

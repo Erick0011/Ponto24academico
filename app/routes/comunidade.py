@@ -521,23 +521,44 @@ def alternar_subscricao(id):
     return redirect(url_for("comunidade.detalhe", id=id))
 
 
+def _pedido_json() -> bool:
+    """O JS da Comunidade marca os pedidos de voto com este cabeçalho. Sem ele
+    (JS desligado, browser antigo) o formulário continua a funcionar à moda
+    antiga, com POST + redirect — daí valer a pena manter os dois caminhos."""
+    return request.headers.get("X-Requested-With") == "fetch"
+
+
 def _votar(alvo_tipo, alvo_obj, redirect_endpoint, redirect_kwargs):
     # Volta para onde o voto foi disparado (feed ou detalhe) em vez de forçar
     # sempre a navegação para a página do post — melhor UX ao votar a partir
     # do feed, onde só se quer atualizar o número, não sair da lista.
     destino = request.referrer or url_for(redirect_endpoint, **redirect_kwargs)
+    ajax = _pedido_json()
+
+    def falhar(mensagem, categoria, codigo):
+        if ajax:
+            return jsonify({"ok": False, "erro": mensagem}), codigo
+        flash(mensagem, categoria)
+        return redirect(destino)
 
     if current_user.id == alvo_obj.autor_id:
-        flash("Não podes votar no teu próprio conteúdo.", "aviso")
-        return redirect(destino)
+        return falhar("Não podes votar no teu próprio conteúdo.", "aviso", 403)
 
     valor = request.form.get("valor", type=int)
     if valor not in (1, -1):
-        flash("Voto inválido.", "erro")
-        return redirect(destino)
+        return falhar("Voto inválido.", "erro", 400)
 
     aplicar_voto(current_user, alvo_tipo, alvo_obj.id, alvo_obj, valor)
     db.session.commit()
+
+    if ajax:
+        return jsonify({
+            "ok": True,
+            "score": alvo_obj.votos_score,
+            # Depois do toggle/troca, qual é o voto que ficou (1, -1 ou None) —
+            # é o que o JS precisa para pintar as setas sem recarregar.
+            "meu_voto": voto_do_utilizador(current_user, alvo_tipo, alvo_obj.id),
+        })
     return redirect(destino)
 
 

@@ -1,0 +1,27 @@
+{#
+  Avatar de utilizador — parâmetros:
+    utilizador : User ou None (conta eliminada)
+    tam        : diâmetro em px (default 28)
+    ligar      : se verdadeiro, envolve num link para o perfil público
+
+  Sem foto, mostra a inicial do nome num círculo. A cor vem do id, para que a
+  mesma pessoa tenha sempre o mesmo tom e seja reconhecível de relance.
+#}
+{% set _tam = tam|default(28) %}
+{% if utilizador %}
+  {% if ligar %}<a href="{{ url_for('main.ver_perfil', id=utilizador.id) }}"
+                   class="text-decoration-none" title="{{ utilizador.nome }}">{% endif %}
+  {% if utilizador.avatar_url %}
+    <img src="{{ utilizador.avatar_url }}" alt="" class="p24-avatar"
+         style="width:{{ _tam }}px;height:{{ _tam }}px" loading="lazy">
+  {% else %}
+    <span class="p24-avatar p24-avatar-inicial p24-avatar-c{{ utilizador.id % 6 }}"
+          style="width:{{ _tam }}px;height:{{ _tam }}px;font-size:{{ (_tam * 0.42)|round|int }}px"
+          aria-hidden="true">{{ utilizador.nome[0]|upper }}</span>
+  {% endif %}
+  {% if ligar %}</a>{% endif %}
+{% else %}
+  <span class="p24-avatar p24-avatar-inicial p24-avatar-vazio"
+        style="width:{{ _tam }}px;height:{{ _tam }}px;font-size:{{ (_tam * 0.42)|round|int }}px"
+        aria-hidden="true"><i class="bi bi-person-fill"></i></span>
+{% endif %}
