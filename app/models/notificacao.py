@@ -11,6 +11,7 @@ class Notificacao(db.Model):
     TIPO_MATERIAL_REJEITADO = "material_rejeitado"
     TIPO_SISTEMA            = "sistema"
     TIPO_COMUNIDADE_RESPOSTA = "comunidade_resposta"
+    TIPO_COMUNIDADE_MELHOR_RESPOSTA = "comunidade_melhor_resposta"
 
     id            = db.Column(db.Integer, primary_key=True)
     utilizador_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)

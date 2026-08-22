@@ -3,7 +3,7 @@ tabela ComunidadeVoto, com alvo_tipo/alvo_id) e construção da query do feed.""
 
 from datetime import datetime
 from app import db
-from app.models.comunidade import ComunidadePost, ComunidadeVoto, ComunidadeTag
+from app.models.comunidade import ComunidadePost, ComunidadeVoto, ComunidadeTag, ComunidadeCategoria
 from app.services.pesquisa_service import condicoes_e_pontuacao
 
 
@@ -44,13 +44,19 @@ def voto_do_utilizador(utilizador, alvo_tipo: str, alvo_id: int):
     return v.valor if v else None
 
 
-def feed_query(tipo: str = None, tag: str = None, busca: str = None, ordenar: str = "recentes"):
+def feed_query(tipo: str = None, categoria: str = None, tag: str = None, busca: str = None, ordenar: str = "recentes"):
     """Query base do feed da Comunidade: posts fixados (e ainda dentro do
     prazo) primeiro, depois ordenados por relevância (havendo pesquisa),
-    pontuação de votos ou data."""
+    pontuação de votos ou data.
+
+    `categoria` (slug) é o filtro atual, mostrado na UI. `tipo` fica só para
+    não partir links antigos que ainda apontem para o enum legado — os dois
+    podem ser combinados (AND) se algum dia vierem juntos num link."""
     query = ComunidadePost.query
     if tipo:
         query = query.filter_by(tipo=tipo)
+    if categoria:
+        query = query.join(ComunidadePost.categoria).filter(ComunidadeCategoria.slug == categoria)
     if tag:
         query = query.join(ComunidadePost.tags).filter(ComunidadeTag.slug == tag)
 
@@ -83,3 +89,21 @@ def feed_query(tipo: str = None, tag: str = None, busca: str = None, ordenar: st
         query = query.order_by(fixado_ativo, *desempate)
 
     return query
+
+
+def anuncios_fixados_ativos(limite: int = 3):
+    """Anúncios oficiais (categoria apenas_admin) atualmente fixados e dentro
+    do prazo — para o banner no topo da Comunidade e, opcionalmente, na
+    página inicial do site."""
+    return (
+        ComunidadePost.query
+        .join(ComunidadePost.categoria)
+        .filter(
+            ComunidadeCategoria.apenas_admin.is_(True),
+            ComunidadePost.fixado.is_(True),
+            db.or_(ComunidadePost.fixado_ate.is_(None), ComunidadePost.fixado_ate > datetime.utcnow()),
+        )
+        .order_by(ComunidadePost.criado_em.desc())
+        .limit(limite)
+        .all()
+    )

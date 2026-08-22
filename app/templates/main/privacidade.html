@@ -63,10 +63,17 @@
 
   <section class="mb-4">
     <h2 class="fw-700 fs-5 mb-2">6. Os teus direitos</h2>
-    <p class="text-muted" style="line-height:1.8">
-      Podes a qualquer momento pedir para aceder, corrigir ou eliminar os teus dados pessoais, e cancelar a
-      subscrição de emails de marketing através do link presente em cada email. Para exercer estes direitos,
-      contacta-nos através da <a href="{{ url_for('main.suporte') }}">página de suporte</a>{% if cfg.get('email_suporte') %} ou por email para
+    <p class="text-muted mb-2" style="line-height:1.8">
+      Podes eliminar a tua própria conta a qualquer momento, sem precisares de nos contactar, em
+      <strong>Definições &gt; Eliminar a minha conta</strong>. Removemos de imediato o teu nome, email, instituição,
+      curso e bio; materiais e publicações que já submeteste continuam disponíveis para os outros utilizadores
+      (para não quebrar o que já foi partilhado), mas deixam de estar associados a ti e passam a mostrar
+      "Utilizador eliminado". Também podes cancelar a subscrição de emails de marketing a qualquer momento,
+      em Definições ou através do link presente em cada email.
+    </p>
+    <p class="text-muted mb-0" style="line-height:1.8">
+      Para outros pedidos sobre os teus dados — como aceder ou corrigir informação que não consigas editar
+      diretamente — contacta-nos através da <a href="{{ url_for('main.suporte') }}">página de suporte</a>{% if cfg.get('email_suporte') %} ou por email para
       <a href="mailto:{{ cfg.email_suporte }}">{{ cfg.email_suporte }}</a>{% endif %}.
     </p>
   </section>

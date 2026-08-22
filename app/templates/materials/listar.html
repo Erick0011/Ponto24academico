@@ -37,15 +37,16 @@
           <!-- Pastas -->
           {% if pastas_raiz_lista %}
           <h6>Pastas</h6>
-          <input type="hidden" name="pasta" value="{{ filtros.get('pasta_id') or '' }}">
-          {% for p in pastas_raiz_lista %}
-          <button type="button" class="p24-filter-item {% if filtros.get('pasta_id') == p.id %}active{% endif %}"
-                  onclick="setFiltro('pasta','{{ p.id }}');this.form.submit()">
-            <i class="bi bi-folder2"></i> {{ p.nome }}
-          </button>
-          {% endfor %}
-          <a href="{{ url_for('materiais.pastas_raiz') }}" class="d-block small text-orange fw-600 mt-1 mb-3">
-            Ver árvore completa <i class="bi bi-arrow-right"></i>
+          {% if filtros.get('pasta_id') %}
+          <input type="hidden" name="pasta" value="{{ filtros.get('pasta_id') }}">
+          <div class="p24-filter-item active d-flex align-items-center justify-content-between mb-3">
+            <span><i class="bi bi-folder2"></i> Filtrado por pasta</span>
+            <button type="button" class="btn-close btn-close-sm" style="font-size:.6rem"
+                    onclick="setFiltro('pasta','');this.form.submit()" aria-label="Remover filtro"></button>
+          </div>
+          {% endif %}
+          <a href="{{ url_for('materiais.pastas_raiz') }}" class="btn btn-outline-secondary btn-sm w-100 fw-600 mb-3">
+            <i class="bi bi-folder2-open me-2"></i>Visualizar por pastas
           </a>
           {% endif %}
 

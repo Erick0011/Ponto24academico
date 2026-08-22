@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Definições — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="row g-4">
+
+    <!-- Sidebar esquerda -->
+    <div class="col-lg-3">
+      <div class="p24-profile-sidebar">
+        <div class="text-center p-4 border-bottom">
+          <div class="p24-avatar mx-auto mb-3"
+               style="width:80px;height:80px;font-size:2rem;background:var(--p24-blue-light)">
+            <i class="bi bi-person-fill text-p24"></i>
+          </div>
+          <div class="fw-700">{{ current_user.nome }}</div>
+          <div class="text-muted small">{{ current_user.email }}</div>
+        </div>
+        <div class="py-2">
+          <a href="{{ url_for('main.perfil') }}" class="p24-profile-nav-item">
+            <i class="bi bi-person"></i> Meu perfil
+          </a>
+          <a href="{{ url_for('materiais.submeter') }}" class="p24-profile-nav-item">
+            <i class="bi bi-cloud-upload"></i> Enviar material
+          </a>
+          <a href="{{ url_for('main.perfil') }}#favoritos" class="p24-profile-nav-item">
+            <i class="bi bi-bookmark-fill"></i> Materiais guardados
+          </a>
+          <a href="{{ url_for('main.perfil') }}#creditos" class="p24-profile-nav-item">
+            <i class="bi bi-coin"></i> Meus créditos
+          </a>
+          <a href="{{ url_for('main.definicoes') }}" class="p24-profile-nav-item active">
+            <i class="bi bi-gear"></i> Definições
+          </a>
+          <hr class="mx-3 my-1">
+          <a href="{{ url_for('auth.sair') }}" class="p24-profile-nav-item text-danger">
+            <i class="bi bi-box-arrow-right"></i> Sair
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="col-lg-9">
+      <div class="mb-4">
+        <h4 class="fw-800 mb-1"><i class="bi bi-gear me-2 text-p24"></i>Definições</h4>
+        <p class="text-muted small mb-0">Preferências da conta e os teus direitos sobre os teus dados.</p>
+      </div>
+
+      <!-- Conta -->
+      <div class="p24-card mb-4">
+        <h6 class="fw-800 mb-3">Conta</h6>
+        <div class="row g-2">
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1"><i class="bi bi-envelope me-1"></i>Email</div>
+            <div class="fw-600 small">{{ current_user.email }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted small mb-1"><i class="bi bi-calendar me-1"></i>Membro desde</div>
+            <div class="fw-600 small">{{ current_user.criado_em.strftime('%B %Y') }}</div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <a href="{{ url_for('main.perfil') }}" class="small text-orange fw-600 text-decoration-none">
+            Editar nome, instituição, curso e bio <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Preferências de comunicação -->
+      <div class="p24-card mb-4">
+        <h6 class="fw-800 mb-3">Preferências de comunicação</h6>
+        <form method="post" action="{{ url_for('main.alternar_marketing') }}"
+              class="d-flex align-items-center justify-content-between gap-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div>
+            <div class="fw-600 small">Emails de marketing</div>
+            <div class="text-muted" style="font-size:.78rem">
+              Novidades, dicas e campanhas do Ponto 24 Académico. Emails transacionais (confirmações, notificações) continuam sempre a ser enviados.
+            </div>
+          </div>
+          <div class="form-check form-switch flex-shrink-0">
+            <input class="form-check-input" type="checkbox" role="switch" style="width:2.5em;height:1.4em"
+                   onchange="this.form.submit()"
+                   {% if current_user.aceita_marketing %}checked{% endif %}>
+          </div>
+        </form>
+      </div>
+
+      <!-- Zona de perigo -->
+      <div class="p24-card border-danger-subtle" style="border:1px solid #f5c6cb">
+        <h6 class="fw-800 mb-1 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Zona de perigo</h6>
+        <p class="text-muted small mb-3">Eliminar a conta é uma ação permanente.</p>
+
+        <div class="p-3 rounded-3 mb-3" style="background:#fff5f5;font-size:.82rem">
+          <div class="fw-700 mb-2">Ao eliminares a tua conta:</div>
+          <ul class="mb-0 ps-3 text-muted" style="line-height:1.9">
+            <li>O teu nome, email, instituição, curso e bio são removidos — não é reversível.</li>
+            <li>Deixas de conseguir entrar com esta conta e perdes os créditos acumulados.</li>
+            <li>Materiais e publicações na Comunidade que já submeteste continuam disponíveis para os outros utilizadores (para não quebrar o que outros já descarregaram ou responderam), mas passam a aparecer como de <strong>"Utilizador eliminado"</strong> — deixam de estar associados a ti.</li>
+            <li>Favoritos e notificações são apagados por completo.</li>
+          </ul>
+        </div>
+
+        <button type="button" class="btn btn-danger fw-700" data-bs-toggle="modal" data-bs-target="#eliminarContaModal">
+          <i class="bi bi-trash3 me-2"></i>Eliminar a minha conta
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Eliminar conta -->
+<div class="modal fade" id="eliminarContaModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-700 text-danger">Eliminar conta — tens a certeza?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{{ url_for('main.eliminar_conta') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-body">
+          <p class="text-muted small">Esta ação não pode ser desfeita. Confirma a tua senha e escreve <strong>ELIMINAR</strong> para continuar.</p>
+          <div class="mb-3">
+            <label class="form-label">Senha atual</label>
+            <input type="password" name="senha" class="form-control" required autocomplete="current-password" />
+          </div>
+          <div class="mb-1">
+            <label class="form-label">Escreve "ELIMINAR" para confirmar</label>
+            <input type="text" name="confirmacao" class="form-control" placeholder="ELIMINAR" required
+                   pattern="[Ee][Ll][Ii][Mm][Ii][Nn][Aa][Rr]" />
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light fw-600" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger fw-700">
+            <i class="bi bi-trash3 me-2"></i>Eliminar definitivamente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

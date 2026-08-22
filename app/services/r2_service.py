@@ -1,6 +1,9 @@
 import os
+import logging
 import boto3
 from botocore.config import Config
+
+logger = logging.getLogger(__name__)
 
 _CONTENT_TYPES = {
     "pdf":  "application/pdf",
@@ -44,7 +47,7 @@ def delete_object(key: str) -> None:
     try:
         _client().delete_object(Bucket=_bucket(), Key=key)
     except Exception:
-        pass
+        logger.exception("Falha ao apagar objeto R2: %s", key)
 
 
 def presigned_url(key: str, expires: int = 3600, download_name: str = None) -> str:

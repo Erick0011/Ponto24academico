@@ -41,10 +41,17 @@
         <i class="bi bi-pin-angle-fill me-1"></i>Fixado{% if post.fixado_ate %} até {{ post.fixado_ate.strftime('%d/%m') }}{% endif %}
       </span>
       {% endif %}
-      {% if post.tipo == 'aviso' %}
+      {% if post.categoria and post.categoria.apenas_admin %}
       <span class="badge bg-danger fw-600"><i class="bi bi-patch-check-fill me-1"></i>Aviso oficial</span>
+      {% elif post.categoria %}
+      <span class="badge bg-p24-light text-p24 fw-600"><i class="bi {{ post.categoria.icone }} me-1"></i>{{ post.categoria.nome }}</span>
       {% else %}
       <span class="badge bg-p24-light text-p24 fw-600">{{ post.tipo_label }}</span>
+      {% endif %}
+      {% if post.estado == 'resolvido' %}
+      <span class="badge bg-success-subtle text-success fw-600"><i class="bi bi-check-circle-fill me-1"></i>Resolvido</span>
+      {% elif post.estado == 'fechado' %}
+      <span class="badge bg-secondary fw-600"><i class="bi bi-lock-fill me-1"></i>Fechado</span>
       {% endif %}
     </div>
     <a href="{{ url_for('comunidade.detalhe', id=post.id) }}" class="text-decoration-none text-dark">

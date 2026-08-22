@@ -262,6 +262,7 @@ Académico{% endblock %} {% block content %}
             </option>
             <option value="UAN">UAN — Universidade Agostinho Neto</option>
             <option value="UCAN">UCAN — Universidade Católica de Angola</option>
+            <option value="Ainda não sou universitário/a">Ainda não sou universitário/a</option>
             <option value="OUTRA">Outra (especificar abaixo)</option>
           </select>
           <input
@@ -477,13 +478,18 @@ Académico{% endblock %} {% block content %}
     if (!selectMode) document.getElementById("curso-text").focus();
   }
 
+  const NAO_UNIVERSITARIO = "Ainda não sou universitário/a";
+
   function updateCursos() {
     const inst = document.getElementById("inst-select").value;
     const select = document.getElementById("curso-select");
     const cursos = CURSOS[inst] || [];
 
     select.innerHTML = "";
-    if (cursos.length === 0) {
+    if (inst === NAO_UNIVERSITARIO) {
+      select.disabled = true;
+      select.innerHTML = '<option value="">Não aplicável</option>';
+    } else if (cursos.length === 0) {
       select.disabled = true;
       select.innerHTML =
         '<option value="">Seleciona primeiro a instituição</option>';

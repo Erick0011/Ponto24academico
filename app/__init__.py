@@ -1,7 +1,8 @@
 import os
+import json
 import logging
 from logging.handlers import RotatingFileHandler
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 from flask import Flask, request as flask_request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -13,6 +14,27 @@ from flask_limiter.util import get_remote_address
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+
+
+class JsonFormatter(logging.Formatter):
+    """Log aplicacional estruturado — uma linha JSON por evento (timestamp,
+    nível, logger, mensagem, stack trace se houver). Nunca inclui passwords,
+    tokens ou dados pessoais sensíveis: isso depende de quem chama o logger
+    não os passar na mensagem, aqui não há sanitização automática de
+    conteúdo livre. `admin/logs.html` (via admin.logs) sabe ler tanto este
+    formato como o texto simples anterior, para não partir o histórico já
+    gravado em disco antes desta mudança."""
+
+    def format(self, record):
+        dados = {
+            "timestamp": self.formatTime(record, "%Y-%m-%d %H:%M:%S"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            dados["exception"] = self.formatException(record.exc_info)
+        return json.dumps(dados, ensure_ascii=False)
 csrf = CSRFProtect()
 # Nota: armazenamento em memória — com `gunicorn -w 4` cada worker mantém o
 # seu próprio contador, pelo que o limite real pode chegar a ~4x o definido.
@@ -45,10 +67,7 @@ def create_app(config_name: str = None):
         backupCount=5,
         encoding="utf-8",
     )
-    handler.setFormatter(logging.Formatter(
-        "[%(asctime)s] %(levelname)-8s %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    ))
+    handler.setFormatter(JsonFormatter())
     handler.setLevel(logging.INFO)
     app.logger.setLevel(logging.INFO)
     app.logger.addHandler(handler)
@@ -66,6 +85,12 @@ def create_app(config_name: str = None):
     login_manager.login_message = "Faz login para continuar."
     login_manager.login_message_category = "aviso"
 
+    # Log de auditoria imutável da Comunidade — um listener SQLAlchemy único
+    # (before_flush) capta automaticamente criação/edição/eliminação dos
+    # modelos auditados, em vez de chamadas manuais espalhadas pelas rotas.
+    from app.services import comunidade_auditoria_service
+    comunidade_auditoria_service.init_app(app)
+
     # Importar modelos para garantir que as tabelas são criadas
     from app.models.notificacao import Notificacao       # noqa: F401
     from app.models.configuracao import Configuracao     # noqa: F401
@@ -75,8 +100,9 @@ def create_app(config_name: str = None):
     from app.models.pasta import Pasta                    # noqa: F401
     from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario  # noqa: F401
     from app.models.comunidade import (                   # noqa: F401
-        ComunidadePost, ComunidadePostImagem, ComunidadeResposta,
-        ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag,
+        ComunidadePost, ComunidadePostImagem, ComunidadeResposta, ComunidadeRespostaImagem,
+        ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag, ComunidadeCategoria,
+        ComunidadeSubscricao, ComunidadeReacao, ComunidadeLink, ComunidadeAuditLog,
     )
     from app.models.visita import VisitaLog                # noqa: F401
 
@@ -190,6 +216,14 @@ def create_app(config_name: str = None):
         args["page"] = str(page)
         return "?" + urlencode(args)
 
+    # Jinja2 global: renderiza o corpo de um post/resposta da Comunidade com
+    # as ligações internas (#123, @material:456) substituídas por cartões.
+    @app.template_global()
+    def renderizar_link_corpo(texto):
+        from flask_login import current_user as _cu_links
+        from app.services.comunidade_links_service import renderizar_link_corpo as _renderizar
+        return _renderizar(texto, _cu_links)
+
     # ── Estatísticas de tráfego (todos os visitantes, mesmo sem conta) ───────────
     # Cookie técnico anónimo — só um identificador aleatório, sem dados pessoais —
     # para contar visitas/visitantes únicos. Ver privacidade.html, secção "Cookies".
@@ -223,6 +257,23 @@ def create_app(config_name: str = None):
         except Exception:
             db.session.rollback()
 
+    # frame-src da CSP: a pré-visualização de PDFs (materials/detalhe.html) usa
+    # um <iframe> para /materiais/<id>/preview. Em local/dev isso é sempre a
+    # própria origem ('self'), mas em produção com R2 configurado essa rota
+    # faz *redirect* para um URL assinado no domínio do R2 (origem diferente)
+    # — sem isto no frame-src, a CSP cai no default-src 'self' e bloqueia o
+    # iframe em silêncio (só visível na consola do browser).
+    _csp_frame_src = "'self'"
+    _r2_endpoint = os.environ.get("R2_ENDPOINT")
+    if _r2_endpoint:
+        _r2_host = urlparse(_r2_endpoint).netloc
+        if _r2_host:
+            _csp_frame_src += f" https://{_r2_host}"
+            _r2_dominio_pai = _r2_host.split(".", 1)[-1]
+            if _r2_dominio_pai != _r2_host:
+                # cobre também o endereçamento virtual-hosted (bucket.<host>)
+                _csp_frame_src += f" https://*.{_r2_dominio_pai}"
+
     # Cabeçalhos de segurança em toda a resposta
     @app.after_request
     def set_security_headers(response):
@@ -243,6 +294,7 @@ def create_app(config_name: str = None):
             "Content-Security-Policy",
             "default-src 'self'; "
             "img-src 'self' data: https:; "
+            f"frame-src {_csp_frame_src}; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:;"

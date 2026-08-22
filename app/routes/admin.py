@@ -15,11 +15,14 @@ from app.models.atividade import AtividadeLog
 from app.models.pasta import Pasta
 from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario
 from app.services import marketing_service
-from app.models.comunidade import ComunidadePost, ComunidadeResposta, ComunidadeRelatorio
+from app.models.comunidade import (
+    ComunidadePost, ComunidadeResposta, ComunidadeRelatorio, ComunidadeCategoria, ComunidadeAuditLog,
+)
 from app.models.visita import VisitaLog
-from app.routes.comunidade import eliminar_post_interno
+from app.routes.comunidade import eliminar_post_interno, eliminar_resposta_interno
+from app.services.comunidade_auditoria_service import registar_auditoria_evento
 from app.services.creditos_service import dar_creditos_upload
-from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta
+from app.services.upload_service import apagar_ficheiro, mover_grupo_para_pasta, slugify
 from app.services.notificacoes_service import notificar_aprovacao, notificar_rejeicao
 from app.services.mail_service import (
     email_material_aprovado, email_material_rejeitado, email_convite_acesso,
@@ -159,6 +162,61 @@ def kpi():
         .limit(10).all()
     )
 
+    # ── Séries diárias (gráficos de tendência dos KPIs) ─────────────────────
+    def _serie_diaria(bruto, dias):
+        """Converte [(data, n), ...] esparso numa série densa alinhada a `dias`
+        (lista de date), preenchendo com 0 os dias sem registos."""
+        mapa = {str(data): n for data, n in bruto}
+        return [mapa.get(str(dia), 0) for dia in dias]
+
+    dias_12 = [(hoje - timedelta(days=i)).date() for i in range(11, -1, -1)]
+    dias_30 = [(hoje - timedelta(days=i)).date() for i in range(29, -1, -1)]
+    labels_12 = [d.strftime("%d/%m") for d in dias_12]
+    labels_30 = [d.strftime("%d/%m") for d in dias_30]
+
+    pesquisas_por_dia = _serie_diaria(
+        db.session.query(func.date(PesquisaLog.criado_em), func.count(PesquisaLog.id))
+        .filter(PesquisaLog.criado_em >= dias_12[0])
+        .group_by(func.date(PesquisaLog.criado_em)).all(),
+        dias_12,
+    )
+    sem_resultados_por_dia = _serie_diaria(
+        db.session.query(func.date(PesquisaLog.criado_em), func.count(PesquisaLog.id))
+        .filter(PesquisaLog.criado_em >= dias_12[0], PesquisaLog.n_resultados == 0)
+        .group_by(func.date(PesquisaLog.criado_em)).all(),
+        dias_12,
+    )
+    novos_users_por_dia = _serie_diaria(
+        db.session.query(func.date(User.criado_em), func.count(User.id))
+        .filter(User.criado_em >= dias_12[0])
+        .group_by(func.date(User.criado_em)).all(),
+        dias_12,
+    )
+    novos_materiais_por_dia = _serie_diaria(
+        db.session.query(func.date(Material.criado_em), func.count(Material.id))
+        .filter(Material.criado_em >= dias_12[0], Material.status == Material.STATUS_APROVADO)
+        .group_by(func.date(Material.criado_em)).all(),
+        dias_12,
+    )
+    candidaturas_por_dia = _serie_diaria(
+        db.session.query(func.date(Candidatura.created_at), func.count(Candidatura.id))
+        .filter(Candidatura.created_at >= dias_12[0])
+        .group_by(func.date(Candidatura.created_at)).all(),
+        dias_12,
+    )
+    visitas_por_dia = _serie_diaria(
+        db.session.query(func.date(VisitaLog.criado_em), func.count(VisitaLog.id))
+        .filter(VisitaLog.criado_em >= dias_30[0])
+        .group_by(func.date(VisitaLog.criado_em)).all(),
+        dias_30,
+    )
+    visitantes_por_dia = _serie_diaria(
+        db.session.query(func.date(VisitaLog.criado_em), func.count(func.distinct(VisitaLog.sessao_id)))
+        .filter(VisitaLog.criado_em >= dias_12[0])
+        .group_by(func.date(VisitaLog.criado_em)).all(),
+        dias_12,
+    )
+
     return render_template(
         "admin/kpi.html",
         total_pesquisas=total_pesquisas,
@@ -177,6 +235,15 @@ def kpi():
         visitas_30d=visitas_30d,
         visitantes_unicos_30d=visitantes_unicos_30d,
         paginas_mais_visitadas=paginas_mais_visitadas,
+        labels_12=labels_12,
+        labels_30=labels_30,
+        pesquisas_por_dia=pesquisas_por_dia,
+        sem_resultados_por_dia=sem_resultados_por_dia,
+        novos_users_por_dia=novos_users_por_dia,
+        novos_materiais_por_dia=novos_materiais_por_dia,
+        candidaturas_por_dia=candidaturas_por_dia,
+        visitas_por_dia=visitas_por_dia,
+        visitantes_por_dia=visitantes_por_dia,
     )
 
 
@@ -360,6 +427,8 @@ def toggle_admin(id):
     user = User.query.get_or_404(id)
     if user.id == current_user.id:
         flash("Não podes alterar os teus próprios privilégios.", "aviso")
+    elif user.esta_eliminada:
+        flash("Esta conta foi eliminada pelo próprio — não é possível alterar privilégios.", "aviso")
     else:
         user.is_admin = not user.is_admin
         if user.is_admin:
@@ -382,6 +451,8 @@ def toggle_moderador(id):
     user = User.query.get_or_404(id)
     if user.is_admin:
         flash("Admins já têm permissões de moderação.", "aviso")
+    elif user.esta_eliminada:
+        flash("Esta conta foi eliminada pelo próprio — não é possível alterar privilégios.", "aviso")
     else:
         user.is_moderador = not user.is_moderador
         registar_atividade(
@@ -402,6 +473,8 @@ def toggle_ativo(id):
     user = User.query.get_or_404(id)
     if user.id == current_user.id:
         flash("Não podes desativar a tua própria conta.", "aviso")
+    elif user.esta_eliminada:
+        flash("Esta conta foi eliminada pelo próprio — o estado de ativação já não é aplicável.", "aviso")
     else:
         user.is_active = not user.is_active
         registar_atividade(
@@ -421,7 +494,9 @@ def toggle_ativo(id):
 def ajustar_creditos(id):
     user      = User.query.get_or_404(id)
     quantidade = request.form.get("quantidade", type=int)
-    if quantidade is None:
+    if user.esta_eliminada:
+        flash("Esta conta foi eliminada pelo próprio — não é possível ajustar créditos.", "aviso")
+    elif quantidade is None:
         flash("Quantidade inválida.", "erro")
     else:
         user.creditos = max(0, user.creditos + quantidade)
@@ -802,17 +877,43 @@ def resolver_relatorio(id):
 @login_required
 @admin_required
 def logs():
+    """Lê o log estruturado em JSON (uma linha por evento — ver
+    JsonFormatter em app/__init__.py). Também sabe ler linhas antigas em
+    texto simples, gravadas antes desta mudança, para o histórico em disco
+    não desaparecer da página."""
     import os as _os
+    import json as _json
     nivel = request.args.get("nivel", "")
     log_path = _os.path.join(current_app.root_path, "..", "logs", "ponto24.log")
-    linhas = []
+    entradas = []
     if _os.path.exists(log_path):
         with open(log_path, "r", encoding="utf-8", errors="replace") as f:
             todas = f.readlines()
-        if nivel:
-            todas = [l for l in todas if f" {nivel.upper()} " in l or f" {nivel.upper()}\t" in l]
-        linhas = list(reversed(todas[-1000:]))
-    return render_template("admin/logs.html", linhas=linhas, nivel=nivel)
+        for linha in reversed(todas[-5000:]):
+            linha = linha.rstrip("\n")
+            if not linha.strip():
+                continue
+            try:
+                dados = _json.loads(linha)
+                nivel_linha = dados.get("level", "INFO")
+                texto = f"[{dados.get('timestamp', '')}] {nivel_linha:<8} {dados.get('logger', '')}: {dados.get('message', '')}"
+                if dados.get("exception"):
+                    texto += "\n" + dados["exception"]
+            except (ValueError, TypeError):
+                # Linha antiga (texto simples, anterior à mudança para JSON).
+                nivel_linha = "INFO"
+                for candidato in ("ERROR", "WARNING", "DEBUG"):
+                    if f" {candidato} " in linha or f" {candidato}\t" in linha:
+                        nivel_linha = candidato
+                        break
+                texto = linha
+
+            if nivel and nivel_linha.upper() != nivel.upper():
+                continue
+            entradas.append({"nivel": nivel_linha.upper(), "texto": texto})
+            if len(entradas) >= 1000:
+                break
+    return render_template("admin/logs.html", linhas=entradas, nivel=nivel)
 
 
 # ── Anúncios ──────────────────────────────────────────────────────────────────
@@ -1195,14 +1296,17 @@ def eliminar_conteudo_comunidade(id):
             eliminar_post_interno(alvo)
         else:
             post_pai = ComunidadePost.query.get(alvo.post_id)
-            if post_pai and post_pai.respostas_count > 0:
-                post_pai.respostas_count -= 1
+            # +1 pela própria resposta, +1 por cada réplica — arrastadas em
+            # cascata pelo model, mas também contam para o total do post.
+            total_eliminado = 1 + alvo.replicas.count()
+            if post_pai:
+                post_pai.respostas_count = max(0, post_pai.respostas_count - total_eliminado)
             registar_atividade(
                 AtividadeLog.EVENTO_COMUNIDADE_RESPOSTA_ELIMINADA,
                 utilizador_id=current_user.id, alvo_tipo="comunidade_resposta", alvo_id=alvo.id,
                 detalhes={"via": "denuncia"},
             )
-            db.session.delete(alvo)
+            eliminar_resposta_interno(alvo)
     relatorio.status = ComunidadeRelatorio.STATUS_RESOLVIDO
     db.session.commit()
     flash("Conteúdo eliminado e denúncia resolvida.", "sucesso")
@@ -1244,6 +1348,70 @@ def fixar_post_comunidade(id):
     db.session.commit()
     flash(mensagem, "sucesso")
     return redirect(request.referrer or url_for("comunidade.detalhe", id=post.id))
+
+
+# ── Categorias da Comunidade (só admin — "Admin cria/edita/ordena") ───────────
+
+@admin_bp.route("/comunidade/categorias", methods=["GET", "POST"])
+@login_required
+@admin_required
+def comunidade_categorias():
+    if request.method == "POST":
+        cat_id       = request.form.get("id", "").strip()
+        nome         = request.form.get("nome", "").strip()
+        descricao    = request.form.get("descricao", "").strip()
+        icone        = request.form.get("icone", "bi-chat-dots").strip() or "bi-chat-dots"
+        ordem        = request.form.get("ordem", type=int) or 0
+        apenas_admin = request.form.get("apenas_admin") == "on"
+
+        if not nome:
+            flash("Nome da categoria é obrigatório.", "erro")
+        elif cat_id:
+            cat = ComunidadeCategoria.query.get_or_404(int(cat_id))
+            cat.nome, cat.descricao, cat.icone = nome, descricao, icone
+            cat.ordem, cat.apenas_admin = ordem, apenas_admin
+            db.session.commit()
+            flash(f"Categoria '{nome}' atualizada.", "sucesso")
+        else:
+            slug = slugify(nome)
+            if ComunidadeCategoria.query.filter_by(slug=slug).first():
+                flash("Já existe uma categoria com esse nome.", "erro")
+            else:
+                db.session.add(ComunidadeCategoria(
+                    slug=slug, nome=nome, descricao=descricao, icone=icone,
+                    ordem=ordem, apenas_admin=apenas_admin,
+                ))
+                db.session.commit()
+                flash(f"Categoria '{nome}' criada.", "sucesso")
+
+    todas = ComunidadeCategoria.query.order_by(ComunidadeCategoria.ordem, ComunidadeCategoria.nome).all()
+    return render_template("admin/comunidade_categorias.html", categorias=todas)
+
+
+@admin_bp.route("/comunidade/categorias/<int:id>/toggle-ativa", methods=["POST"])
+@login_required
+@admin_required
+def toggle_ativa_categoria(id):
+    cat = ComunidadeCategoria.query.get_or_404(id)
+    cat.ativa = not cat.ativa
+    db.session.commit()
+    flash(f"Categoria '{cat.nome}' {'ativada' if cat.ativa else 'desativada'}.", "sucesso")
+    return redirect(url_for("admin.comunidade_categorias"))
+
+
+@admin_bp.route("/comunidade/categorias/<int:id>/eliminar", methods=["POST"])
+@login_required
+@admin_required
+def eliminar_categoria_comunidade(id):
+    cat = ComunidadeCategoria.query.get_or_404(id)
+    if cat.posts.count() > 0:
+        flash("Não é possível eliminar uma categoria com publicações associadas — desativa-a em vez disso.", "erro")
+    else:
+        nome = cat.nome
+        db.session.delete(cat)
+        db.session.commit()
+        flash(f"Categoria '{nome}' eliminada.", "aviso")
+    return redirect(url_for("admin.comunidade_categorias"))
 
 
 # ── Restrição de utilizadores na Comunidade (admin e moderadores) ─────────────
@@ -1301,6 +1469,10 @@ def suspender_utilizador_comunidade(id):
         utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
         detalhes={"duracao": duracao_key, "motivo": motivo},
     )
+    registar_auditoria_evento(
+        action="suspender_comunidade", entity_type="user", entity_id=user.id,
+        payload_after={"duracao": duracao_key, "motivo": motivo, "banido_permanente": user.comunidade_banido},
+    )
     db.session.commit()
     flash(f"{user.nome} foi suspenso(a) da Comunidade.", "sucesso")
     return redirect(request.referrer or url_for("admin.comunidade_utilizadores"))
@@ -1319,6 +1491,34 @@ def reativar_utilizador_comunidade(id):
         AtividadeLog.EVENTO_COMUNIDADE_USER_REATIVADO,
         utilizador_id=current_user.id, alvo_tipo="user", alvo_id=user.id,
     )
+    registar_auditoria_evento(action="reativar_comunidade", entity_type="user", entity_id=user.id)
     db.session.commit()
     flash(f"{user.nome} pode voltar a participar na Comunidade.", "sucesso")
     return redirect(request.referrer or url_for("admin.comunidade_utilizadores"))
+
+
+# ── Auditoria da Comunidade (só admin — log imutável, só leitura aqui) ────────
+
+@admin_bp.route("/comunidade/auditoria")
+@login_required
+@admin_required
+def comunidade_auditoria():
+    page = request.args.get("page", 1, type=int)
+    action = request.args.get("action", "").strip()
+    entity_type = request.args.get("entity_type", "").strip()
+
+    query = ComunidadeAuditLog.query
+    if action:
+        query = query.filter_by(action=action)
+    if entity_type:
+        query = query.filter_by(entity_type=entity_type)
+
+    logs = query.order_by(ComunidadeAuditLog.criado_em.desc()).paginate(page=page, per_page=40, error_out=False)
+
+    acoes_disponiveis = [r[0] for r in db.session.query(ComunidadeAuditLog.action).distinct().order_by(ComunidadeAuditLog.action).all()]
+    entidades_disponiveis = [r[0] for r in db.session.query(ComunidadeAuditLog.entity_type).distinct().order_by(ComunidadeAuditLog.entity_type).all()]
+
+    return render_template(
+        "admin/comunidade_auditoria.html", logs=logs, action=action, entity_type=entity_type,
+        acoes_disponiveis=acoes_disponiveis, entidades_disponiveis=entidades_disponiveis,
+    )

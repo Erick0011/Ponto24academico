@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -34,6 +35,13 @@ class User(UserMixin, db.Model):
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
     ultimo_login = db.Column(db.DateTime)
 
+    # Eliminação de conta (autoserviço, Definições > Eliminar conta) — distinto
+    # de is_active (que é a suspensão feita por um admin): quando preenchido,
+    # os dados pessoais já foram anonimizados e o login fica bloqueado, mas a
+    # linha do utilizador mantém-se para não quebrar o autor_id de materiais,
+    # posts da Comunidade, avaliações e logs de atividade já publicados.
+    conta_eliminada_em = db.Column(db.DateTime, nullable=True)
+
     # Moderação da Comunidade — suspensão temporária (até uma data) ou permanente
     # (comunidade_banido=True). Ver User.suspenso_da_comunidade.
     comunidade_banido = db.Column(db.Boolean, default=False)
@@ -51,6 +59,28 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
+
+    @property
+    def esta_eliminada(self) -> bool:
+        return self.conta_eliminada_em is not None
+
+    def anonimizar(self):
+        """Eliminação de conta a pedido do próprio (Definições > Eliminar
+        conta) — direito de apagamento da política de privacidade, §5/§6.
+        Mantém a linha (e por isso os materiais, posts da Comunidade e
+        avaliações já publicados continuam íntegros, agora atribuídos a
+        "Utilizador eliminado"), mas remove todos os dados pessoais e
+        bloqueia logins futuros. Favoritos e notificações — só relevantes
+        para o próprio — são apagados à parte pelo chamador."""
+        self.nome = "Utilizador eliminado"
+        self.email = f"eliminado-{self.id}@removido.ponto24.pt"
+        self.password_hash = generate_password_hash(uuid.uuid4().hex)
+        self.instituicao = None
+        self.curso = None
+        self.bio = None
+        self.avatar_url = None
+        self.aceita_marketing = False
+        self.conta_eliminada_em = datetime.utcnow()
 
     def tem_creditos(self, quantidade: int = 1) -> bool:
         return self.creditos >= quantidade

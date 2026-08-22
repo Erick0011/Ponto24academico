@@ -34,7 +34,9 @@
               <div>
                 <div class="fw-600 small d-flex align-items-center gap-1">
                   {{ u.nome }}
-                  {% if u.is_admin %}
+                  {% if u.esta_eliminada %}
+                  <i class="bi bi-trash3-fill text-muted" title="Conta eliminada pelo próprio em {{ u.conta_eliminada_em.strftime('%d/%m/%Y') }}"></i>
+                  {% elif u.is_admin %}
                   <span class="badge bg-warning text-dark fw-600" style="font-size:.65rem">Admin</span>
                   {% elif u.is_moderador %}
                   <span class="badge bg-info fw-600" style="font-size:.65rem">Moderador</span>
@@ -50,7 +52,9 @@
           <td><span class="fw-700 text-warning">{{ u.creditos }}</span></td>
           <td class="d-none d-sm-table-cell fw-600 text-p24">{{ u.total_uploads }}</td>
           <td>
-            {% if u.is_active %}
+            {% if u.esta_eliminada %}
+            <span class="badge bg-secondary fw-600" title="Dados pessoais removidos a pedido do próprio">Eliminada</span>
+            {% elif u.is_active %}
             <span class="badge bg-success-subtle text-success fw-600">Ativo</span>
             {% else %}
             <span class="badge bg-danger-subtle text-danger fw-600">Inativo</span>
@@ -64,23 +68,24 @@
                 <i class="bi bi-person"></i>
               </a>
               <!-- Ajustar créditos -->
-              <button class="btn btn-warning btn-sm" title="Ajustar créditos"
-                      data-bs-toggle="modal" data-bs-target="#creditos{{ u.id }}">
+              <button class="btn btn-warning btn-sm" title="{% if u.esta_eliminada %}Conta eliminada{% else %}Ajustar créditos{% endif %}"
+                      {% if u.esta_eliminada %}disabled{% else %}data-bs-toggle="modal" data-bs-target="#creditos{{ u.id }}"{% endif %}>
                 <i class="bi bi-coin"></i>
               </button>
               <!-- Toggle admin -->
               <form action="{{ url_for('admin.toggle_moderador', id=u.id) }}" method="post" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {% if u.is_moderador %}btn-info{% else %}btn-outline-info{% endif %}"
-                        title="{% if u.is_moderador %}Remover moderador{% else %}Tornar moderador{% endif %}"
-                        {% if u.is_admin %}disabled{% endif %}>
+                        title="{% if u.esta_eliminada %}Conta eliminada{% elif u.is_moderador %}Remover moderador{% else %}Tornar moderador{% endif %}"
+                        {% if u.is_admin or u.esta_eliminada %}disabled{% endif %}>
                   <i class="bi bi-person-badge{% if u.is_moderador %}-fill{% endif %}"></i>
                 </button>
               </form>
               <form action="{{ url_for('admin.toggle_admin', id=u.id) }}" method="post" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {% if u.is_admin %}btn-warning{% else %}btn-outline-warning{% endif %}"
-                        title="{% if u.is_admin %}Remover admin{% else %}Tornar admin{% endif %}">
+                        title="{% if u.esta_eliminada %}Conta eliminada{% elif u.is_admin %}Remover admin{% else %}Tornar admin{% endif %}"
+                        {% if u.esta_eliminada %}disabled{% endif %}>
                   <i class="bi bi-shield{% if u.is_admin %}-fill{% endif %}"></i>
                 </button>
               </form>
@@ -88,7 +93,8 @@
               <form action="{{ url_for('admin.toggle_ativo', id=u.id) }}" method="post" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-success{% endif %}"
-                        title="{% if u.is_active %}Desativar conta{% else %}Ativar conta{% endif %}">
+                        title="{% if u.esta_eliminada %}Conta eliminada{% elif u.is_active %}Desativar conta{% else %}Ativar conta{% endif %}"
+                        {% if u.esta_eliminada %}disabled{% endif %}>
                   <i class="bi bi-{% if u.is_active %}slash-circle{% else %}check-circle{% endif %}"></i>
                 </button>
               </form>

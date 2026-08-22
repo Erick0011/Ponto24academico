@@ -3,11 +3,14 @@ import os
 import shutil
 import uuid
 import hashlib
+import logging
 import unicodedata
 import re
 from pathlib import Path
 from flask import current_app
 from werkzeug.utils import secure_filename
+
+logger = logging.getLogger(__name__)
 
 
 def _usar_r2() -> bool:
@@ -78,7 +81,7 @@ def _gerar_thumbnail_r2(data: bytes, subfolder: str, nome: str, tipo: str):
         thumb_key = f"{subfolder}/thumbs/{nome}" if subfolder else f"thumbs/{nome}"
         upload_bytes(out.getvalue(), thumb_key, tipo)
     except Exception:
-        pass
+        logger.exception("Falha ao gerar thumbnail (R2) para %s", nome)
 
 
 def _gerar_thumbnail(caminho_original: str, destino_dir: str, nome: str):
@@ -91,7 +94,7 @@ def _gerar_thumbnail(caminho_original: str, destino_dir: str, nome: str):
             img.thumbnail((300, 300))
             img.save(thumb_path)
     except Exception:
-        pass
+        logger.exception("Falha ao gerar thumbnail para %s", nome)
 
 
 def calcular_hash(caminho_completo: str) -> str:
@@ -214,5 +217,7 @@ def mover_grupo_para_pasta(materiais: list, pasta) -> dict:
                 mover_ficheiro(m, subfolder_antigo)
                 m.ficheiro_path = path_antigo
             except Exception:
-                pass  # rollback best-effort; o erro original é o que importa reportar
+                # rollback best-effort; o erro original é o que importa reportar
+                logger.exception("Falha no rollback ao mover material #%s de volta", m.id)
+        logger.error("Falha ao mover grupo de materiais para pasta: %s", e)
         return {"ok": False, "erro": str(e)}

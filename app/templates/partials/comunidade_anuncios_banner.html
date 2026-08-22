@@ -1,0 +1,16 @@
+{# Banner de anúncios oficiais fixados — Comunidade > Anúncios (categoria
+   apenas_admin). Reaproveitado no feed da Comunidade e, opcionalmente, na
+   página inicial (autenticada e pública). Ver comunidade_service.anuncios_fixados_ativos. #}
+{% if anuncios_fixados %}
+<div class="d-flex flex-column gap-2 mb-4">
+  {% for a in anuncios_fixados %}
+  <a href="{{ url_for('comunidade.detalhe', id=a.id) }}"
+     class="d-flex align-items-center gap-2 text-decoration-none p-3 rounded-3"
+     style="background:linear-gradient(135deg, var(--p24-blue) 0%, var(--p24-blue-mid, var(--p24-blue)) 100%);color:#fff">
+    <span class="badge bg-white text-danger fw-700 flex-shrink-0"><i class="bi bi-patch-check-fill me-1"></i>Oficial</span>
+    <span class="fw-600 text-truncate">{{ a.titulo }}</span>
+    <i class="bi bi-arrow-right ms-auto flex-shrink-0"></i>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}

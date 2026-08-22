@@ -120,6 +120,12 @@
   </div>
 </section>
 
+{% if anuncios_fixados %}
+<div class="container-xl pt-4">
+  {% include "partials/comunidade_anuncios_banner.html" %}
+</div>
+{% endif %}
+
 <!-- ═══ MAIN CONTENT ═══ -->
 <div class="container-xl py-5">
   <div class="row g-4">

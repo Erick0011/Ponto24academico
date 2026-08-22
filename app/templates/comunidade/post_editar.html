@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Editar publicação — Comunidade — Ponto 24 Académico{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="fw-800 mb-0">Editar publicação</h4>
+        <a href="{{ url_for('comunidade.detalhe', id=post.id) }}" class="btn btn-light fw-600">
+          <i class="bi bi-arrow-left me-2"></i>Cancelar
+        </a>
+      </div>
+
+      <div class="p24-card">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-600">Título</label>
+            <input type="text" name="titulo" class="form-control" maxlength="200" required value="{{ post.titulo }}">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-600">Conteúdo</label>
+            <textarea name="corpo" class="form-control" rows="6" required>{{ post.corpo }}</textarea>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-600">Tags <span class="text-muted fw-400">(opcional, até 5, separadas por vírgula)</span></label>
+            <input type="text" name="tags" class="form-control" maxlength="200"
+                   value="{{ post.tags|map(attribute='nome')|join(', ') }}">
+          </div>
+
+          {% if post.imagens.count() %}
+          <div class="mb-4">
+            <label class="form-label fw-600">Fotos anexadas</label>
+            <div class="text-muted small mb-2">As fotos já anexadas não podem ser alteradas aqui — elimina a publicação e cria uma nova se precisares de trocar as fotos.</div>
+            <div class="d-flex flex-wrap gap-2">
+              {% for img in post.imagens %}
+              <img src="{{ comunidade_imagem_url(img.path_relativo) }}" alt="" class="rounded-3" style="width:72px;height:72px;object-fit:cover">
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary fw-700">
+            <i class="bi bi-check-lg me-2"></i>Guardar alterações
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

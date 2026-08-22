@@ -123,6 +123,16 @@ def entrar():
             flash("Email ou palavra-passe incorretos.", "erro")
             return render_template("auth/entrar.html")
 
+        if user.esta_eliminada:
+            registar_atividade(
+                AtividadeLog.EVENTO_LOGIN_FALHADO,
+                utilizador_id=user.id,
+                detalhes={"email": email, "motivo": "conta_eliminada"},
+            )
+            db.session.commit()
+            flash("Esta conta foi eliminada.", "erro")
+            return render_template("auth/entrar.html")
+
         if not user.is_active:
             registar_atividade(
                 AtividadeLog.EVENTO_LOGIN_FALHADO,

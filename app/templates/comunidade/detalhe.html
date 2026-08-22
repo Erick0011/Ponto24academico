@@ -28,6 +28,38 @@
 </script>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Cartões de ligação interna (#123, @material:456) embutidos no corpo do
+   texto — discretos, distinguíveis da prosa, versão compacta em mobile. ── */
+.comunidade-link-card {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .15rem .6rem; margin: .1rem 0; border-radius: 20px;
+  background: var(--p24-blue-light, #eef3fc); color: var(--p24-blue);
+  text-decoration: none; font-size: .85rem; font-weight: 600; vertical-align: middle;
+  border: 1px solid rgba(0,0,0,.04);
+}
+.comunidade-link-card:hover { background: var(--p24-blue); color: #fff; }
+.comunidade-link-card small { display: block; font-weight: 500; font-size: .72rem; opacity: .75; }
+.comunidade-link-card--indisponivel {
+  background: #f1f1f1; color: #8a8a8a; cursor: default; border-style: dashed;
+}
+.comunidade-link-card--indisponivel:hover { background: #f1f1f1; color: #8a8a8a; }
+@media (max-width: 576px) {
+  .comunidade-link-card small { display: none; } /* versão compacta: só o título */
+}
+
+/* ── Reações nomeadas (a par do voto +/-) ── */
+.comunidade-reacoes { display: flex; gap: .35rem; flex-wrap: wrap; }
+.comunidade-reacao-btn {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .2rem .55rem; border-radius: 20px; border: 1px solid var(--p24-border);
+  background: #fff; color: var(--p24-text-muted); font-size: .76rem; font-weight: 600;
+}
+.comunidade-reacao-btn.ativa { background: var(--p24-blue-light, #eef3fc); color: var(--p24-blue); border-color: transparent; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-xl py-4">
   <div class="row justify-content-center">
@@ -68,14 +100,24 @@
               <i class="bi bi-pin-angle-fill me-1"></i>Fixado{% if post.fixado_ate %} até {{ post.fixado_ate.strftime('%d/%m/%Y') }}{% endif %}
             </span>
             {% endif %}
-            {% if post.tipo == 'aviso' %}
+            {% if post.categoria and post.categoria.apenas_admin %}
             <span class="badge bg-danger fw-600"><i class="bi bi-patch-check-fill me-1"></i>Aviso oficial</span>
+            {% elif post.categoria %}
+            <span class="badge bg-p24-light text-p24 fw-600"><i class="bi {{ post.categoria.icone }} me-1"></i>{{ post.categoria.nome }}</span>
             {% else %}
             <span class="badge bg-p24-light text-p24 fw-600">{{ post.tipo_label }}</span>
             {% endif %}
+            {% if post.estado == 'resolvido' %}
+            <span class="badge bg-success-subtle text-success fw-600"><i class="bi bi-check-circle-fill me-1"></i>Resolvido</span>
+            {% elif post.estado == 'fechado' %}
+            <span class="badge bg-secondary fw-600"><i class="bi bi-lock-fill me-1"></i>Fechado</span>
+            {% endif %}
+            {% if post.editado %}
+            <span class="text-muted small fst-italic">editado</span>
+            {% endif %}
           </div>
           <h1 class="fw-800 mb-2" style="font-size:1.5rem">{{ post.titulo }}</h1>
-          <p class="mb-3" style="white-space:pre-wrap">{{ post.corpo }}</p>
+          <p class="mb-3" style="white-space:pre-wrap">{{ renderizar_link_corpo(post.corpo) }}</p>
 
           {% if post.tags %}
           <div class="d-flex flex-wrap gap-1 mb-3">
@@ -104,7 +146,65 @@
             <span>{{ post.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
           </div>
 
+          <div class="comunidade-reacoes mb-2">
+            {% for val, label in reacoes_tipos %}
+            <form action="{{ url_for('comunidade.reagir') }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="alvo_tipo" value="post">
+              <input type="hidden" name="alvo_id" value="{{ post.id }}">
+              <input type="hidden" name="tipo" value="{{ val }}">
+              <button type="submit" class="comunidade-reacao-btn {% if val in reacoes_post_minhas %}ativa{% endif %}"
+                      {% if not current_user.is_authenticated %}disabled{% endif %}>
+                <i class="bi {{ reacoes_icones.get(val, 'bi-hand-thumbs-up') }}"></i>{{ label }}
+                {% if reacoes_post_n.get(val) %}<span>{{ reacoes_post_n[val] }}</span>{% endif %}
+              </button>
+            </form>
+            {% endfor %}
+          </div>
+
           <div class="d-flex gap-2 flex-wrap">
+            {% if current_user.is_authenticated %}
+            <form action="{{ url_for('comunidade.alternar_subscricao', id=post.id) }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm fw-600 {% if esta_subscrito %}btn-p24-blue{% else %}btn-outline-secondary{% endif %}"
+                      title="{% if esta_subscrito %}Deixar de seguir{% else %}Seguir para receber notificações de novas respostas{% endif %}">
+                <i class="bi bi-bell{% if esta_subscrito %}-fill{% endif %} me-1"></i>{% if esta_subscrito %}A seguir{% else %}Seguir{% endif %}
+              </button>
+            </form>
+            {% endif %}
+            {% if pode_editar_post %}
+            <a href="{{ url_for('comunidade.editar_post', id=post.id) }}" class="btn btn-sm btn-outline-secondary fw-600">
+              <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            {% endif %}
+            {% if current_user.is_authenticated and (current_user.id == post.autor_id or pode_moderar) and post.estado != 'fechado' %}
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary fw-600 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-flag-fill me-1"></i>{{ post.estado_label }}
+              </button>
+              <ul class="dropdown-menu">
+                {% for val, label in estados %}
+                {% if val != post.estado %}
+                <li>
+                  <form action="{{ url_for('comunidade.mudar_estado_post', id=post.id) }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="estado" value="{{ val }}">
+                    <button type="submit" class="dropdown-item">{{ label }}</button>
+                  </form>
+                </li>
+                {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+            {% elif post.estado == 'fechado' and (current_user.id == post.autor_id or pode_moderar) %}
+            <form action="{{ url_for('comunidade.mudar_estado_post', id=post.id) }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="estado" value="aberto">
+              <button type="submit" class="btn btn-sm btn-outline-secondary fw-600">
+                <i class="bi bi-unlock me-1"></i>Reabrir
+              </button>
+            </form>
+            {% endif %}
             {% if current_user.is_authenticated and current_user.id != post.autor_id %}
             <button type="button" class="btn btn-sm btn-outline-secondary fw-600" data-bs-toggle="modal" data-bs-target="#denunciarPost">
               <i class="bi bi-flag me-1"></i>Denunciar
@@ -151,15 +251,27 @@
         </select>
       </div>
 
-      {% if current_user.is_authenticated %}
+      {% if post.estado == 'fechado' %}
+      <div class="p24-card mb-4 text-center text-muted small py-3">
+        <i class="bi bi-lock-fill me-1"></i>Esta publicação está fechada — já não aceita novas respostas.
+      </div>
+      {% elif current_user.is_authenticated %}
       <div class="p24-card mb-4">
-        <form action="{{ url_for('comunidade.criar_resposta', id=post.id) }}" method="post">
+        <form action="{{ url_for('comunidade.criar_resposta', id=post.id) }}" method="post"
+              enctype="multipart/form-data" class="comunidade-form-resposta">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           {% include "partials/honeypot.html" %}
-          <textarea name="corpo" class="form-control mb-2" rows="3" required placeholder="Escreve uma resposta..."></textarea>
-          <button type="submit" class="btn btn-primary fw-700 btn-sm">
-            <i class="bi bi-send me-2"></i>Responder
-          </button>
+          <textarea name="corpo" class="form-control mb-2" rows="3" placeholder="Escreve uma resposta..."></textarea>
+          <div class="comunidade-imagens-preview d-flex flex-wrap gap-2 mb-2"></div>
+          <div class="d-flex align-items-center gap-2">
+            <label class="btn btn-sm btn-outline-secondary mb-0" title="Anexar fotos">
+              <i class="bi bi-image"></i>
+              <input type="file" name="imagens" class="comunidade-imagens-input d-none" accept="image/*" multiple>
+            </label>
+            <button type="submit" class="btn btn-primary fw-700 btn-sm">
+              <i class="bi bi-send me-2"></i>Responder
+            </button>
+          </div>
         </form>
       </div>
       {% endif %}
@@ -186,16 +298,68 @@
           </form>
         </div>
         <div class="flex-grow-1 min-w-0">
-          <p class="mb-2" style="white-space:pre-wrap">{{ r.corpo }}</p>
+          {% if r.parent_id and r.parent %}
+          <div class="p-2 mb-2 rounded-3 text-muted small" style="background:rgba(0,0,0,.035);border-left:3px solid var(--p24-border)">
+            <i class="bi bi-reply-fill me-1"></i>Em resposta a <strong>{{ r.parent.autor.nome.split()[0] if r.parent.autor else 'utilizador removido' }}</strong>:
+            <div class="fst-italic text-truncate">"{{ r.parent.corpo }}"</div>
+          </div>
+          {% endif %}
+          {% if r.corpo %}
+          <p class="mb-2" style="white-space:pre-wrap">{{ renderizar_link_corpo(r.corpo) }}</p>
+          {% endif %}
+          {% if r.imagens.count() %}
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            {% for img in r.imagens %}
+            <a href="{{ comunidade_imagem_url(img.path_relativo) }}" target="_blank" rel="noopener">
+              <img src="{{ comunidade_imagem_url(img.path_relativo) }}" alt=""
+                   class="rounded-3" style="width:72px;height:72px;object-fit:cover">
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
           <div class="d-flex align-items-center gap-3 text-muted mb-2" style="font-size:.75rem">
             <span><i class="bi bi-person-fill me-1"></i>{{ r.autor.nome if r.autor else "Utilizador removido" }}</span>
             <span>{{ r.criado_em.strftime('%d/%m/%Y %H:%M') }}</span>
+            {% if r.editado %}<span class="fst-italic">editado</span>{% endif %}
+            {% if r.e_melhor_resposta %}
+            <span class="badge bg-success-subtle text-success fw-600"><i class="bi bi-award-fill me-1"></i>Melhor resposta</span>
+            {% endif %}
           </div>
-          <div class="d-flex gap-3 align-items-center">
+          <div class="comunidade-reacoes mb-2">
+            {% for val, label in reacoes_tipos %}
+            <form action="{{ url_for('comunidade.reagir') }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="alvo_tipo" value="resposta">
+              <input type="hidden" name="alvo_id" value="{{ r.id }}">
+              <input type="hidden" name="tipo" value="{{ val }}">
+              <button type="submit" class="comunidade-reacao-btn {% if val in reacoes_resp_minhas.get(r.id, []) %}ativa{% endif %}"
+                      {% if not current_user.is_authenticated %}disabled{% endif %}>
+                <i class="bi {{ reacoes_icones.get(val, 'bi-hand-thumbs-up') }}"></i>{{ label }}
+                {% if reacoes_resp_n.get(r.id, {}).get(val) %}<span>{{ reacoes_resp_n[r.id][val] }}</span>{% endif %}
+              </button>
+            </form>
+            {% endfor %}
+          </div>
+          <div class="d-flex gap-3 align-items-center flex-wrap">
             {% if current_user.is_authenticated and not nivel %}
             <button type="button" class="btn btn-sm btn-link text-muted p-0 fw-600" style="font-size:.78rem"
                     data-bs-toggle="collapse" data-bs-target="#responderResposta{{ r.id }}">
               <i class="bi bi-reply me-1"></i>Responder
+            </button>
+            {% endif %}
+            {% if not nivel and current_user.is_authenticated and (current_user.id == post.autor_id or pode_moderar) %}
+            <form action="{{ url_for('comunidade.marcar_melhor_resposta', id=r.id) }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-link p-0 fw-600" style="font-size:.78rem"
+                      title="{% if r.e_melhor_resposta %}Remover marcação{% else %}Marcar como melhor resposta{% endif %}">
+                <i class="bi bi-award{% if r.e_melhor_resposta %}-fill text-success{% else %} text-muted{% endif %} me-1"></i>{% if r.e_melhor_resposta %}Remover melhor resposta{% else %}Melhor resposta{% endif %}
+              </button>
+            </form>
+            {% endif %}
+            {% if pode_editar_respostas.get(r.id) %}
+            <button type="button" class="btn btn-sm btn-link text-muted p-0 fw-600" style="font-size:.78rem"
+                    data-bs-toggle="collapse" data-bs-target="#editarResposta{{ r.id }}">
+              <i class="bi bi-pencil me-1"></i>Editar
             </button>
             {% endif %}
             {% if current_user.is_authenticated and current_user.id != r.autor_id %}
@@ -215,16 +379,36 @@
             {% endif %}
           </div>
 
+          {% if pode_editar_respostas.get(r.id) %}
+          <div class="collapse mt-2" id="editarResposta{{ r.id }}">
+            <form action="{{ url_for('comunidade.editar_resposta', id=r.id) }}" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <textarea name="corpo" class="form-control form-control-sm mb-2" rows="2" required>{{ r.corpo }}</textarea>
+              <button type="submit" class="btn btn-primary btn-sm fw-700">
+                <i class="bi bi-check-lg me-1"></i>Guardar
+              </button>
+            </form>
+          </div>
+          {% endif %}
+
           {% if current_user.is_authenticated and not nivel %}
           <div class="collapse mt-2" id="responderResposta{{ r.id }}">
-            <form action="{{ url_for('comunidade.criar_resposta', id=post.id) }}" method="post">
+            <form action="{{ url_for('comunidade.criar_resposta', id=post.id) }}" method="post"
+                  enctype="multipart/form-data" class="comunidade-form-resposta">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="parent_id" value="{{ r.id }}">
               {% include "partials/honeypot.html" %}
-              <textarea name="corpo" class="form-control form-control-sm mb-2" rows="2" required placeholder="Responder a {{ r.autor.nome.split()[0] if r.autor else 'este comentário' }}..."></textarea>
-              <button type="submit" class="btn btn-primary btn-sm fw-700">
-                <i class="bi bi-send me-1"></i>Enviar
-              </button>
+              <textarea name="corpo" class="form-control form-control-sm mb-2" rows="2" placeholder="Responder a {{ r.autor.nome.split()[0] if r.autor else 'este comentário' }}..."></textarea>
+              <div class="comunidade-imagens-preview d-flex flex-wrap gap-2 mb-2"></div>
+              <div class="d-flex align-items-center gap-2">
+                <label class="btn btn-sm btn-outline-secondary mb-0" title="Anexar fotos">
+                  <i class="bi bi-image"></i>
+                  <input type="file" name="imagens" class="comunidade-imagens-input d-none" accept="image/*" multiple>
+                </label>
+                <button type="submit" class="btn btn-primary btn-sm fw-700">
+                  <i class="bi bi-send me-1"></i>Enviar
+                </button>
+              </div>
             </form>
           </div>
           {% endif %}
@@ -296,6 +480,18 @@
       </nav>
       {% endif %}
 
+      <!-- Referenciado por (ligações internas — ver comunidade_links_service) -->
+      {% if referenciado_por %}
+      <div class="mt-4">
+        <h2 class="fw-800 mb-3" style="font-size:1.1rem"><i class="bi bi-link-45deg me-1"></i>Referenciado por</h2>
+        <div class="d-flex flex-column gap-3">
+          {% for post in referenciado_por %}
+          {% include "comunidade/_post_card.html" %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Publicações relacionadas -->
       {% if relacionados %}
       <div class="mt-4">
@@ -344,4 +540,27 @@
   </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Pré-visualização das fotos anexadas a um comentário/resposta — aplica-se
+// ao formulário principal e a cada formulário de "Responder" (1 por comentário).
+document.querySelectorAll('.comunidade-form-resposta').forEach(function (form) {
+  var input = form.querySelector('.comunidade-imagens-input');
+  var preview = form.querySelector('.comunidade-imagens-preview');
+  if (!input || !preview) return;
+  input.addEventListener('change', function () {
+    preview.innerHTML = '';
+    Array.from(input.files).slice(0, 4).forEach(function (file) {
+      if (!file.type.startsWith('image/')) return;
+      var img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.alt = '';
+      img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:6px';
+      preview.appendChild(img);
+    });
+  });
+});
+</script>
 {% endblock %}

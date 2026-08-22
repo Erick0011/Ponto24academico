@@ -28,6 +28,7 @@ class AtividadeLog(db.Model):
     EVENTO_USER_REMOVIDO_MODERADOR = "user_removido_moderador"
     EVENTO_USER_ATIVADO = "user_ativado"
     EVENTO_USER_DESATIVADO = "user_desativado"
+    EVENTO_CONTA_ELIMINADA = "conta_eliminada"  # autoserviço, Definições > Eliminar conta
 
     # Autenticação
     EVENTO_LOGIN = "login"
@@ -55,6 +56,10 @@ class AtividadeLog(db.Model):
     EVENTO_COMUNIDADE_POST_FIXADO = "comunidade_post_fixado"
     EVENTO_COMUNIDADE_USER_SUSPENSO = "comunidade_user_suspenso"
     EVENTO_COMUNIDADE_USER_REATIVADO = "comunidade_user_reativado"
+    EVENTO_COMUNIDADE_ESTADO_ALTERADO = "comunidade_estado_alterado"
+    EVENTO_COMUNIDADE_MELHOR_RESPOSTA = "comunidade_melhor_resposta"
+    EVENTO_COMUNIDADE_POST_EDITADO = "comunidade_post_editado"
+    EVENTO_COMUNIDADE_RESPOSTA_EDITADA = "comunidade_resposta_editada"
 
     id = db.Column(db.Integer, primary_key=True)
     evento = db.Column(db.String(40), nullable=False, index=True)

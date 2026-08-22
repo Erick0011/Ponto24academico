@@ -30,12 +30,7 @@
     {% if linhas %}
       <div style="max-height:75vh;overflow-y:auto;">
         {% for linha in linhas %}
-          {% set nivel_linha = 'INFO' %}
-          {% if ' ERROR ' in linha %}{% set nivel_linha = 'ERROR' %}
-          {% elif ' WARNING ' in linha %}{% set nivel_linha = 'WARNING' %}
-          {% elif ' DEBUG ' in linha %}{% set nivel_linha = 'DEBUG' %}
-          {% endif %}
-          <div class="log-line {{ nivel_linha }}">{{ linha }}</div>
+          <div class="log-line {{ linha.nivel }}">{{ linha.texto }}</div>
         {% endfor %}
       </div>
       <div class="px-3 py-2 text-muted small border-top">

@@ -361,6 +361,23 @@
     </div>
   </div>
 
+  <!-- Discutido na Comunidade (ligações internas — ver comunidade_links_service) -->
+  {% if topicos_comunidade %}
+  <div class="mt-4">
+    <h2 class="fw-800 mb-3" style="font-size:1.25rem">
+      <i class="bi bi-chat-left-text me-1"></i>Discutido em {{ topicos_comunidade|length }} tópico{% if topicos_comunidade|length != 1 %}s{% endif %} da Comunidade
+    </h2>
+    <div class="d-flex flex-column gap-2">
+      {% for t in topicos_comunidade %}
+      <a href="{{ url_for('comunidade.detalhe', id=t.id) }}" class="p24-card d-block text-decoration-none text-dark py-2">
+        <span class="fw-700">{{ t.titulo }}</span>
+        <span class="text-muted small ms-2">{{ t.respostas_count }} resposta{% if t.respostas_count != 1 %}s{% endif %}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Materiais relacionados -->
   {% if relacionados %}
   <div class="mt-4">

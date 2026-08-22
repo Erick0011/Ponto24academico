@@ -227,6 +227,29 @@ def pastas_sem_pasta():
     return _render_pasta(None, sem_pasta=True)
 
 
+def _contagem_pasta(pasta):
+    """Nº de materiais aprovados na pasta e em toda a sua subárvore."""
+    return Material.query.filter(
+        Material.status == Material.STATUS_APROVADO,
+        Material.pasta_id.in_(pasta.ids_subquery()),
+    ).count()
+
+
+def _proxima_pasta_com_conteudo(pasta):
+    """Quando a pasta atual está vazia, sugere a próxima pasta-irmã (na mesma
+    ordem alfabética usada na navegação) que já tenha algum material aprovado
+    — para quem cai numa pasta vazia não ficar sem saber para onde ir."""
+    irmas = Pasta.query.filter_by(parent_id=pasta.parent_id).order_by(Pasta.nome).all()
+    idx = next((i for i, p in enumerate(irmas) if p.id == pasta.id), None)
+    if idx is None:
+        return None
+    ordem = irmas[idx + 1:] + irmas[:idx]  # depois da atual, depois as anteriores
+    for candidata in ordem:
+        if _contagem_pasta(candidata) > 0:
+            return candidata
+    return None
+
+
 def _render_pasta(pasta, sem_pasta=False):
     """Navegação pública (leitura) da árvore de pastas — reaproveita o mesmo
     dedup de grupo_upload e metadados de grupo usados em listar()."""
@@ -234,6 +257,8 @@ def _render_pasta(pasta, sem_pasta=False):
 
     breadcrumb = []
     sem_pasta_count = 0
+    sugestao_pasta = None
+    filhos_contagem = {}
     if sem_pasta:
         filhos = []
         query = (
@@ -278,6 +303,12 @@ def _render_pasta(pasta, sem_pasta=False):
         materiais = query.paginate(page=page, per_page=12, error_out=False)
         grupo_counts, grupo_thumbs = _grupo_metadados(materiais.items)
 
+        if not filhos and not materiais.items:
+            sugestao_pasta = _proxima_pasta_com_conteudo(pasta)
+
+    for f in filhos:
+        filhos_contagem[f.id] = _contagem_pasta(f)
+
     if sem_pasta:
         meta_descricao = _truncar("Materiais aprovados que ainda não foram organizados em nenhuma pasta.")
     elif pasta is not None:
@@ -285,11 +316,17 @@ def _render_pasta(pasta, sem_pasta=False):
     else:
         meta_descricao = _truncar("Navega os materiais académicos do Ponto 24 Académico organizados por pastas: universidade, curso, disciplina e ano.")
 
+    pode_moderar = current_user.is_authenticated and (
+        current_user.is_admin or getattr(current_user, "is_moderador", False)
+    )
+
     return render_template(
         "materials/pastas.html",
-        pasta_atual=pasta, filhos=filhos, materiais=materiais, breadcrumb=breadcrumb,
+        pasta_atual=pasta, filhos=filhos, filhos_contagem=filhos_contagem,
+        materiais=materiais, breadcrumb=breadcrumb,
         grupo_counts=grupo_counts, grupo_thumbs=grupo_thumbs, meta_descricao=meta_descricao,
         sem_pasta=sem_pasta, sem_pasta_count=sem_pasta_count,
+        sugestao_pasta=sugestao_pasta, pode_moderar=pode_moderar,
     )
 
 
@@ -328,6 +365,9 @@ def detalhe(id):
             .all()
         )
 
+    from app.models.comunidade import ComunidadeLink
+    from app.services.comunidade_links_service import topicos_relacionados
+
     return render_template(
         "materials/detalhe.html",
         material=material,
@@ -339,6 +379,7 @@ def detalhe(id):
         # _card.html (reaproveitado nos "Materiais relacionados") espera estas
         # duas variáveis para agrupar uploads múltiplos — aqui não há grupos.
         grupo_counts={}, grupo_thumbs={},
+        topicos_comunidade=topicos_relacionados(ComunidadeLink.TARGET_MATERIAL, material.id),
     )
 
 
@@ -374,6 +415,16 @@ def submeter():
     """Formulário de submissão de novo material."""
     categorias = Categoria.query.all()
 
+    # Upload direto para uma pasta — só admin/moderador (link "Enviar material
+    # para esta pasta" em materials/pastas.html). Reaplicado em cada re-render
+    # do formulário (erro de validação, duplicado, etc.) para não se perder.
+    pode_moderar = current_user.is_admin or getattr(current_user, "is_moderador", False)
+    pasta_id_bruto = (
+        request.form.get("pasta_id", type=int) if request.method == "POST"
+        else request.args.get("pasta_id", type=int)
+    )
+    pasta_destino = Pasta.query.get(pasta_id_bruto) if pode_moderar and pasta_id_bruto else None
+
     if request.method == "POST":
         titulo = request.form.get("titulo", "").strip()
         descricao = request.form.get("descricao", "").strip()
@@ -389,7 +440,7 @@ def submeter():
         # Validações
         if not all([titulo, instituicao, disciplina]) or not ficheiros:
             flash("Preenche os campos obrigatórios e seleciona pelo menos um ficheiro.", "erro")
-            return render_template("materials/submeter.html", categorias=categorias)
+            return render_template("materials/submeter.html", categorias=categorias, pasta_destino=pasta_destino)
 
         total = len(ficheiros)
         grupo_id = str(uuid.uuid4()) if total > 1 else None
@@ -415,7 +466,7 @@ def submeter():
             for info in guardados:
                 apagar_ficheiro(info["path_relativo"])
             flash(str(e), "erro")
-            return render_template("materials/submeter.html", categorias=categorias)
+            return render_template("materials/submeter.html", categorias=categorias, pasta_destino=pasta_destino)
 
         # Verificar duplicados exactos por hash SHA-256
         duplicados_encontrados = []
@@ -438,7 +489,7 @@ def submeter():
                 "Se tens uma versão diferente, envia como novo material.",
                 "aviso",
             )
-            return render_template("materials/submeter.html", categorias=categorias)
+            return render_template("materials/submeter.html", categorias=categorias, pasta_destino=pasta_destino)
 
         primeiro_id = None
         for i, info in enumerate(guardados):
@@ -461,6 +512,7 @@ def submeter():
                 autor_id=current_user.id,
                 status=Material.STATUS_PENDENTE,
                 grupo_upload=grupo_id,
+                pasta_id=pasta_destino.id if pasta_destino else None,
             )
             db.session.add(material)
             db.session.flush()
@@ -482,15 +534,18 @@ def submeter():
                 notificar_moderadores_novo_material(primeiro_material)
                 db.session.commit()
             except Exception:
-                pass
+                current_app.logger.exception(
+                    "Falha ao notificar moderadores do material #%s", primeiro_material.id
+                )
 
+        sufixo_pasta = f" Vai para a pasta \"{pasta_destino.nome}\" assim que for aprovado." if pasta_destino else ""
         if total == 1:
-            flash("Material submetido com sucesso! Está a aguardar aprovação.", "sucesso")
+            flash(f"Material submetido com sucesso! Está a aguardar aprovação.{sufixo_pasta}", "sucesso")
         else:
-            flash(f"{total} fotografias submetidas com sucesso! Estão a aguardar aprovação.", "sucesso")
+            flash(f"{total} fotografias submetidas com sucesso! Estão a aguardar aprovação.{sufixo_pasta}", "sucesso")
         return redirect(url_for("materiais.detalhe", id=primeiro_id))
 
-    return render_template("materials/submeter.html", categorias=categorias)
+    return render_template("materials/submeter.html", categorias=categorias, pasta_destino=pasta_destino)
 
 
 @materiais_bp.route("/<int:id>/preview")

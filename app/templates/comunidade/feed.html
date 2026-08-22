@@ -7,127 +7,252 @@
 
 {% block banner %}{% include "partials/banner.html" %}{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Botão flutuante de filtros — fixo no canto, sempre alcançável com o
+   polegar em mobile. O modal é que carrega os controlos de filtro. ── */
+.p24-fab {
+  position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 1030;
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: var(--p24-blue); color: #fff; font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--p24-shadow-lg); transition: transform .15s;
+}
+.p24-fab:hover, .p24-fab:focus { color: #fff; transform: translateY(-2px); }
+.p24-fab .p24-fab-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--p24-orange); border: 2px solid #fff;
+}
+@media (min-width: 992px) {
+  .p24-fab { right: 2rem; bottom: 2rem; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-xl py-4">
-  <div class="row g-4">
 
-    <!-- ═══ SIDEBAR ═══ -->
-    <div class="col-lg-3">
-      <div class="p24-sidebar">
-        <h6 class="mb-3" style="font-size:.85rem;font-weight:800;color:var(--p24-text)">Tipo</h6>
-        <a href="{{ url_for('comunidade.feed', ordenar=ordenar, tag=tag, q=busca) }}"
-           class="p24-filter-item d-block text-decoration-none {% if not tipo %}active{% endif %}">
-          <i class="bi bi-grid"></i> Todas
-        </a>
-        {% for val, label in tipos %}
-        <a href="{{ url_for('comunidade.feed', tipo=val, ordenar=ordenar, tag=tag, q=busca) }}"
-           class="p24-filter-item d-block text-decoration-none {% if tipo == val %}active{% endif %}">
-          <i class="bi {% if val == 'aviso' %}bi-patch-check-fill{% else %}bi-chat-dots{% endif %}"></i> {{ label }}
-        </a>
-        {% endfor %}
-
-        <hr class="my-3">
-        <a href="{{ url_for('comunidade.criar_post') }}" class="btn btn-primary w-100 fw-700">
-          <i class="bi bi-plus-lg me-2"></i>Nova publicação
-        </a>
-      </div>
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <h1 class="fw-800 mb-1" style="font-size:1.5rem">Comunidade</h1>
+      <p class="text-muted small mb-0">Dúvidas, discussões e avisos entre estudantes.</p>
     </div>
+    <a href="{{ url_for('comunidade.criar_post') }}" class="btn btn-primary fw-700">
+      <i class="bi bi-plus-lg me-2"></i>Nova publicação
+    </a>
+  </div>
 
-    <!-- ═══ MAIN CONTENT ═══ -->
-    <div class="col-lg-9">
+  {% include "partials/comunidade_anuncios_banner.html" %}
 
-      <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-        <div>
-          <h1 class="fw-800 mb-1" style="font-size:1.5rem">Comunidade</h1>
-          <p class="text-muted small mb-0">Dúvidas, discussões e avisos entre estudantes.</p>
-        </div>
-        <select class="form-select form-select-sm" style="width:auto"
-                onchange="(function(v){var p=new URLSearchParams(window.location.search);p.set('ordenar',v);p.delete('page');window.location='?'+p.toString();})(this.value)">
-          <option value="recentes" {% if ordenar == 'recentes' %}selected{% endif %}>Mais recentes</option>
-          <option value="votados" {% if ordenar == 'votados' %}selected{% endif %}>Mais votados</option>
-        </select>
+  {% set tem_filtros = tipo or categoria or tag or busca or ordenar == 'votados' %}
+  {% if tem_filtros %}
+  <div class="mb-3 d-flex flex-wrap gap-2">
+    {% if busca %}
+    <span class="badge bg-p24-light text-p24 fw-600">
+      Resultados para "{{ busca }}"
+      <a href="{{ url_for('comunidade.feed', tipo=tipo, categoria=categoria, tag=tag, ordenar=ordenar) }}" class="text-p24 ms-2" title="Limpar pesquisa">
+        <i class="bi bi-x-circle-fill"></i>
+      </a>
+    </span>
+    {% endif %}
+    {% if categoria %}
+    <span class="badge bg-p24-light text-p24 fw-600">
+      {{ categoria_nome_filtro }}
+      <a href="{{ url_for('comunidade.feed', tipo=tipo, tag=tag, ordenar=ordenar, q=busca) }}" class="text-p24 ms-2" title="Remover filtro">
+        <i class="bi bi-x-circle-fill"></i>
+      </a>
+    </span>
+    {% endif %}
+    {% if tipo %}
+    <span class="badge bg-p24-light text-p24 fw-600">
+      {{ tipos_dict.get(tipo, tipo) }}
+      <a href="{{ url_for('comunidade.feed', categoria=categoria, tag=tag, ordenar=ordenar, q=busca) }}" class="text-p24 ms-2" title="Remover filtro">
+        <i class="bi bi-x-circle-fill"></i>
+      </a>
+    </span>
+    {% endif %}
+    {% if tag %}
+    <span class="badge bg-p24-light text-p24 fw-600">
+      #{{ tag }}
+      <a href="{{ url_for('comunidade.feed', tipo=tipo, categoria=categoria, ordenar=ordenar, q=busca) }}" class="text-p24 ms-2" title="Remover filtro">
+        <i class="bi bi-x-circle-fill"></i>
+      </a>
+    </span>
+    {% endif %}
+    {% if ordenar == 'votados' %}
+    <span class="badge bg-p24-light text-p24 fw-600">
+      Mais votados
+      <a href="{{ url_for('comunidade.feed', tipo=tipo, categoria=categoria, tag=tag, q=busca) }}" class="text-p24 ms-2" title="Voltar a mais recentes">
+        <i class="bi bi-x-circle-fill"></i>
+      </a>
+    </span>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if posts.items %}
+  <div id="feed-cards" class="d-flex flex-column gap-3 mb-3">
+    {% include "comunidade/_post_cards.html" %}
+  </div>
+
+  <div id="feed-sentinel" style="min-height:1px" class="{% if not posts.has_next %}d-none{% endif %}">
+    <div class="text-center py-3 text-muted small">
+      <div class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></div>
+      A carregar mais publicações…
+    </div>
+  </div>
+
+  <!-- Paginação — funciona sempre; o JS esconde-a assim que assume o scroll infinito -->
+  {% if posts.pages > 1 %}
+  <nav id="feed-paginacao-fallback">
+    <ul class="pagination justify-content-center">
+      <li class="page-item {% if not posts.has_prev %}disabled{% endif %}">
+        <a class="page-link" href="{{ paginate_url(posts.prev_num) }}"><i class="bi bi-chevron-left"></i> Anterior</a>
+      </li>
+      {% for p in posts.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+        <li class="page-item {% if p == posts.page %}active{% endif %}">
+          <a class="page-link" href="{{ paginate_url(p) }}">{{ p }}</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endfor %}
+      <li class="page-item {% if not posts.has_next %}disabled{% endif %}">
+        <a class="page-link" href="{{ paginate_url(posts.next_num) }}">Próximo <i class="bi bi-chevron-right"></i></a>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="bi bi-chat-square-text text-muted" style="font-size:3rem"></i>
+    {% if tem_filtros %}
+    <h5 class="mt-3 fw-700">Nenhuma publicação encontrada</h5>
+    <p class="text-muted">Tenta outra pesquisa ou remove os filtros.</p>
+    {% else %}
+    <h5 class="mt-3 fw-700">Ainda não há publicações</h5>
+    <p class="text-muted">Sê o primeiro a começar uma discussão.</p>
+    {% endif %}
+    <a href="{{ url_for('comunidade.criar_post') }}" class="btn btn-primary fw-600">Nova publicação</a>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ═══ Filtros: botão flutuante + modal ═══ -->
+<button type="button" class="p24-fab" data-bs-toggle="modal" data-bs-target="#filtrosModal" aria-label="Filtrar e pesquisar publicações">
+  <i class="bi bi-sliders"></i>
+  {% if tem_filtros %}<span class="p24-fab-dot" aria-hidden="true"></span>{% endif %}
+</button>
+
+<div class="modal fade" id="filtrosModal" tabindex="-1" aria-labelledby="filtrosModalLabel">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-700" id="filtrosModalLabel">Filtrar e pesquisar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
-
-      <form method="get" action="{{ url_for('comunidade.feed') }}" class="mb-3">
-        <input type="hidden" name="tipo" value="{{ tipo or '' }}">
-        <input type="hidden" name="tag" value="{{ tag or '' }}">
-        <input type="hidden" name="ordenar" value="{{ ordenar }}">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-          <input type="search" name="q" class="form-control border-start-0 ps-0"
-                 placeholder="Pesquisar publicações…" value="{{ busca }}">
-          {% if busca %}
-          <a href="{{ url_for('comunidade.feed', tipo=tipo, tag=tag, ordenar=ordenar) }}"
-             class="btn btn-outline-secondary" title="Limpar pesquisa"><i class="bi bi-x-lg"></i></a>
+      <form method="get" action="{{ url_for('comunidade.feed') }}">
+        <div class="modal-body">
+          {% if tag %}
+          <input type="hidden" name="tag" value="{{ tag }}">
+          <div class="mb-3 small text-muted">
+            A filtrar também por <strong class="text-p24">#{{ tag }}</strong> —
+            <a href="{{ url_for('comunidade.feed', tipo=tipo, categoria=categoria, ordenar=ordenar, q=busca) }}">remover</a>
+          </div>
           {% endif %}
+          {% if tipo %}
+          <input type="hidden" name="tipo" value="{{ tipo }}">
+          <div class="mb-3 small text-muted">
+            A filtrar também por <strong class="text-p24">{{ tipos_dict.get(tipo, tipo) }}</strong> (filtro antigo) —
+            <a href="{{ url_for('comunidade.feed', categoria=categoria, tag=tag, ordenar=ordenar, q=busca) }}">remover</a>
+          </div>
+          {% endif %}
+          <div class="mb-3">
+            <label class="form-label" for="filtro-q">Pesquisar</label>
+            <input type="search" name="q" id="filtro-q" class="form-control" value="{{ busca }}" placeholder="Título ou conteúdo…">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="filtro-categoria">Categoria</label>
+            <select name="categoria" id="filtro-categoria" class="form-select">
+              <option value="">Todas</option>
+              {% for c in categorias_filtro %}
+              <option value="{{ c.slug }}" {% if categoria == c.slug %}selected{% endif %}>{{ c.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-1">
+            <label class="form-label" for="filtro-ordenar">Ordenar por</label>
+            <select name="ordenar" id="filtro-ordenar" class="form-select">
+              <option value="recentes" {% if ordenar == 'recentes' %}selected{% endif %}>Mais recentes</option>
+              <option value="votados" {% if ordenar == 'votados' %}selected{% endif %}>Mais votados</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          {% if tem_filtros %}
+          <a href="{{ url_for('comunidade.feed') }}" class="btn btn-light fw-600 me-auto">Limpar tudo</a>
+          {% endif %}
+          <button type="button" class="btn btn-light fw-600" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary fw-700">Aplicar</button>
         </div>
       </form>
-
-      {% if tag or busca %}
-      <div class="mb-3 d-flex flex-wrap gap-2">
-        {% if busca %}
-        <span class="badge bg-p24-light text-p24 fw-600">
-          Resultados para "{{ busca }}"
-          <a href="{{ url_for('comunidade.feed', tipo=tipo, tag=tag, ordenar=ordenar) }}" class="text-p24 ms-2" title="Limpar pesquisa">
-            <i class="bi bi-x-circle-fill"></i>
-          </a>
-        </span>
-        {% endif %}
-        {% if tag %}
-        <span class="badge bg-p24-light text-p24 fw-600">
-          A filtrar por #{{ tag }}
-          <a href="{{ url_for('comunidade.feed', tipo=tipo, ordenar=ordenar, q=busca) }}" class="text-p24 ms-2" title="Remover filtro">
-            <i class="bi bi-x-circle-fill"></i>
-          </a>
-        </span>
-        {% endif %}
-      </div>
-      {% endif %}
-
-      {% if posts.items %}
-      <div class="d-flex flex-column gap-3 mb-4">
-        {% for post in posts.items %}
-        {% include "comunidade/_post_card.html" %}
-        {% endfor %}
-      </div>
-
-      {% if posts.pages > 1 %}
-      <nav>
-        <ul class="pagination justify-content-center">
-          <li class="page-item {% if not posts.has_prev %}disabled{% endif %}">
-            <a class="page-link" href="{{ paginate_url(posts.prev_num) }}"><i class="bi bi-chevron-left"></i> Anterior</a>
-          </li>
-          {% for p in posts.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-            {% if p %}
-            <li class="page-item {% if p == posts.page %}active{% endif %}">
-              <a class="page-link" href="{{ paginate_url(p) }}">{{ p }}</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">…</span></li>
-            {% endif %}
-          {% endfor %}
-          <li class="page-item {% if not posts.has_next %}disabled{% endif %}">
-            <a class="page-link" href="{{ paginate_url(posts.next_num) }}">Próximo <i class="bi bi-chevron-right"></i></a>
-          </li>
-        </ul>
-      </nav>
-      {% endif %}
-
-      {% else %}
-      <div class="text-center py-5">
-        <i class="bi bi-chat-square-text text-muted" style="font-size:3rem"></i>
-        {% if busca or tag %}
-        <h5 class="mt-3 fw-700">Nenhuma publicação encontrada</h5>
-        <p class="text-muted">Tenta outra pesquisa ou remove os filtros.</p>
-        {% else %}
-        <h5 class="mt-3 fw-700">Ainda não há publicações</h5>
-        <p class="text-muted">Sê o primeiro a começar uma discussão.</p>
-        {% endif %}
-        <a href="{{ url_for('comunidade.criar_post') }}" class="btn btn-primary fw-600">Nova publicação</a>
-      </div>
-      {% endif %}
-
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var cardsEl = document.getElementById('feed-cards');
+  var sentinel = document.getElementById('feed-sentinel');
+  if (!cardsEl || !sentinel) return;
+
+  var fallbackNav = document.getElementById('feed-paginacao-fallback');
+  var proximaPagina = {{ (posts.next_num or 0)|tojson }};
+  var temMais = {{ 'true' if posts.has_next else 'false' }};
+  var aCarregar = false;
+  var baseParams = new URLSearchParams(window.location.search);
+  baseParams.delete('page');
+
+  // O scroll infinito assumiu — a navegação normal fica só como rede de
+  // segurança caso o JS falhe a meio (fica escondida, não removida do DOM).
+  if (fallbackNav) fallbackNav.classList.add('d-none');
+
+  function atualizarSentinela() {
+    sentinel.classList.toggle('d-none', !temMais);
+  }
+
+  async function carregarMais() {
+    if (aCarregar || !temMais) return;
+    aCarregar = true;
+    try {
+      var params = new URLSearchParams(baseParams);
+      params.set('page', proximaPagina);
+      params.set('fragmento', '1');
+      var res = await fetch('{{ url_for("comunidade.feed") }}?' + params.toString());
+      if (!res.ok) throw new Error('resposta não OK');
+      var dados = await res.json();
+      cardsEl.insertAdjacentHTML('beforeend', dados.html);
+      temMais = dados.tem_mais;
+      proximaPagina = dados.proxima_pagina;
+    } catch (e) {
+      temMais = false; // evita martelar o servidor se algo falhar
+      if (fallbackNav) fallbackNav.classList.remove('d-none'); // devolve a rede de segurança
+    } finally {
+      aCarregar = false;
+      atualizarSentinela();
+    }
+  }
+
+  var observer = new IntersectionObserver(function (entradas) {
+    if (entradas[0].isIntersecting) carregarMais();
+  }, { rootMargin: '400px' });
+  observer.observe(sentinel);
+})();
+</script>
 {% endblock %}

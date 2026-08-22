@@ -21,8 +21,22 @@
         </span>
       </div>
 
-      <form method="post" enctype="multipart/form-data">
+      {% if pasta_destino %}
+      <div class="alert border-0 mb-4 d-flex align-items-center justify-content-between gap-2"
+           style="background:var(--p24-blue-light);border-radius:var(--p24-radius)">
+        <span class="small fw-600" style="color:var(--p24-blue)">
+          <i class="bi bi-folder2-open me-2"></i>Este material vai diretamente para a pasta
+          <strong>{{ pasta_destino.caminho_display }}</strong>.
+        </span>
+        <a href="{{ url_for('materiais.submeter') }}" class="small text-muted text-decoration-underline flex-shrink-0">Remover</a>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" onsubmit="return prepararSubmissao()">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if pasta_destino %}
+        <input type="hidden" name="pasta_id" value="{{ pasta_destino.id }}">
+        {% endif %}
         <!-- Secção 1: Ficheiro -->
         <div class="p24-form-card mb-4">
           <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">1</span>Ficheiro(s)</h6>
@@ -87,17 +101,46 @@
           <h6 class="fw-700 mb-3"><span class="badge bg-p24-light text-p24 me-2">3</span>Classificação académica</h6>
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label">Instituição *</label>
-              <select name="instituicao" id="instituicao" class="form-select" required>
-                <option value="">Seleciona a instituição...</option>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0">Instituição *</label>
+                <div class="btn-group btn-group-sm" role="group">
+                  <input type="radio" class="btn-check" name="inst-mode" id="inst-select-mode" checked onchange="toggleInstMode()">
+                  <label class="btn btn-outline-secondary" for="inst-select-mode" style="font-size:.65rem;padding:.15rem .4rem">Lista</label>
+                  <input type="radio" class="btn-check" name="inst-mode" id="inst-text-mode" onchange="toggleInstMode()">
+                  <label class="btn btn-outline-secondary" for="inst-text-mode" style="font-size:.65rem;padding:.15rem .4rem">Outra</label>
+                </div>
+              </div>
+              <select name="instituicao_select" id="inst-select" class="form-select" onchange="updateCursos()">
+                <option value="">Seleciona...</option>
                 <option value="ISAF">ISAF — Instituto Superior de Administração e Finanças</option>
+                <option value="ISPTEC">ISPTEC — Instituto Superior Politécnico de Tecnologias e Ciências</option>
+                <option value="UAN">UAN — Universidade Agostinho Neto</option>
+                <option value="UCAN">UCAN — Universidade Católica de Angola</option>
+                <option value="Ainda não sou universitário/a">Ainda não sou universitário/a</option>
+                <option value="OUTRA">Outra (especificar abaixo)</option>
               </select>
+              <input type="text" name="instituicao_text" id="inst-text" class="form-control mt-2 d-none"
+                     placeholder="Escreve o nome da tua instituição">
+              <!-- Campo hidden que envia o valor final -->
+              <input type="hidden" name="instituicao" id="inst-final">
             </div>
             <div class="col-md-6">
-              <label class="form-label">Curso</label>
-              <select name="curso" id="curso" class="form-select" disabled>
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label mb-0">Curso</label>
+                <div class="btn-group btn-group-sm" role="group">
+                  <input type="radio" class="btn-check" name="curso-mode" id="curso-select-mode" checked onchange="toggleCursoMode()">
+                  <label class="btn btn-outline-secondary" for="curso-select-mode" style="font-size:.65rem;padding:.15rem .4rem">Lista</label>
+                  <input type="radio" class="btn-check" name="curso-mode" id="curso-text-mode" onchange="toggleCursoMode()">
+                  <label class="btn btn-outline-secondary" for="curso-text-mode" style="font-size:.65rem;padding:.15rem .4rem">Outro</label>
+                </div>
+              </div>
+              <select name="curso_select" id="curso-select" class="form-select" disabled>
                 <option value="">Seleciona primeiro a instituição</option>
               </select>
+              <input type="text" name="curso_text" id="curso-text" class="form-control mt-2 d-none"
+                     placeholder="Escreve o nome do teu curso">
+              <!-- Campo hidden que envia o valor final -->
+              <input type="hidden" name="curso" id="curso-final">
             </div>
             <div class="col-md-6">
               <label class="form-label">Disciplina *</label>
@@ -225,39 +268,85 @@ zone.addEventListener('drop', e => {
   mostrarFicheiros(input);
 });
 
-// Cursos por instituição
+// Instituição / Curso: alterna entre lista (Select) e texto livre (Outra/Outro)
+// — mesmo padrão do registo (auth/registar.html), com a mesma lista de
+// instituições e a opção para quem ainda não é universitário.
+const NAO_UNIVERSITARIO = 'Ainda não sou universitário/a';
+
 const CURSOS = {
   'ISAF': [
     'Informática de Gestão Financeira',
     'Contabilidade e Finanças',
-    'Gestão Bancária e de Seguros'
-  ]
+    'Gestão Bancária e de Seguros',
+  ],
+  'ISPTEC': [
+    'Engenharia Informática',
+    'Engenharia Electrotécnica',
+    'Engenharia Mecânica',
+    'Arquitectura',
+  ],
+  'UAN': ['Medicina', 'Direito', 'Economia', 'Engenharia Civil'],
+  'UCAN': ['Teologia', 'Direito', 'Psicologia', 'Ciências da Educação'],
 };
 
-const selectInstituicao = document.getElementById('instituicao');
-const selectCurso = document.getElementById('curso');
+function toggleInstMode() {
+  const selectMode = document.getElementById('inst-select-mode').checked;
+  document.getElementById('inst-select').classList.toggle('d-none', !selectMode);
+  document.getElementById('inst-text').classList.toggle('d-none', selectMode);
+  if (!selectMode) document.getElementById('inst-text').focus();
+}
 
-selectInstituicao.addEventListener('change', function () {
-  const cursos = CURSOS[this.value] || [];
-  selectCurso.innerHTML = '';
+function toggleCursoMode() {
+  const selectMode = document.getElementById('curso-select-mode').checked;
+  document.getElementById('curso-select').classList.toggle('d-none', !selectMode);
+  document.getElementById('curso-text').classList.toggle('d-none', selectMode);
+  if (!selectMode) document.getElementById('curso-text').focus();
+}
 
-  if (cursos.length === 0) {
-    selectCurso.disabled = true;
-    selectCurso.innerHTML = '<option value="">Seleciona primeiro a instituição</option>';
+function updateCursos() {
+  const inst = document.getElementById('inst-select').value;
+  const select = document.getElementById('curso-select');
+  const cursos = CURSOS[inst] || [];
+
+  select.innerHTML = '';
+  if (inst === NAO_UNIVERSITARIO) {
+    select.disabled = true;
+    select.innerHTML = '<option value="">Não aplicável</option>';
+  } else if (cursos.length === 0) {
+    select.disabled = true;
+    select.innerHTML = '<option value="">Seleciona primeiro a instituição</option>';
   } else {
-    selectCurso.disabled = false;
-    selectCurso.innerHTML = '<option value="">Seleciona o curso...</option>';
+    select.disabled = false;
+    select.innerHTML = '<option value="">Seleciona o curso...</option>';
     cursos.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c;
       opt.textContent = c;
-      selectCurso.appendChild(opt);
+      select.appendChild(opt);
     });
   }
 
   // Limpa sugestões de disciplina ao trocar de instituição
   document.getElementById('list-disciplina').innerHTML = '';
-});
+}
+
+function valorInstituicaoAtual() {
+  const selectMode = document.getElementById('inst-select-mode').checked;
+  return selectMode
+    ? document.getElementById('inst-select').value
+    : document.getElementById('inst-text').value.trim();
+}
+
+function prepararSubmissao() {
+  document.getElementById('inst-final').value = valorInstituicaoAtual();
+
+  const cursoSelectMode = document.getElementById('curso-select-mode').checked;
+  document.getElementById('curso-final').value = cursoSelectMode
+    ? document.getElementById('curso-select').value
+    : document.getElementById('curso-text').value.trim();
+
+  return true;
+}
 
 // Autocomplete de disciplina filtrado pela instituição selecionada
 const SUGESTOES_URL = "{{ url_for('materiais.sugestoes') }}";
@@ -266,7 +355,7 @@ let timer;
 document.getElementById('disciplina').addEventListener('input', function () {
   clearTimeout(timer);
   const q = this.value;
-  const inst = selectInstituicao.value;
+  const inst = valorInstituicaoAtual();
   if (q.length < 1) return;
   timer = setTimeout(async () => {
     const params = new URLSearchParams({ campo: 'disciplina', q });

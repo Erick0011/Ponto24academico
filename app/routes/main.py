@@ -9,13 +9,15 @@ from flask import (
     flash,
     request,
     Response,
+    current_app,
 )
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 from app import db, limiter
 from app.models.material import Material, Categoria, Favorito
 from app.models.user import User
 from app.models.configuracao import Configuracao
 from app.models.lista_espera import ListaEspera
+from app.models.notificacao import Notificacao
 import json
 from app.models import Candidatura
 from app.utils.honeypot import honeypot_preenchido
@@ -102,6 +104,8 @@ def index():
         for slug, cid in cat_ids.items()
     }
 
+    from app.services.comunidade_service import anuncios_fixados_ativos
+
     return render_template(
         "index.html",
         total_materiais=total_materiais,
@@ -113,6 +117,7 @@ def index():
         populares=populares,
         cat_ids=cat_ids,
         cat_counts=cat_counts,
+        anuncios_fixados=anuncios_fixados_ativos(limite=1),
     )
 
 
@@ -138,6 +143,8 @@ def dashboard():
         .all()
     )
 
+    from app.services.comunidade_service import anuncios_fixados_ativos
+
     return render_template(
         "dashboard/index.html",
         meus_materiais=meus_materiais,
@@ -145,6 +152,7 @@ def dashboard():
         populares=populares,
         recomendados=materiais_para_utilizador(current_user),
         posts_recomendados=posts_para_utilizador(current_user, limite=4),
+        anuncios_fixados=anuncios_fixados_ativos(limite=1),
     )
 
 
@@ -265,6 +273,62 @@ def alterar_senha():
         flash("Senha alterada com sucesso!", "sucesso")
 
     return redirect(url_for("main.perfil"))
+
+
+@main_bp.route("/definicoes")
+@login_required
+def definicoes():
+    """Definições da conta: preferências e eliminação de conta (compliance —
+    ver política de privacidade §5/§6)."""
+    return render_template("dashboard/definicoes.html")
+
+
+@main_bp.route("/definicoes/marketing", methods=["POST"])
+@login_required
+def alternar_marketing():
+    current_user.aceita_marketing = not current_user.aceita_marketing
+    if not current_user.aceita_marketing:
+        registar_atividade(AtividadeLog.EVENTO_MARKETING_CANCELADO, utilizador_id=current_user.id)
+    db.session.commit()
+    flash(
+        "Vais continuar a receber emails de marketing." if current_user.aceita_marketing
+        else "Já não vais receber emails de marketing.",
+        "sucesso",
+    )
+    return redirect(url_for("main.definicoes"))
+
+
+@main_bp.route("/definicoes/eliminar-conta", methods=["POST"])
+@login_required
+@limiter.limit("5 per hour", methods=["POST"])
+def eliminar_conta():
+    """Eliminação de conta a pedido do próprio. Exige a senha atual — ação
+    irreversível — e anonimiza em vez de apagar a linha (ver User.anonimizar),
+    para não partir materiais/posts/avaliações já publicados por este
+    utilizador nem os FKs de outras tabelas que apontam para o seu id."""
+    senha = request.form.get("senha", "")
+    confirmacao = request.form.get("confirmacao", "").strip().upper()
+
+    if not current_user.check_password(senha):
+        flash("Senha incorreta. A conta não foi eliminada.", "erro")
+        return redirect(url_for("main.definicoes"))
+    if confirmacao != "ELIMINAR":
+        flash('Escreve "ELIMINAR" para confirmar. A conta não foi eliminada.', "erro")
+        return redirect(url_for("main.definicoes"))
+
+    uid = current_user.id
+    # Dados só relevantes para o próprio — sem valor para outros utilizadores
+    # nem para o histórico da plataforma — são apagados por completo.
+    Favorito.query.filter_by(utilizador_id=uid).delete()
+    Notificacao.query.filter_by(utilizador_id=uid).delete()
+
+    current_user.anonimizar()
+    registar_atividade(AtividadeLog.EVENTO_CONTA_ELIMINADA, utilizador_id=uid)
+    db.session.commit()
+
+    logout_user()
+    flash("A tua conta e os teus dados pessoais foram eliminados.", "sucesso")
+    return redirect(url_for("main.index"))
 
 
 @main_bp.route("/sobre")
@@ -425,12 +489,12 @@ def juntar_se():
             )
             return redirect(url_for("main.juntar_se"))
 
-        except Exception as e:
+        except Exception:
             db.session.rollback()
+            current_app.logger.exception("Erro ao guardar candidatura")
             flash(
                 "Ocorreu um erro ao guardar a candidatura. Tenta novamente.", "danger"
             )
-            # Em dev podes logar: app.logger.error(e)
             return render_template("main/juntar_se.html", **_stats_candidatura()), 500
 
     # GET

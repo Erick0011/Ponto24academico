@@ -1,6 +1,20 @@
 {% extends "admin/base_admin.html" %}
 {% block title %}KPIs — Admin{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Stat tiles com sparkline: mantém o layout base do .p24-admin-stat
+   (partilhado com o painel), só passa a coluna e acrescenta a faixa do
+   gráfico por baixo do número. ── */
+.p24-admin-stat--trend { flex-direction: column; align-items: stretch; gap: .6rem; }
+.p24-admin-stat--trend .stat-top { display: flex; align-items: center; gap: 1rem; }
+.p24-admin-stat--trend .spark { height: 28px; }
+
+.p24-chart-card { height: 280px; }
+.p24-chart-card canvas { max-height: 100%; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-xl py-4">
 
@@ -19,69 +33,109 @@
     </a>
   </div>
 
-  <!-- ── Stats rápidos ── -->
+  <!-- ── Stats rápidos, cada um com a tendência dos últimos 12 dias ── -->
   <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-primary-subtle"><i class="bi bi-search text-primary"></i></div>
-        <div>
-          <div class="val text-primary">{{ total_pesquisas }}</div>
-          <div class="lbl">Pesquisas (30d)</div>
+    <div class="col-6 col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend">
+        <div class="stat-top">
+          <div class="icon-box bg-primary-subtle"><i class="bi bi-search text-primary"></i></div>
+          <div>
+            <div class="val text-primary">{{ total_pesquisas }}</div>
+            <div class="lbl">Pesquisas (30d)</div>
+          </div>
         </div>
+        <div class="spark"><canvas id="spark-pesquisas"></canvas></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-danger-subtle"><i class="bi bi-search text-danger"></i></div>
-        <div>
-          <div class="val text-danger">{{ sem_resultados|length }}</div>
-          <div class="lbl">Termos sem resultado</div>
+    <div class="col-6 col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend">
+        <div class="stat-top">
+          <div class="icon-box bg-danger-subtle"><i class="bi bi-search text-danger"></i></div>
+          <div>
+            <div class="val text-danger">{{ sem_resultados|length }}</div>
+            <div class="lbl">Termos sem resultado</div>
+          </div>
         </div>
+        <div class="spark"><canvas id="spark-sem-resultados"></canvas></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-success-subtle"><i class="bi bi-people text-success"></i></div>
-        <div>
-          <div class="val text-success">+{{ novos_users_semana }}</div>
-          <div class="lbl">Novos utilizadores (7d)</div>
+    <div class="col-6 col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend">
+        <div class="stat-top">
+          <div class="icon-box bg-success-subtle"><i class="bi bi-people text-success"></i></div>
+          <div>
+            <div class="val text-success">+{{ novos_users_semana }}</div>
+            <div class="lbl">Novos utilizadores (7d)</div>
+          </div>
         </div>
+        <div class="spark"><canvas id="spark-users"></canvas></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-warning-subtle"><i class="bi bi-file-earmark-check text-warning"></i></div>
-        <div>
-          <div class="val text-warning">+{{ novos_materiais_semana }}</div>
-          <div class="lbl">Materiais aprovados (7d)</div>
+    <div class="col-6 col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend">
+        <div class="stat-top">
+          <div class="icon-box bg-warning-subtle"><i class="bi bi-file-earmark-check text-warning"></i></div>
+          <div>
+            <div class="val text-warning">+{{ novos_materiais_semana }}</div>
+            <div class="lbl">Materiais aprovados (7d)</div>
+          </div>
         </div>
+        <div class="spark"><canvas id="spark-materiais"></canvas></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-info-subtle"><i class="bi bi-person-lines-fill text-info"></i></div>
-        <div>
-          <div class="val text-info">{{ candidaturas_pendentes }}</div>
-          <div class="lbl">Candidaturas pendentes</div>
+    <div class="col-6 col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend">
+        <div class="stat-top">
+          <div class="icon-box bg-info-subtle"><i class="bi bi-person-lines-fill text-info"></i></div>
+          <div>
+            <div class="val text-info">{{ candidaturas_pendentes }}</div>
+            <div class="lbl">Candidaturas pendentes</div>
+          </div>
         </div>
+        <div class="spark"><canvas id="spark-candidaturas"></canvas></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-primary-subtle"><i class="bi bi-eye text-primary"></i></div>
-        <div>
-          <div class="val text-primary">{{ visitas_30d }}</div>
-          <div class="lbl">Visitas (30d)</div>
+    <div class="col-6 col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend">
+        <div class="stat-top">
+          <div class="icon-box bg-primary-subtle"><i class="bi bi-eye text-primary"></i></div>
+          <div>
+            <div class="val text-primary">{{ visitas_30d }}</div>
+            <div class="lbl">Visitas (30d)</div>
+          </div>
         </div>
+        <div class="spark"><canvas id="spark-visitas"></canvas></div>
       </div>
     </div>
-    <div class="col-6 col-lg-3">
-      <div class="p24-admin-stat">
-        <div class="icon-box bg-success-subtle"><i class="bi bi-person-check text-success"></i></div>
-        <div>
-          <div class="val text-success">{{ visitantes_unicos_30d }}</div>
-          <div class="lbl">Visitantes únicos (30d)</div>
+  </div>
+
+  <!-- ── Visitantes únicos: junto com o gráfico principal de tendência ── -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-4">
+      <div class="p24-admin-stat p24-admin-stat--trend h-100">
+        <div class="stat-top">
+          <div class="icon-box bg-success-subtle"><i class="bi bi-person-check text-success"></i></div>
+          <div>
+            <div class="val text-success">{{ visitantes_unicos_30d }}</div>
+            <div class="lbl">Visitantes únicos (30d)</div>
+          </div>
         </div>
+        <div class="spark" style="height:60px"><canvas id="spark-visitantes"></canvas></div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="p24-card h-100">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+               style="width:32px;height:32px;background:var(--p24-blue-lt,var(--p24-blue-light))">
+            <i class="bi bi-graph-up text-p24" style="font-size:.85rem"></i>
+          </div>
+          <div>
+            <div class="fw-800" style="font-size:.95rem">Visitas nos últimos 30 dias</div>
+            <div class="text-muted" style="font-size:.72rem">Tráfego diário, incluindo visitantes sem conta</div>
+          </div>
+        </div>
+        <div class="p24-chart-card"><canvas id="chart-visitas-30d"></canvas></div>
       </div>
     </div>
   </div>
@@ -102,20 +156,7 @@
           </div>
         </div>
         {% if sem_resultados %}
-        <div class="d-flex flex-column gap-2">
-          {% for termo, n in sem_resultados %}
-          <div class="d-flex align-items-center justify-content-between gap-2">
-            <div class="d-flex align-items-center gap-2 min-w-0">
-              <i class="bi bi-dash-circle text-danger flex-shrink-0" style="font-size:.75rem"></i>
-              <span class="fw-600 text-truncate" style="font-size:.85rem">{{ termo }}</span>
-            </div>
-            <span class="badge rounded-pill flex-shrink-0"
-                  style="background:#fee2e2;color:#dc3545;font-size:.72rem">
-              {{ n }}x
-            </span>
-          </div>
-          {% endfor %}
-        </div>
+        <div class="p24-chart-card"><canvas id="chart-sem-resultados"></canvas></div>
         {% else %}
         <div class="text-center py-4 text-muted small">
           <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-2"></i>
@@ -130,7 +171,7 @@
       <div class="p24-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
           <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width:32px;height:32px;background:var(--p24-blue-lt)">
+               style="width:32px;height:32px;background:var(--p24-blue-lt,var(--p24-blue-light))">
             <i class="bi bi-search text-p24" style="font-size:.85rem"></i>
           </div>
           <div>
@@ -139,20 +180,7 @@
           </div>
         </div>
         {% if top_termos %}
-        {% set max_n = top_termos[0][1] %}
-        <div class="d-flex flex-column gap-2">
-          {% for termo, n in top_termos %}
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-600 text-truncate" style="font-size:.82rem;max-width:75%">{{ termo }}</span>
-              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
-            </div>
-            <div class="progress" style="height:4px;border-radius:2px">
-              <div class="progress-bar" style="width:{{ (n / max_n * 100)|int }}%;background:var(--p24-blue)"></div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
+        <div class="p24-chart-card"><canvas id="chart-top-termos"></canvas></div>
         {% else %}
         <div class="text-center py-4 text-muted small">
           <i class="bi bi-search fs-3 d-block mb-2"></i>
@@ -172,19 +200,8 @@
           <i class="bi bi-download me-2 text-success"></i>Materiais mais descarregados
         </div>
         {% if top_downloads %}
-        <div class="d-flex flex-column gap-2">
-          {% for m in top_downloads %}
-          <div class="d-flex align-items-center gap-3">
-            <span class="fw-800 text-muted flex-shrink-0" style="width:20px;font-size:.8rem">{{ loop.index }}</span>
-            <div class="flex-grow-1 min-w-0">
-              <div class="fw-600 text-truncate" style="font-size:.82rem">{{ m.titulo_base }}</div>
-              <div class="text-muted" style="font-size:.7rem">{{ m.disciplina }} · {{ m.instituicao }}</div>
-            </div>
-            <span class="badge bg-success-subtle text-success fw-700 flex-shrink-0" style="font-size:.72rem">
-              {{ m.downloads }} downloads
-            </span>
-          </div>
-          {% endfor %}
+        <div class="p24-chart-card" style="height:{{ (top_downloads|length * 34 + 40) }}px">
+          <canvas id="chart-top-downloads"></canvas>
         </div>
         {% else %}
         <p class="text-muted small mb-0">Nenhum download ainda.</p>
@@ -199,20 +216,7 @@
           <i class="bi bi-tags me-2 text-info"></i>Materiais por categoria
         </div>
         {% if por_categoria %}
-        {% set max_cat = por_categoria[0][1] %}
-        <div class="d-flex flex-column gap-3">
-          {% for nome, n in por_categoria %}
-          <div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="fw-600" style="font-size:.82rem">{{ nome }}</span>
-              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
-            </div>
-            <div class="progress" style="height:6px;border-radius:3px">
-              <div class="progress-bar bg-info" style="width:{{ (n / max_cat * 100)|int }}%"></div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
+        <div class="p24-chart-card"><canvas id="chart-por-categoria"></canvas></div>
         {% else %}
         <p class="text-muted small mb-0">Sem materiais aprovados ainda.</p>
         {% endif %}
@@ -228,7 +232,7 @@
       <div class="p24-card h-100">
         <div class="d-flex align-items-center gap-2 mb-3">
           <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-               style="width:32px;height:32px;background:var(--p24-blue-lt)">
+               style="width:32px;height:32px;background:var(--p24-blue-lt,var(--p24-blue-light))">
             <i class="bi bi-eye text-p24" style="font-size:.85rem"></i>
           </div>
           <div>
@@ -237,20 +241,7 @@
           </div>
         </div>
         {% if paginas_mais_visitadas %}
-        {% set max_v = paginas_mais_visitadas[0][1] %}
-        <div class="d-flex flex-column gap-2">
-          {% for caminho, n in paginas_mais_visitadas %}
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-600 text-truncate" style="font-size:.82rem;max-width:75%;font-family:monospace">{{ caminho }}</span>
-              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
-            </div>
-            <div class="progress" style="height:4px;border-radius:2px">
-              <div class="progress-bar" style="width:{{ (n / max_v * 100)|int }}%;background:var(--p24-blue)"></div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
+        <div class="p24-chart-card"><canvas id="chart-paginas"></canvas></div>
         {% else %}
         <div class="text-center py-4 text-muted small">
           <i class="bi bi-eye fs-3 d-block mb-2"></i>
@@ -274,20 +265,7 @@
           </div>
         </div>
         {% if acoes_por_tipo %}
-        {% set max_a = acoes_por_tipo[0][1] %}
-        <div class="d-flex flex-column gap-2">
-          {% for evento, n in acoes_por_tipo %}
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-600 text-truncate" style="font-size:.82rem">{{ evento|replace('_', ' ')|capitalize }}</span>
-              <span class="text-muted fw-600" style="font-size:.78rem">{{ n }}</span>
-            </div>
-            <div class="progress" style="height:4px;border-radius:2px">
-              <div class="progress-bar bg-info" style="width:{{ (n / max_a * 100)|int }}%"></div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
+        <div class="p24-chart-card"><canvas id="chart-acoes"></canvas></div>
         {% else %}
         <div class="text-center py-4 text-muted small">
           <i class="bi bi-activity fs-3 d-block mb-2"></i>
@@ -326,3 +304,179 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  // ── Paleta (validada — ver skill de dataviz): azul de sequência por
+  // omissão, mais o vermelho de estado já usado nesta página para "gaps". ──
+  const AZUL   = '#2a78d6';
+  const VERMELHO = '#dc3545';
+  const VERDE  = '#27ae60';
+  const LARANJA = '#f47c20';
+  const TEAL   = '#0ea5a0';
+  const GRADE  = '#e1e0d9';
+  const TEXTO_MUTED = '#898781';
+
+  Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
+  Chart.defaults.color = TEXTO_MUTED;
+
+  function sparkline(id, dados, cor) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, {
+      type: 'line',
+      data: {
+        labels: dados.map((_, i) => i),
+        datasets: [{
+          data: dados,
+          borderColor: cor,
+          backgroundColor: cor + '1a',
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: cor,
+          tension: .3,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: { x: { display: false }, y: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: { displayColors: false, callbacks: { title: () => '' } },
+        },
+      },
+    });
+  }
+
+  function linha(id, labels, dados, cor) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Visitas',
+          data: dados,
+          borderColor: cor,
+          backgroundColor: cor + '1a',
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: cor,
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+          tension: .3,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+          y: { beginAtZero: true, grid: { color: GRADE }, border: { display: false } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  function barraHorizontal(id, labels, dados, cor) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: dados,
+          backgroundColor: cor,
+          borderRadius: 4,
+          borderSkipped: 'left',
+          maxBarThickness: 22,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { beginAtZero: true, grid: { color: GRADE }, border: { display: false } },
+          y: { grid: { display: false }, border: { display: false } },
+        },
+        plugins: { legend: { display: false } },
+      },
+    });
+  }
+
+  // ── Sparklines dos KPIs (12 dias) ──
+  sparkline('spark-pesquisas',     {{ pesquisas_por_dia|tojson }},        AZUL);
+  sparkline('spark-sem-resultados',{{ sem_resultados_por_dia|tojson }},   VERMELHO);
+  sparkline('spark-users',         {{ novos_users_por_dia|tojson }},      VERDE);
+  sparkline('spark-materiais',     {{ novos_materiais_por_dia|tojson }},  LARANJA);
+  sparkline('spark-candidaturas',  {{ candidaturas_por_dia|tojson }},     TEAL);
+  sparkline('spark-visitas',       {{ visitas_por_dia[-12:]|tojson }},    AZUL);
+  sparkline('spark-visitantes',    {{ visitantes_por_dia|tojson }},       VERDE);
+
+  // ── Gráfico principal de tráfego (30 dias) ──
+  linha('chart-visitas-30d', {{ labels_30|tojson }}, {{ visitas_por_dia|tojson }}, AZUL);
+
+  // ── Barras horizontais das listas ──
+  {% if sem_resultados %}
+  barraHorizontal(
+    'chart-sem-resultados',
+    {{ sem_resultados|map(attribute=0)|list|tojson }},
+    {{ sem_resultados|map(attribute=1)|list|tojson }},
+    VERMELHO,
+  );
+  {% endif %}
+  {% if top_termos %}
+  barraHorizontal(
+    'chart-top-termos',
+    {{ top_termos|map(attribute=0)|list|tojson }},
+    {{ top_termos|map(attribute=1)|list|tojson }},
+    AZUL,
+  );
+  {% endif %}
+  {% if top_downloads %}
+  barraHorizontal(
+    'chart-top-downloads',
+    {{ top_downloads|map(attribute='titulo_base')|map('truncate', 28, true)|list|tojson }},
+    {{ top_downloads|map(attribute='downloads')|list|tojson }},
+    AZUL,
+  );
+  {% endif %}
+  {% if por_categoria %}
+  barraHorizontal(
+    'chart-por-categoria',
+    {{ por_categoria|map(attribute=0)|list|tojson }},
+    {{ por_categoria|map(attribute=1)|list|tojson }},
+    AZUL,
+  );
+  {% endif %}
+  {% if paginas_mais_visitadas %}
+  barraHorizontal(
+    'chart-paginas',
+    {{ paginas_mais_visitadas|map(attribute=0)|list|tojson }},
+    {{ paginas_mais_visitadas|map(attribute=1)|list|tojson }},
+    AZUL,
+  );
+  {% endif %}
+  {% if acoes_por_tipo %}
+  barraHorizontal(
+    'chart-acoes',
+    {{ acoes_por_tipo|map(attribute=0)|map('replace', '_', ' ')|map('capitalize')|list|tojson }},
+    {{ acoes_por_tipo|map(attribute=1)|list|tojson }},
+    AZUL,
+  );
+  {% endif %}
+})();
+</script>
+{% endblock %}
