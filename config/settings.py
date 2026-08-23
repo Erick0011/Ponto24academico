@@ -25,9 +25,6 @@ class Config:
     CREDITOS_INICIAIS = 10
     CREDITOS_POR_UPLOAD_APROVADO = 5
     CREDITOS_POR_DOWNLOAD = 1
-    CREDITOS_POR_POST_COMUNIDADE = 2
-    CREDITOS_POR_RESPOSTA_COMUNIDADE = 1
-    CREDITOS_POR_MELHOR_RESPOSTA = 5
 
     # Marketing / email em massa — limites de segurança para não sermos
     # marcados como spam ou bloqueados pelo servidor SMTP (ex: Gmail costuma

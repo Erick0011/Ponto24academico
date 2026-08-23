@@ -39,14 +39,8 @@ class User(UserMixin, db.Model):
     # de is_active (que é a suspensão feita por um admin): quando preenchido,
     # os dados pessoais já foram anonimizados e o login fica bloqueado, mas a
     # linha do utilizador mantém-se para não quebrar o autor_id de materiais,
-    # posts da Comunidade, avaliações e logs de atividade já publicados.
+    # avaliações e logs de atividade já publicados.
     conta_eliminada_em = db.Column(db.DateTime, nullable=True)
-
-    # Moderação da Comunidade — suspensão temporária (até uma data) ou permanente
-    # (comunidade_banido=True). Ver User.suspenso_da_comunidade.
-    comunidade_banido = db.Column(db.Boolean, default=False)
-    comunidade_suspenso_ate = db.Column(db.DateTime, nullable=True)
-    comunidade_suspensao_motivo = db.Column(db.String(300), nullable=True)
 
     # Relações
     materiais      = db.relationship("Material",      back_populates="autor",     foreign_keys="Material.autor_id",        lazy="dynamic")
@@ -67,8 +61,8 @@ class User(UserMixin, db.Model):
     def anonimizar(self):
         """Eliminação de conta a pedido do próprio (Definições > Eliminar
         conta) — direito de apagamento da política de privacidade, §5/§6.
-        Mantém a linha (e por isso os materiais, posts da Comunidade e
-        avaliações já publicados continuam íntegros, agora atribuídos a
+        Mantém a linha (e por isso os materiais e avaliações já
+        publicados continuam íntegros, agora atribuídos a
         "Utilizador eliminado"), mas remove todos os dados pessoais e
         bloqueia logins futuros. Favoritos e notificações — só relevantes
         para o próprio — são apagados à parte pelo chamador."""
@@ -92,14 +86,6 @@ class User(UserMixin, db.Model):
 
     def ganhar_creditos(self, quantidade: int):
         self.creditos += quantidade
-
-    @property
-    def suspenso_da_comunidade(self) -> bool:
-        """True se o utilizador está banido permanentemente ou dentro do
-        prazo de uma suspensão temporária da Comunidade."""
-        if self.comunidade_banido:
-            return True
-        return bool(self.comunidade_suspenso_ate and self.comunidade_suspenso_ate > datetime.utcnow())
 
     @property
     def nivel(self):

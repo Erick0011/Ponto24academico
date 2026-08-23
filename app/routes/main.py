@@ -104,8 +104,6 @@ def index():
         for slug, cid in cat_ids.items()
     }
 
-    from app.services.comunidade_service import anuncios_fixados_ativos
-
     return render_template(
         "index.html",
         total_materiais=total_materiais,
@@ -117,7 +115,6 @@ def index():
         populares=populares,
         cat_ids=cat_ids,
         cat_counts=cat_counts,
-        anuncios_fixados=anuncios_fixados_ativos(limite=1),
     )
 
 
@@ -125,7 +122,7 @@ def index():
 @login_required
 def dashboard():
     """Dashboard do utilizador autenticado."""
-    from app.services.recomendacao_service import materiais_para_utilizador, posts_para_utilizador
+    from app.services.recomendacao_service import materiais_para_utilizador
 
     meus_materiais = (
         current_user.materiais.order_by(Material.criado_em.desc()).limit(5).all()
@@ -143,16 +140,12 @@ def dashboard():
         .all()
     )
 
-    from app.services.comunidade_service import anuncios_fixados_ativos
-
     return render_template(
         "dashboard/index.html",
         meus_materiais=meus_materiais,
         recentes=recentes,
         populares=populares,
         recomendados=materiais_para_utilizador(current_user),
-        posts_recomendados=posts_para_utilizador(current_user, limite=4),
-        anuncios_fixados=anuncios_fixados_ativos(limite=1),
     )
 
 
@@ -564,7 +557,6 @@ def robots_txt():
         "Disallow: /materiais/submeter",
         "Disallow: /materiais/*/preview",
         "Disallow: /materiais/*/download",
-        "Disallow: /comunidade/novo",
         "Disallow: /marketing/cancelar/",
         "",
         f"Sitemap: {url_for('main.sitemap_xml', _external=True)}",
@@ -575,7 +567,7 @@ def robots_txt():
 @main_bp.route("/sitemap.xml")
 def sitemap_xml():
     """Sitemap gerado dinamicamente a partir dos dados — nunca escrito à mão,
-    para não desatualizar à medida que materiais, pastas, posts e perfis mudam.
+    para não desatualizar à medida que materiais, pastas e perfis mudam.
     Só inclui páginas públicas e efetivamente indexáveis (200, sem noindex,
     sem exigir login)."""
     now = datetime.utcnow().strftime("%Y-%m-%d")
@@ -584,7 +576,6 @@ def sitemap_xml():
         (url_for("main.index", _external=True), now, "daily", "1.0"),
         (url_for("materiais.listar", _external=True), now, "daily", "0.9"),
         (url_for("materiais.pastas_raiz", _external=True), now, "weekly", "0.6"),
-        (url_for("comunidade.feed", _external=True), now, "daily", "0.7"),
         (url_for("main.como_funciona", _external=True), now, "monthly", "0.6"),
         (url_for("main.sobre_nos", _external=True), now, "monthly", "0.5"),
         (url_for("main.anunciar", _external=True), now, "monthly", "0.4"),
@@ -620,22 +611,6 @@ def sitemap_xml():
             "0.5",
         )
         for p in pastas
-    ]
-
-    from app.models.comunidade import ComunidadePost
-    posts = (
-        ComunidadePost.query.order_by(ComunidadePost.criado_em.desc())
-        .limit(1000)
-        .all()
-    )
-    urls += [
-        (
-            url_for("comunidade.detalhe", id=p.id, _external=True),
-            (p.atualizado_em or p.criado_em).strftime("%Y-%m-%d"),
-            "weekly",
-            "0.5",
-        )
-        for p in posts
     ]
 
     # Perfis públicos: só de utilizadores ativos com pelo menos 1 material

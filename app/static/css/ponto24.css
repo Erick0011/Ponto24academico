@@ -503,8 +503,8 @@ body {
 .rounded-p24  { border-radius: var(--p24-radius) !important; }
 .min-width-0,
 /* Alias: vários templates escrevem .min-w-0 (hábito do Tailwind). Sem esta
-   regra a classe não fazia nada e os cards da Comunidade transbordavam em
-   mobile quando o título tinha uma palavra longa. */
+   regra a classe não fazia nada e os cards transbordavam em mobile quando o
+   título tinha uma palavra longa. */
 .min-w-0      { min-width: 0; }                    /* permite truncar texto em filhos flex */
 
 /* Animate in */
@@ -662,39 +662,6 @@ body {
 .p24-table td { overflow-wrap: anywhere; }
 
 /* ════════════════════════════════════════════════════════
-   COMUNIDADE — VOTOS
-   ════════════════════════════════════════════════════════ */
-.p24-voto {
-  display: flex; flex-direction: column; align-items: center;
-  flex-shrink: 0; width: 40px; gap: .1rem;
-}
-.p24-voto-form { margin: 0; line-height: 0; }
-.p24-voto-btn {
-  background: none; border: none; padding: 0; line-height: 1;
-  color: var(--p24-text-muted); border-radius: 6px;
-  /* 32px de alvo de toque: as setas antigas tinham ~16px e eram difíceis de
-     acertar com o polegar. */
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .12s, color .12s;
-}
-.p24-voto-btn i { font-size: 1.15rem; }
-.p24-voto-btn:hover { background: var(--p24-gray-bg); }
-.p24-voto-cima.ativo  { color: var(--p24-verde, #198754); }
-.p24-voto-baixo.ativo { color: #dc3545; }
-.p24-voto-score {
-  font-weight: 800; font-size: .85rem; color: var(--p24-text-muted);
-  font-variant-numeric: tabular-nums; line-height: 1;
-}
-.p24-voto-score.positivo { color: #198754; }
-.p24-voto-score.negativo { color: #dc3545; }
-.p24-voto-grande .p24-voto-btn { width: 36px; height: 36px; }
-.p24-voto-grande .p24-voto-btn i { font-size: 1.4rem; }
-.p24-voto-grande .p24-voto-score { font-size: 1rem; }
-/* Enquanto o pedido está a decorrer, evita duplo-clique acidental. */
-.p24-voto.ocupado { opacity: .55; pointer-events: none; }
-
-/* ════════════════════════════════════════════════════════
    AVATARES
    ════════════════════════════════════════════════════════ */
 .p24-avatar {
@@ -709,61 +676,3 @@ body {
 .p24-avatar-c4 { background: #b03a5b; }
 .p24-avatar-c5 { background: #37718e; }
 .p24-avatar-vazio { background: #adb5bd; }
-
-/* ════════════════════════════════════════════════════════
-   COMUNIDADE — CARD DO FEED
-   ════════════════════════════════════════════════════════ */
-.p24-post-card { display: flex; gap: .75rem; }
-.p24-post-corpo { flex: 1 1 auto; min-width: 0; }
-.p24-post-titulo {
-  font-weight: 800; font-size: 1rem; line-height: 1.3; margin: 0 0 .25rem;
-  overflow-wrap: anywhere;
-}
-.p24-post-excerto {
-  color: var(--p24-text-muted); font-size: .85rem; margin: 0 0 .5rem;
-  overflow: hidden; text-overflow: ellipsis; overflow-wrap: anywhere;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-}
-.p24-post-etiquetas { display: flex; flex-wrap: wrap; gap: .25rem; margin-bottom: .5rem; }
-/* Badges longos (nomes de categoria compridos) truncam em vez de esticar o
-   cartão para lá da largura do ecrã. */
-.p24-post-etiquetas .badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.p24-post-rodape {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .75rem;
-  font-size: .78rem; color: var(--p24-text-muted); min-width: 0;
-}
-.p24-post-autor {
-  display: inline-flex; align-items: center; gap: .35rem;
-  color: inherit; text-decoration: none; max-width: 100%; min-width: 0;
-}
-.p24-post-autor:hover { color: var(--p24-orange); }
-.p24-post-autor .nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.p24-post-miniatura {
-  width: 64px; height: 64px; object-fit: cover; border-radius: 10px; flex-shrink: 0;
-}
-
-/* Resposta aninhada (1 nível). Como classe e não style inline para poder
-   encolher a indentação em mobile — 2.5rem num ecrã de 360px comia quase um
-   quinto da largura útil do comentário. */
-.p24-resposta-aninhada {
-  margin-left: 2.5rem;
-  background: var(--p24-blue-light, #f8fafc);
-}
-
-@media (max-width: 575.98px) {
-  .p24-resposta-aninhada {
-    margin-left: .75rem;
-    /* Barra lateral a marcar o aninhamento, agora que a indentação é pequena. */
-    border-left: 3px solid var(--p24-blue-light, #dbe6f5);
-  }
-  .p24-post-card { gap: .5rem; }
-  .p24-voto { width: 34px; }
-  .p24-voto-btn { width: 30px; height: 30px; }
-  .p24-post-titulo { font-size: .95rem; }
-  /* A miniatura passa a quadrado pequeno para o texto ficar com espaço útil. */
-  .p24-post-miniatura { width: 48px; height: 48px; }
-  /* Excerto só numa linha: em ecrãs pequenos o que interessa é ver mais
-     publicações por ecrã, não mais texto de cada uma. */
-  .p24-post-excerto { -webkit-line-clamp: 2; font-size: .8rem; }
-  .p24-post-rodape { gap: .25rem .5rem; font-size: .72rem; }
-}

@@ -19,8 +19,7 @@ usou o material. Ninguém precisa de "conhecer alguém" para ter acesso a boas p
 
 Funciona com um sistema de **créditos**: ganha-se ao partilhar materiais aprovados, gasta-se ao
 descarregar. Quem dá, recebe primeiro — e a plataforma cresce com quem a usa, não apesar de quem
-a usa. Para além do acervo de materiais, há uma **Comunidade** onde estudantes tiram dúvidas,
-discutem e ajudam-se uns aos outros, com respostas votadas pela própria comunidade.
+a usa.
 
 Não é uma plataforma genérica traduzida para Angola — é feita a pensar em como os estudantes
 angolanos já partilham (WhatsApp, grupos, boca-a-boca) e no que lhes falta: organização, acesso
@@ -65,14 +64,8 @@ a correr localmente, salta para a [instalação local](#instalação-local).
 - Avaliações (1-5 estrelas), favoritos e contagem de visualizações/downloads
 - Denúncia de conteúdo inadequado
 
-**Comunidade** (estilo fórum)
-- Publicações do tipo Dúvida / Discussão / Aviso, com até 6 fotos anexadas
-- Respostas (sem aninhamento) e votação real (upvote/downvote com pontuação líquida)
-- Denúncia e moderação de posts/respostas
-- Publicações fixadas em destaque
-
 **Gamificação**
-- Créditos ganhos ao registar, publicar materiais aprovados, publicar/responder na Comunidade
+- Créditos ganhos ao registar e ao publicar materiais aprovados
 - Créditos gastos ao fazer download
 - Níveis (Novato → Expert) derivados do saldo de créditos
 
@@ -86,7 +79,7 @@ a correr localmente, salta para a [instalação local](#instalação-local).
 **Administração**
 - Painel com KPIs e log de auditoria de todas as ações relevantes
 - Gestão de utilizadores (promover admin/moderador, ativar/desativar, ajustar créditos)
-- Gestão de categorias, pastas, anúncios (banners patrocinados, exibidos na Comunidade) e configurações gerais
+- Gestão de categorias, pastas, anúncios (banners patrocinados) e configurações gerais
 - Fila de candidaturas para colaboradores/voluntários, com email automático de resposta
 - Lista de espera / acesso antecipado (modo pré-lançamento opcional)
 - Importação em massa de materiais via CLI
@@ -126,11 +119,10 @@ A app segue o padrão **application factory**: `create_app()` em `app/__init__.p
 | `auth` | `/auth` | `app/routes/auth.py` |
 | `main` | `/` | `app/routes/main.py` |
 | `materiais` | `/materiais` | `app/routes/materiais.py` |
-| `comunidade` | `/comunidade` | `app/routes/comunidade.py` |
 | `admin` | `/admin` | `app/routes/admin.py` |
 | `notificacoes` | `/notificacoes` | `app/routes/notificacoes.py` |
 
-A lógica de negócio fica em `app/services/` (upload, email, créditos, notificações, tokens, votação/feed da Comunidade, campanhas de marketing) — as rotas ficam finas, delegando a estes serviços. Os modelos SQLAlchemy vivem em `app/models/`, um ficheiro por domínio.
+A lógica de negócio fica em `app/services/` (upload, email, créditos, notificações, tokens, campanhas de marketing) — as rotas ficam finas, delegando a estes serviços. Os modelos SQLAlchemy vivem em `app/models/`, um ficheiro por domínio.
 
 Para uma explicação detalhada de cada ficheiro, ver a [documentação técnica](#documentação-técnica).
 
@@ -142,15 +134,15 @@ Para uma explicação detalhada de cada ficheiro, ver a [documentação técnica
 Ponto24academico/
 ├── app/
 │   ├── __init__.py            # Application factory, extensões, hooks, context processors
-│   ├── models/                # Um ficheiro por domínio (User, Material, Pasta, Comunidade, ...)
-│   ├── routes/                # Blueprints: auth, main, materiais, comunidade, admin, notificacoes
-│   ├── services/               # Lógica de negócio (upload, email, créditos, votação, marketing, ...)
+│   ├── models/                # Um ficheiro por domínio (User, Material, Pasta, ...)
+│   ├── routes/                # Blueprints: auth, main, materiais, admin, notificacoes
+│   ├── services/               # Lógica de negócio (upload, email, créditos, marketing, ...)
 │   ├── utils/                  # Helpers (honeypot, validação de senha)
 │   ├── static/
 │   │   ├── css/ponto24.css     # Design system próprio
 │   │   ├── img/
 │   │   └── uploads/            # Ficheiros enviados (só em armazenamento local)
-│   └── templates/               # Jinja2, organizado por área (admin/, materials/, comunidade/, email/, ...)
+│   └── templates/               # Jinja2, organizado por área (admin/, materials/, email/, ...)
 ├── config/
 │   └── settings.py             # Config por ambiente (Development/Production/Testing)
 ├── migrations/                  # Migrações Alembic (Flask-Migrate)
@@ -251,7 +243,7 @@ Checklist mínimo:
 ## Documentação técnica
 
 - **`docs/TESTES.md`** — checklist manual de testes funcionais, organizado por fase de desenvolvimento (200+ itens).
-- **`docs/PONTO24_DOCUMENTACAO_TECNICA.pdf`** — documentação técnica completa, pasta a pasta e ficheiro a ficheiro: o que cada módulo faz, principais funções/classes, decisões de arquitetura (caminho materializado nas pastas, convenção "add mas não commit" nos serviços, mover ficheiros com garantia all-or-nothing, votação polimórfica na Comunidade, etc.) — pensada para debugging e para planear melhorias futuras.
+- **`docs/PONTO24_DOCUMENTACAO_TECNICA.pdf`** — documentação técnica completa, pasta a pasta e ficheiro a ficheiro: o que cada módulo faz, principais funções/classes, decisões de arquitetura (caminho materializado nas pastas, convenção "add mas não commit" nos serviços, mover ficheiros com garantia all-or-nothing, etc.) — pensada para debugging e para planear melhorias futuras.
 
 ---
 
@@ -271,7 +263,6 @@ Encontraste uma vulnerabilidade? Contacta a equipa através da página de Suport
 
 - [x] Segurança, painel admin profissional, candidaturas, log de auditoria
 - [x] Sistema de pastas hierárquico com reorganização física dos ficheiros
-- [x] Comunidade (posts, respostas, votação) + migração dos anúncios para o feed
 - [x] Email automático de candidaturas + campanhas de marketing em massa
 - [ ] API REST (para uma futura app mobile)
 - [ ] Testes automatizados (atualmente o checklist em `docs/TESTES.md` é manual)

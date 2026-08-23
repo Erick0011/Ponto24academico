@@ -317,114 +317,21 @@
 
 ---
 
-## 15. Comunidade — Fase 4
-
-### Publicações e respostas
-
-- [ ] **Criar publicação** — `/comunidade/novo` cria com sucesso, tipo (dúvida/discussão/aviso) gravado corretamente
-- [ ] **Criar publicação com fotos** — até 6 imagens anexadas, `ComunidadePostImagem` criada para cada uma, ficheiro gravado em `comunidade/{YYYY}/{MM}/`
-- [ ] **Ficheiro inválido não bloqueia o post** — anexar um ficheiro de extensão não permitida é ignorado silenciosamente, o post é criado na mesma
-- [ ] **Créditos ao publicar** — autor recebe `CREDITOS_POR_POST_COMUNIDADE`
-- [ ] **Responder a um post** — `respostas_count` incrementa, resposta aparece na lista, ordenação por data/votos funciona
-- [ ] **Créditos ao responder** — autor da resposta recebe `CREDITOS_POR_RESPOSTA_COMUNIDADE`
-- [ ] **Notificação ao autor do post** — ao receber uma resposta (exceto se o autor responder a si próprio)
-- [ ] **Honeypot bloqueia bots** — campo `website` preenchido em criar post/resposta é rejeitado
-- [ ] **Rate limit** — `/comunidade/novo` e `/comunidade/<id>/responder` respeitam os limites definidos
-
-### Votação
-
-- [ ] **Upvote soma +1** ao `votos_score` do post/resposta
-- [ ] **Downvote soma -1**
-- [ ] **Clicar no mesmo voto remove-o (toggle off)** — volta a 0
-- [ ] **Clicar no voto oposto troca-o** — delta de 2 aplicado corretamente
-- [ ] **Bloqueio de auto-voto** — autor não consegue votar no próprio post/resposta
-- [ ] **Votar a partir do feed mantém o utilizador no feed** (usa `request.referrer`)
-- [ ] **Ordenar por votados** — feed e respostas respeitam `votos_score` na ordenação
-
-### Denúncias e moderação
-
-- [ ] **Denunciar post/resposta** — cria `ComunidadeRelatorio` com o `alvo_tipo` correto
-- [ ] **Bloqueia denúncia duplicada** — mesmo utilizador não denuncia o mesmo alvo duas vezes enquanto pendente
-- [ ] **Fila de denúncias admin** — `/admin/comunidade/relatorios`, tabs de contagem, só admin/moderador acede (403 para utilizador normal)
-- [ ] **Resolver sem eliminar** — marca `resolvido`, conteúdo permanece
-- [ ] **Ignorar denúncia** — marca `ignorado`
-- [ ] **Eliminar conteúdo a partir da denúncia** — apaga o post/resposta denunciado, decrementa `respostas_count` do post pai quando aplicável, marca a denúncia como resolvida
-- [ ] **Denúncia de conteúdo já eliminado** — fila mostra "Conteúdo já eliminado" em vez de rebentar
-
-### Fixar, eliminar e permissões
-
-- [ ] **Fixar post com prazo** (admin/moderador) — escolher duração (1/3/7/30 dias ou permanente), post aparece no topo do feed enquanto `esta_fixado_ativo`
-- [ ] **Fixado expira sozinho** — após o `fixado_ate` passar, o post deixa de aparecer fixado no feed (sem precisar de ação manual)
-- [ ] **Autor elimina o próprio post/resposta**
-- [ ] **Moderador elimina post/resposta de outro utilizador**
-- [ ] **Utilizador normal não consegue eliminar conteúdo alheio** (403)
-- [ ] **Eliminar post remove as imagens do disco/R2**
-
-### Banner patrocinado (migração dos Anúncios)
-
-- [ ] **Banner deixa de aparecer sitewide** — `/`, `/materiais`, etc. não mostram mais o banner
-- [ ] **Banner aparece dentro da Comunidade** — `/comunidade/` inclui `partials/banner.html` sem alterações ao `Anuncio`/`_banner()`/rotas `/admin/anuncios*`
-
-### Navegação e regressão
-
-- [ ] **Nav mostra "Comunidade"** em todas as páginas, `active` no endpoint correto
-- [ ] **Feed público sem login**
-- [ ] **`flask db upgrade` limpo** numa BD nova e numa existente
-- [ ] **Logs de auditoria** — `comunidade_post_criado`, `comunidade_resposta_criada`, `comunidade_post_eliminado`, `comunidade_resposta_eliminada`, `comunidade_relatorio_resolvido`
-
----
-
-## 16. Comunidade — Avisos, Tags e Suspensão (Fase 4b)
-
-### Avisos oficiais
-
-- [ ] **Utilizador normal não vê "Aviso" no select** de `/comunidade/novo`
-- [ ] **Utilizador normal a forçar `tipo=aviso` no POST** — servidor rebaixa para "Discussão" e mostra aviso, não deixa passar como Aviso
-- [ ] **Admin/moderador consegue publicar Aviso** normalmente
-- [ ] **Badge "Aviso oficial"** aparece nos posts tipo aviso (feed e detalhe), com destaque visual distinto dos outros tipos
-
-### Tags
-
-- [ ] **Criar post com tags** — `"cálculo, provas, exame"` gera 3 `ComunidadeTag` (slugs sem acentos), associadas ao post
-- [ ] **Reaproveita tag existente** — publicar outro post com uma tag já usada não duplica `ComunidadeTag` (mesmo slug)
-- [ ] **Limite de 5 tags** — tags a mais são ignoradas
-- [ ] **Tags aparecem como pills** no card do feed e na página do post, com link para `/comunidade/?tag=slug`
-- [ ] **Filtrar por tag** — feed mostra só posts com aquela tag, chip "a filtrar por #tag" com opção de remover
-- [ ] **Filtro de tag combina com filtro de tipo** e é preservado ao paginar/ordenar
-
-### Suspensão de utilizadores na Comunidade
-
-- [ ] **Admin/moderador suspende utilizador** em `/admin/comunidade/utilizadores` — duração (1/3/7/30 dias) ou permanente, com motivo opcional
-- [ ] **Não é possível suspender admin/moderador** (bloqueado no servidor)
-- [ ] **Utilizador suspenso não consegue criar post** — redirecionado ao feed com mensagem de erro
-- [ ] **Utilizador suspenso não consegue responder** — redirecionado ao post com mensagem de erro
-- [ ] **Suspensão temporária expira sozinha** — após `comunidade_suspenso_ate` passar, o utilizador volta a poder publicar sem ação manual
-- [ ] **Reativar utilizador** — admin remove a suspensão manualmente antes do prazo
-- [ ] **Lista de suspensos atuais** mostra motivo e prazo (ou "Permanente")
-- [ ] **Link rápido a partir da fila de denúncias** — botão "gerir autor" preenche a pesquisa com o email do autor denunciado
-
----
-
----
-
-## 17. Badges do Perfil (Fase 4c)
+## 15. Badges do Perfil (Fase 4c)
 
 - [ ] **Badge "Contribuidor"** sobe de tier ao atingir 1/5/15/40 materiais **aprovados** enviados (materiais pendentes/rejeitados não contam)
 - [ ] **Badge "Estudioso"** sobe de tier a cada 5/25/75/200 downloads feitos pelo próprio utilizador
-- [ ] **Badge "Voz da Comunidade"** sobe de tier a cada 1/5/20/50 posts criados na Comunidade
-- [ ] **Badge "Comentador"** sobe de tier a cada 1/10/40/100 respostas dadas na Comunidade
 - [ ] **Badge "Conteúdo Popular"** reflete a soma de downloads recebidos em todos os materiais do utilizador
-- [ ] **Badge "Reputação"** reflete a soma de `votos_score` de todos os posts + respostas do utilizador (pode ficar sempre bloqueado se o saldo for negativo)
 - [ ] **Badges aparecem no perfil próprio** (`/perfil`) e no **perfil público** (`/utilizador/<id>`) de qualquer utilizador
 - [ ] **Badge não conquistado** aparece a cinzento/opaco com "Por conquistar" e a contagem "faltam X para o próximo nível" no tooltip
 - [ ] **Badge no tier máximo (Diamante)** não mostra "faltam X" (não há próximo nível)
-- [ ] **Contagem "X / 6" no topo** do bloco de badges corresponde ao nº de categorias já com pelo menos o tier Bronze
+- [ ] **Contagem "X / 3" no topo** do bloco de badges corresponde ao nº de categorias já com pelo menos o tier Bronze
 
 ---
 
 ---
 
-## 18. Pesquisa Avançada e Recomendação (Fase 4d)
+## 16. Pesquisa Avançada e Recomendação (Fase 4d)
 
 ### Pesquisa de materiais
 
@@ -434,34 +341,18 @@
 - [ ] **Relevância manda mesmo com "ordenar" definido** — pesquisar e escolher "Mais popular" usa a popularidade só como desempate, não sobrepõe a relevância
 - [ ] **Sem pesquisa, comportamento antigo intacto** — filtros (instituição/disciplina/categoria/ano/pasta) e ordenação funcionam exatamente como antes
 
-### Pesquisa na Comunidade (nova)
-
-- [ ] **Caixa de pesquisa no feed** — `/comunidade/?q=termo` filtra por título+corpo, multi-palavra (mesma lógica AND-entre-palavras/OR-entre-campos)
-- [ ] **Pesquisa combina com tipo e tag** — `?q=termo&tipo=duvida&tag=calculo` aplica os três filtros ao mesmo tempo
-- [ ] **Chip de pesquisa ativa** — mostra `Resultados para "termo"` com opção de limpar, preservando tipo/tag
-- [ ] **Estado vazio distingue pesquisa sem resultados** de "ainda não há publicações"
-
 ### Materiais relacionados
 
 - [ ] **Aparecem na página de detalhe do material**, mesma disciplina/categoria/instituição/ano, ordenados por relevância e depois popularidade
 - [ ] **Material sem nenhum critério partilhado** não aparece nos relacionados de outro (score teria de ser > 0)
 - [ ] **Sem materiais relacionados, a secção não aparece** (não mostra bloco vazio)
 
-### Publicações relacionadas
-
-- [ ] **Aparecem na página de detalhe do post**, mesmo tipo ou tags partilhadas
-- [ ] **Post sem tags** só relaciona por tipo
-- [ ] **Sem publicações relacionadas, a secção não aparece**
-
 ### "Recomendado para ti" (dashboard)
 
 - [ ] **Materiais recomendados** — utilizador com instituição/curso no perfil vê materiais dessa instituição/curso primeiro, completando com populares se faltarem
 - [ ] **Utilizador sem instituição/curso** — cai direto para os materiais mais populares, sem erro
 - [ ] **Nunca recomenda os próprios materiais** do utilizador
-- [ ] **Publicações recomendadas** — utilizador que já postou/comentou vê publicações com tags semelhantes às dos posts em que participou
-- [ ] **Utilizador sem atividade na Comunidade** — cai para os posts mais votados/recentes, sem erro
-- [ ] **Nunca recomenda os próprios posts** do utilizador nem os posts em que já comentou
 
 ---
 
-**Total: 268 testes**
+**Total: 199 testes**

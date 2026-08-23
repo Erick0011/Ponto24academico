@@ -1,6 +1,0 @@
-{# Lista de cartões do feed — usado tanto no render inicial (comunidade/feed.html)
-   como na resposta JSON do scroll infinito (?fragmento=1), para nunca duplicar
-   o markup do cartão entre os dois caminhos. #}
-{% for post in posts %}
-{% include "comunidade/_post_card.html" %}
-{% endfor %}

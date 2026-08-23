@@ -85,12 +85,6 @@ def create_app(config_name: str = None):
     login_manager.login_message = "Faz login para continuar."
     login_manager.login_message_category = "aviso"
 
-    # Log de auditoria imutável da Comunidade — um listener SQLAlchemy único
-    # (before_flush) capta automaticamente criação/edição/eliminação dos
-    # modelos auditados, em vez de chamadas manuais espalhadas pelas rotas.
-    from app.services import comunidade_auditoria_service
-    comunidade_auditoria_service.init_app(app)
-
     # Importar modelos para garantir que as tabelas são criadas
     from app.models.notificacao import Notificacao       # noqa: F401
     from app.models.configuracao import Configuracao     # noqa: F401
@@ -99,11 +93,6 @@ def create_app(config_name: str = None):
     from app.models.atividade import AtividadeLog         # noqa: F401
     from app.models.pasta import Pasta                    # noqa: F401
     from app.models.campanha_email import CampanhaEmail, CampanhaEmailDestinatario  # noqa: F401
-    from app.models.comunidade import (                   # noqa: F401
-        ComunidadePost, ComunidadePostImagem, ComunidadeResposta, ComunidadeRespostaImagem,
-        ComunidadeVoto, ComunidadeRelatorio, ComunidadeTag, ComunidadeCategoria,
-        ComunidadeSubscricao, ComunidadeReacao, ComunidadeLink, ComunidadeAuditLog,
-    )
     from app.models.visita import VisitaLog                # noqa: F401
 
     # User loader para Flask-Login
@@ -119,14 +108,12 @@ def create_app(config_name: str = None):
     from app.routes.materiais import materiais_bp
     from app.routes.admin import admin_bp
     from app.routes.notificacoes import notificacoes_bp
-    from app.routes.comunidade import comunidade_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(materiais_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(notificacoes_bp)
-    app.register_blueprint(comunidade_bp)
 
     # Bloqueio de conta após 7 dias sem confirmação de email
     from flask_login import current_user as _cu
@@ -169,18 +156,10 @@ def create_app(config_name: str = None):
                 if not _cu.email_verificado:
                     limite = _cu.criado_em + timedelta(days=PRAZO_CONFIRMACAO)
                     dias_restantes = max(0, (limite - datetime.utcnow()).days)
-                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner(), "comunidade_imagem_url": _comunidade_imagem_url}
+                return {"notif_nao_lidas": count, "dias_confirmacao": dias_restantes, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
         except Exception:
             pass
-        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner(), "comunidade_imagem_url": _comunidade_imagem_url}
-
-    # URL de uma imagem de post da Comunidade (local ou R2)
-    def _comunidade_imagem_url(path_relativo):
-        if os.environ.get("R2_ENDPOINT"):
-            from app.services.r2_service import presigned_url
-            return presigned_url(path_relativo, expires=7200)
-        from flask import url_for as _url_for
-        return _url_for("static", filename=f"uploads/{path_relativo}")
+        return {"notif_nao_lidas": 0, "dias_confirmacao": None, "cfg": cfg, "thumb_url": _thumb_url, "banner_ativo": _banner()}
 
     # Selecciona banner activo e resolve URL da imagem
     def _banner():
@@ -211,8 +190,6 @@ def create_app(config_name: str = None):
 
     # Jinja2 filtro: "há 3 horas" em vez de "22/08/2026 14:07".
     #
-    # Na Comunidade a idade relativa diz muito mais do que a data absoluta —
-    # é o que permite perceber de relance se uma dúvida ainda está quente.
     # Todas as datas do modelo são gravadas com datetime.utcnow(), por isso a
     # comparação é feita também em UTC.
     @app.template_filter("tempo_relativo")
@@ -252,14 +229,6 @@ def create_app(config_name: str = None):
         args = flask_request.args.to_dict()
         args["page"] = str(page)
         return "?" + urlencode(args)
-
-    # Jinja2 global: renderiza o corpo de um post/resposta da Comunidade com
-    # as ligações internas (#123, @material:456) substituídas por cartões.
-    @app.template_global()
-    def renderizar_link_corpo(texto):
-        from flask_login import current_user as _cu_links
-        from app.services.comunidade_links_service import renderizar_link_corpo as _renderizar
-        return _renderizar(texto, _cu_links)
 
     # ── Estatísticas de tráfego (todos os visitantes, mesmo sem conta) ───────────
     # Cookie técnico anónimo — só um identificador aleatório, sem dados pessoais —

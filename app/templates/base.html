@@ -143,10 +143,6 @@
              href="{{ url_for('materiais.listar') }}">Explorar</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.endpoint and 'comunidade' in request.endpoint %}active{% endif %}"
-             href="{{ url_for('comunidade.feed') }}">Comunidade</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'main.provas_simuladas' %}active{% endif %}"
              href="{{ url_for('main.provas_simuladas') }}">Provas Simuladas</a>
         </li>
@@ -271,8 +267,8 @@
 {% endif %}
 
 <!-- ═══════════════════════════════════════ BANNER PUBLICITÁRIO ═══════════════════════════════════════ -->
-<!-- Deixou de ser sitewide (Fase 4) — só a Comunidade o inclui, como um
-     cartão "patrocinado" no topo do feed. Ver comunidade/feed.html. -->
+<!-- Não é sitewide: cada página que queira mostrar o banner preenche este
+     bloco (ver `banner_ativo` no context processor de app/__init__.py). -->
 {% block banner %}{% endblock %}
 
 <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->

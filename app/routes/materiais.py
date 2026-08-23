@@ -365,9 +365,6 @@ def detalhe(id):
             .all()
         )
 
-    from app.models.comunidade import ComunidadeLink
-    from app.services.comunidade_links_service import topicos_relacionados
-
     return render_template(
         "materials/detalhe.html",
         material=material,
@@ -379,7 +376,6 @@ def detalhe(id):
         # _card.html (reaproveitado nos "Materiais relacionados") espera estas
         # duas variáveis para agrupar uploads múltiplos — aqui não há grupos.
         grupo_counts={}, grupo_thumbs={},
-        topicos_comunidade=topicos_relacionados(ComunidadeLink.TARGET_MATERIAL, material.id),
     )
 
 
