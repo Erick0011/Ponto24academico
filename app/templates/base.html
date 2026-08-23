@@ -268,7 +268,10 @@
 
 <!-- ═══════════════════════════════════════ BANNER PUBLICITÁRIO ═══════════════════════════════════════ -->
 <!-- Não é sitewide: cada página que queira mostrar o banner preenche este
-     bloco (ver `banner_ativo` no context processor de app/__init__.py). -->
+     bloco (ver `banner_ativo` no context processor de app/__init__.py).
+     Hoje só materials/listar.html o preenche — é a "página mais visitada"
+     vendida em /anunciar. Se ficar outra vez sem nenhum preenchimento, o
+     produto Anúncios deixa de aparecer no site sem dar erro nenhum. -->
 {% block banner %}{% endblock %}
 
 <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->

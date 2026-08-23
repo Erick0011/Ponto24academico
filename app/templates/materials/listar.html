@@ -3,6 +3,7 @@
 {% block meta_description %}{{ meta_descricao }}{% endblock %}
 {% block og_title %}{% if busca %}Pesquisa: "{{ busca }}" — {% endif %}Explorar materiais — Ponto 24 Académico{% endblock %}
 {% block og_description %}{{ meta_descricao }}{% endblock %}
+{% block banner %}{% include "partials/banner.html" %}{% endblock %}
 {% block meta_robots %}{% if busca or filtros.instituicao or filtros.disciplina or filtros.categoria_id or filtros.ano_letivo %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
 
 {% block content %}
