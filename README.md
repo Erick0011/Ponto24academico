@@ -6,8 +6,6 @@
 
 ---
 
-## 🇬🇧 English
-
 ### About
 
 **Ponto 24 Académico** is a digital platform designed to centralize, organize, and improve access to academic materials for university students in Angola.
