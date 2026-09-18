@@ -1,274 +1,614 @@
 # Ponto 24 Académico
 
-**A maior plataforma digital de materiais académicos para estudantes angolanos.**
+> **Plataforma digital de materiais académicos para estudantes angolanos.**
+
+[Website](https://ponto24academico.com) · [GitHub](https://github.com/Erick0011/Ponto24academico)
 
 ---
 
-## O problema
+## 🇬🇧 English
 
-Todos os anos, milhares de provas, resumos e exercícios circulam entre estudantes angolanos —
-mas dispersos em grupos de WhatsApp, perdidos em chats antigos, sem contexto e sem forma de
-saber se valem a pena antes de abrir o ficheiro. Quem não tem os contactos certos simplesmente
-fica de fora. E quem contribui, contribui de graça, sem nada em troca.
+### About
 
-## O que é o Ponto 24
+**Ponto 24 Académico** is a digital platform designed to centralize, organize, and improve access to academic materials for university students in Angola.
 
-O **Ponto 24 Académico** junta tudo isso num único lugar, organizado por instituição, curso,
-disciplina e ano — com pesquisa, pré-visualização antes de descarregar, e avaliações de quem já
-usou o material. Ninguém precisa de "conhecer alguém" para ter acesso a boas provas e resumos.
-
-Funciona com um sistema de **créditos**: ganha-se ao partilhar materiais aprovados, gasta-se ao
-descarregar. Quem dá, recebe primeiro — e a plataforma cresce com quem a usa, não apesar de quem
-a usa.
-
-Não é uma plataforma genérica traduzida para Angola — é feita a pensar em como os estudantes
-angolanos já partilham (WhatsApp, grupos, boca-a-boca) e no que lhes falta: organização, acesso
-justo e reconhecimento por quem contribui.
-
-**Website:** [ponto24academico.com](https://ponto24academico.com)
+The project was built as a real-world web application, focusing not only on features, but also on **software architecture, data management, security, scalability, and production deployment**.
 
 ---
 
-Este README tem duas partes: esta primeira, para quem quer perceber **o que é o projeto**; e a
-segunda, mais abaixo, para quem quer **correr o código**. Se és programador e só queres pôr isto
-a correr localmente, salta para a [instalação local](#instalação-local).
+## The Problem
+
+Academic materials such as exams, summaries, exercises, and study resources are frequently shared through WhatsApp groups and other informal channels.
+
+This creates several problems:
+
+* Materials become scattered across different groups.
+* Older resources are difficult to find.
+* Students may not know whether a file is relevant or useful before downloading it.
+* Access often depends on being part of the right group or knowing the right people.
+* Students who contribute materials receive little recognition for sharing them.
+* There is no centralized structure for organizing materials by institution, course, subject, and academic year.
+
+### The goal
+
+Build a centralized platform where students can **discover, contribute, evaluate, and manage academic resources** in an organized environment.
 
 ---
 
-## Índice
+## The Solution
 
-- [O problema](#o-problema)
-- [O que é o Ponto 24](#o-que-é-o-ponto-24)
-- [Funcionalidades](#funcionalidades)
-- [Stack tecnológica](#stack-tecnológica)
-- [Arquitetura](#arquitetura)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Instalação local](#instalação-local)
-- [Variáveis de ambiente](#variáveis-de-ambiente)
-- [Comandos úteis](#comandos-úteis-manage-py)
-- [Deployment em produção](#deployment-em-produção)
-- [Documentação técnica](#documentação-técnica)
-- [Segurança](#segurança)
-- [Roadmap](#roadmap)
-- [Licença](#licença)
+Ponto 24 Académico organizes materials by:
+
+**Institution → Course → Subject → Academic Year → Category**
+
+Students can search and filter resources, preview information before downloading, rate materials, save favorites, and report inappropriate content.
+
+The platform also uses a **credit-based contribution system**:
+
+> Contribute approved materials → earn credits → use credits to download materials.
+
+This creates an incentive for users to contribute to the platform instead of only consuming content.
 
 ---
 
-## Funcionalidades
+# Core Features
 
-**Materiais académicos**
-- Submissão de ficheiros (PDF, DOCX, imagens) com deteção de duplicados por hash SHA-256
-- Fila de moderação (aprovar/rejeitar) antes de um material ficar público
-- Pesquisa e filtros por instituição, curso, disciplina, ano letivo e categoria
-- Sistema de pastas hierárquico (profundidade livre) para curadoria — os ficheiros são fisicamente reorganizados no armazenamento para espelhar a árvore
-- Avaliações (1-5 estrelas), favoritos e contagem de visualizações/downloads
-- Denúncia de conteúdo inadequado
+### 📚 Academic Materials
 
-**Gamificação**
-- Créditos ganhos ao registar e ao publicar materiais aprovados
-- Créditos gastos ao fazer download
-- Níveis (Novato → Expert) derivados do saldo de créditos
+* Upload PDF, DOCX, and image files.
+* SHA-256 hash-based duplicate detection.
+* Material moderation before publication.
+* Search and filtering.
+* Organization by institution, course, subject, academic year, and category.
+* Hierarchical folder management.
+* Ratings from 1–5 stars.
+* Favorites.
+* View and download counters.
+* Content reporting.
 
-**Conta e comunicação**
-- Registo/login com confirmação de email obrigatória (prazo de 7 dias)
-- Recuperação de palavra-passe por token com expiração
-- Notificações in-app
-- Emails transacionais (boas-vindas, aprovação/rejeição de material, candidaturas, etc.)
-- Secção de Marketing: campanhas de email em massa com throttle, limite diário e cancelamento de subscrição — pensada para não bloquear a conta de envio
+### 🎮 Contribution & Gamification
 
-**Administração**
-- Painel com KPIs e log de auditoria de todas as ações relevantes
-- Gestão de utilizadores (promover admin/moderador, ativar/desativar, ajustar créditos)
-- Gestão de categorias, pastas, anúncios (banners patrocinados) e configurações gerais
-- Fila de candidaturas para colaboradores/voluntários, com email automático de resposta
-- Lista de espera / acesso antecipado (modo pré-lançamento opcional)
-- Importação em massa de materiais via CLI
+* Credits earned through approved contributions.
+* Credits spent when downloading materials.
+* User levels based on credit balance.
+* Contribution-based progression.
 
-**Segurança**
-- Honeypot + rate limiting (Flask-Limiter) em todos os formulários públicos, sem CAPTCHA de terceiros
-- Cabeçalhos de segurança (CSP, X-Frame-Options, HSTS, etc.)
-- Política de palavra-passe forte, cookies de sessão seguros
+### 🔐 Authentication & Accounts
 
----
+* User registration and login.
+* Mandatory email verification.
+* Password recovery through expiring tokens.
+* Secure password hashing.
+* Session management.
+* In-app notifications.
 
-## Stack tecnológica
+### 📧 Email System
 
-| Camada | Tecnologia |
-|---|---|
-| Backend | Python 3.10+, Flask 3 (padrão *application factory* + Blueprints) |
-| Base de dados | SQLAlchemy + Flask-Migrate (Alembic); SQLite em desenvolvimento, PostgreSQL em produção |
-| Autenticação | Flask-Login, `werkzeug.security` para hashing de senhas |
-| Formulários/CSRF | Flask-WTF |
-| Rate limiting | Flask-Limiter |
-| Armazenamento de ficheiros | Disco local (padrão) ou Cloudflare R2 (S3-compatible, via `boto3`) |
-| Email | SMTP puro (`smtplib`), sem Flask-Mail |
-| Imagens | Pillow (geração de thumbnails) |
-| Frontend | Bootstrap 5.3 + Bootstrap Icons (CDN), CSS próprio (`ponto24.css`), JavaScript vanilla |
-| Produção | Gunicorn |
+Transactional emails for:
 
-Sem frontend framework (React/Vue) — server-side rendering com Jinja2.
+* Account verification.
+* Welcome messages.
+* Password recovery.
+* Material approval/rejection.
+* Application status.
+* Other system notifications.
 
----
+The platform also includes a marketing email system with:
 
-## Arquitetura
+* Sending throttling.
+* Daily sending limits.
+* Cancellation/unsubscribe support.
+* `List-Unsubscribe` and `List-Unsubscribe-Post` headers.
 
-A app segue o padrão **application factory**: `create_app()` em `app/__init__.py` monta a aplicação, regista extensões, blueprints e hooks. Cinco blueprints organizam as rotas por área:
+### 🛠️ Administration
 
-| Blueprint | Prefixo | Ficheiro |
-|---|---|---|
-| `auth` | `/auth` | `app/routes/auth.py` |
-| `main` | `/` | `app/routes/main.py` |
-| `materiais` | `/materiais` | `app/routes/materiais.py` |
-| `admin` | `/admin` | `app/routes/admin.py` |
-| `notificacoes` | `/notificacoes` | `app/routes/notificacoes.py` |
+Administrative dashboard with:
 
-A lógica de negócio fica em `app/services/` (upload, email, créditos, notificações, tokens, campanhas de marketing) — as rotas ficam finas, delegando a estes serviços. Os modelos SQLAlchemy vivem em `app/models/`, um ficheiro por domínio.
-
-Para uma explicação detalhada de cada ficheiro, ver a [documentação técnica](#documentação-técnica).
+* Platform KPIs.
+* Audit logs.
+* User management.
+* Role management.
+* Credit management.
+* Material moderation.
+* Category and folder management.
+* Sponsored banner management.
+* Application/volunteer management.
+* Platform configuration.
+* Bulk material import through CLI.
 
 ---
 
-## Estrutura do projeto
+# Engineering
 
+The project was designed as more than a CRUD application.
+
+The architecture separates **HTTP handling, business logic, data access, configuration, and infrastructure concerns**, making the application easier to maintain and extend.
+
+## Application Architecture
+
+The application follows the **Application Factory** pattern.
+
+```text
+create_app()
+    │
+    ├── Configuration
+    ├── Extensions
+    ├── Blueprints
+    ├── Error Handlers
+    └── Application Hooks
 ```
+
+Routes are organized using Flask Blueprints:
+
+```text
+app/
+├── routes/
+│   ├── auth.py
+│   ├── main.py
+│   ├── materiais.py
+│   ├── admin.py
+│   └── notificacoes.py
+│
+├── models/
+├── services/
+├── utils/
+├── templates/
+└── static/
+```
+
+### Why this architecture?
+
+Instead of placing all logic inside route handlers, the application separates responsibilities.
+
+```text
+Request
+   ↓
+Route / Blueprint
+   ↓
+Service Layer
+   ↓
+SQLAlchemy Models
+   ↓
+Database
+```
+
+This keeps routes relatively thin and allows business logic to be reused by different parts of the application.
+
+---
+
+# Service Layer
+
+Business logic is organized inside `app/services/`.
+
+Examples include:
+
+```text
+services/
+├── upload
+├── email
+├── credits
+├── notifications
+├── tokens
+└── marketing
+```
+
+This separation is particularly useful for operations such as:
+
+* Processing uploads.
+* Sending emails.
+* Managing credits.
+* Creating notifications.
+* Handling authentication tokens.
+* Running email campaigns.
+
+The goal is to avoid turning route handlers into large blocks of business logic.
+
+---
+
+# Database
+
+The application uses **SQLAlchemy** as its ORM.
+
+### Development
+
+```text
+SQLite
+```
+
+SQLite keeps local development simple and requires no external database server.
+
+### Production
+
+```text
+PostgreSQL
+```
+
+PostgreSQL is used in production for a more robust relational database environment.
+
+Database schema changes are managed through:
+
+```text
+Flask-Migrate
+        ↓
+     Alembic
+```
+
+This allows schema changes to be version-controlled and applied consistently across environments.
+
+---
+
+# File Storage
+
+Academic materials are separated from the application's relational data.
+
+The application supports:
+
+### Local storage
+
+Useful for development:
+
+```text
+app/static/uploads/
+```
+
+### Cloud storage
+
+Production environments can use:
+
+```text
+Cloudflare R2
+        ↓
+S3-compatible API
+        ↓
+boto3
+```
+
+This prevents the application database from becoming responsible for storing large binary files and provides persistent storage independently from the application server.
+
+---
+
+# File Integrity & Duplicate Detection
+
+Uploaded materials are processed using **SHA-256 hashing**.
+
+Conceptually:
+
+```text
+File
+ ↓
+SHA-256
+ ↓
+Hash
+ ↓
+Duplicate check
+```
+
+This allows the system to identify identical files before unnecessarily storing duplicate content.
+
+---
+
+# Security
+
+Security was considered at both the application and HTTP layers.
+
+### Application security
+
+* CSRF protection with Flask-WTF.
+* Strong password policy.
+* Secure password hashing.
+* Session security.
+* Email verification.
+* Expiring password-reset tokens.
+* Rate limiting.
+* Honeypot protection on public forms.
+
+### HTTP security
+
+The application configures security headers including:
+
+* Content Security Policy (CSP).
+* `X-Frame-Options`.
+* `X-Content-Type-Options`.
+* `Referrer-Policy`.
+* HTTP Strict Transport Security (HSTS).
+
+### Production sessions
+
+Secure cookies are enabled in production and HTTPS is required for secure session handling.
+
+---
+
+# Email Campaign Protection
+
+The marketing system was designed with operational limits instead of sending an unlimited number of emails at once.
+
+Example configuration:
+
+```env
+MARKETING_INTERVAL_SECONDS=3
+MARKETING_DAILY_LIMIT=300
+```
+
+This provides:
+
+* Sending throttling.
+* Daily limits.
+* Campaign cancellation.
+* Unsubscribe support.
+
+The goal is to reduce the risk of overwhelming the SMTP provider or damaging sender reputation.
+
+---
+
+# CLI & Management Commands
+
+The application includes a custom management interface through `manage.py`.
+
+Examples:
+
+```bash
+# Seed base categories
+flask --app manage.py seed-db
+
+# Create/promote administrator
+flask --app manage.py criar-admin <email> <password>
+
+# Test email configuration
+flask --app manage.py testar-email <recipient>
+
+# Preview bulk import
+flask --app manage.py importar-lote ./pasta --dry-run
+
+# Bulk import
+flask --app manage.py importar-lote ./pasta \
+    --auto-aprovar \
+    --ano-letivo "2024/2025"
+```
+
+Database migrations:
+
+```bash
+flask --app manage.py db migrate -m "description"
+flask --app manage.py db upgrade
+```
+
+---
+
+# Production
+
+The application can be served using **Gunicorn**:
+
+```bash
+gunicorn -w 4 -b 0.0.0.0:8000 wsgi:app
+```
+
+Production configuration supports:
+
+* PostgreSQL.
+* Cloudflare R2.
+* SMTP.
+* HTTPS.
+* Secure cookies.
+* Environment-based configuration.
+* Gunicorn.
+
+Sensitive configuration is provided through environment variables rather than being hard-coded into the repository.
+
+---
+
+# Configuration
+
+Create the environment file:
+
+```bash
+cp .env.example .env
+```
+
+Important variables include:
+
+```env
+SECRET_KEY=
+DATABASE_URL=
+
+MAIL_SERVER=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_DEFAULT_SENDER=
+
+R2_ENDPOINT=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+
+MAX_CONTENT_LENGTH_MB=
+MARKETING_INTERVAL_SECONDS=
+MARKETING_DAILY_LIMIT=
+```
+
+The production environment refuses insecure default secret configuration.
+
+---
+
+# Project Structure
+
+```text
 Ponto24academico/
+│
 ├── app/
-│   ├── __init__.py            # Application factory, extensões, hooks, context processors
-│   ├── models/                # Um ficheiro por domínio (User, Material, Pasta, ...)
-│   ├── routes/                # Blueprints: auth, main, materiais, admin, notificacoes
-│   ├── services/               # Lógica de negócio (upload, email, créditos, marketing, ...)
-│   ├── utils/                  # Helpers (honeypot, validação de senha)
+│   ├── __init__.py
+│   │
+│   ├── models/
+│   │   └── ...
+│   │
+│   ├── routes/
+│   │   ├── auth.py
+│   │   ├── main.py
+│   │   ├── materiais.py
+│   │   ├── admin.py
+│   │   └── notificacoes.py
+│   │
+│   ├── services/
+│   │   ├── upload
+│   │   ├── email
+│   │   ├── credits
+│   │   ├── notifications
+│   │   ├── tokens
+│   │   └── marketing
+│   │
+│   ├── utils/
+│   │
 │   ├── static/
-│   │   ├── css/ponto24.css     # Design system próprio
+│   │   ├── css/
 │   │   ├── img/
-│   │   └── uploads/            # Ficheiros enviados (só em armazenamento local)
-│   └── templates/               # Jinja2, organizado por área (admin/, materials/, email/, ...)
+│   │   └── uploads/
+│   │
+│   └── templates/
+│
 ├── config/
-│   └── settings.py             # Config por ambiente (Development/Production/Testing)
-├── migrations/                  # Migrações Alembic (Flask-Migrate)
+│   └── settings.py
+│
+├── migrations/
+│
 ├── docs/
-│   ├── TESTES.md                # Checklist manual de testes (200+ itens)
-│   └── PONTO24_DOCUMENTACAO_TECNICA.pdf  # Documentação técnica completa
-├── manage.py                    # Comandos CLI (seed-db, criar-admin, importar-lote, ...)
-├── run.py                       # Ponto de entrada em desenvolvimento
-├── wsgi.py                      # Ponto de entrada para Gunicorn
+│   ├── TESTES.md
+│   └── PONTO24_DOCUMENTACAO_TECNICA.pdf
+│
+├── manage.py
+├── run.py
+├── wsgi.py
 ├── requirements.txt
 └── .env.example
 ```
 
 ---
 
-## Instalação local
+# Tech Stack
 
-Requisitos: Python 3.10+, pip, git.
+| Layer                | Technology                          |
+| -------------------- | ----------------------------------- |
+| Language             | Python 3.10+                        |
+| Backend              | Flask 3                             |
+| ORM                  | SQLAlchemy                          |
+| Database             | PostgreSQL / SQLite                 |
+| Migrations           | Flask-Migrate / Alembic             |
+| Authentication       | Flask-Login                         |
+| Forms & CSRF         | Flask-WTF                           |
+| Rate Limiting        | Flask-Limiter                       |
+| File Storage         | Local Storage / Cloudflare R2       |
+| Object Storage SDK   | boto3                               |
+| Image Processing     | Pillow                              |
+| Frontend             | Jinja2 + Bootstrap 5.3 + JavaScript |
+| Web Server           | Gunicorn                            |
+| Database Production  | PostgreSQL                          |
+| Development Database | SQLite                              |
+
+---
+
+# Local Development
+
+### Requirements
+
+* Python 3.10+
+* pip
+* Git
+
+### Clone
 
 ```bash
-# 1. Clonar
 git clone https://github.com/Erick0011/Ponto24academico.git
 cd Ponto24academico
+```
 
-# 2. Ambiente virtual
+### Virtual environment
+
+```bash
 python3 -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate
+```
 
-# 3. Dependências
+Windows:
+
+```powershell
+venv\Scripts\activate
+```
+
+### Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-# 4. Variáveis de ambiente
+### Configure environment
+
+```bash
 cp .env.example .env
-# edita o .env — define pelo menos SECRET_KEY com um valor aleatório seguro:
-python -c "import secrets; print(secrets.token_hex(24))"
+```
 
-# 5. Base de dados
+Generate a secure secret:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(24))"
+```
+
+Add it to `.env`.
+
+### Initialize database
+
+```bash
 flask --app manage.py db upgrade
 flask --app manage.py seed-db
+```
 
-# 6. Utilizador administrador
-# a senha tem de ter 8+ caracteres, maiúscula, minúscula e número
-flask --app manage.py criar-admin admin@exemplo.com SenhaForte123
+### Create administrator
 
-# 7. Arrancar
+```bash
+flask --app manage.py criar-admin admin@example.com StrongPassword123
+```
+
+### Run
+
+```bash
 python run.py
 ```
 
-Acede em **http://localhost:5000**. Sem `R2_ENDPOINT` definido no `.env`, os ficheiros são guardados em disco local (`app/static/uploads/`) — suficiente para testar tudo localmente.
+The application will be available at:
 
----
-
-## Variáveis de ambiente
-
-Ver `.env.example` para a lista completa e comentada. As mais relevantes:
-
-| Variável | Obrigatória | Descrição |
-|---|---|---|
-| `SECRET_KEY` | Sim | Chave de assinatura de sessões/tokens — nunca usar o valor de exemplo em produção |
-| `DATABASE_URL` | Não | `sqlite:///...` por defeito; `postgresql://...` em produção |
-| `MAIL_SERVER`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER` | Não | Sem isto, o envio de email é ignorado silenciosamente (útil em dev) |
-| `MARKETING_INTERVALO_SEGUNDOS`, `MARKETING_LIMITE_DIARIO` | Não | Throttle de campanhas de email em massa (padrão: 3s, 300/dia) |
-| `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Não | Se definidos, os ficheiros vão para Cloudflare R2 em vez de disco local |
-| `MAX_CONTENT_LENGTH_MB` | Não | Limite de tamanho de upload (padrão: 50 MB) |
-
----
-
-## Comandos úteis (`manage.py`)
-
-```bash
-flask --app manage.py seed-db                              # cria as categorias base
-flask --app manage.py criar-admin <email> <password>       # cria/promove um admin
-flask --app manage.py testar-email <destinatario>           # envia emails de teste
-flask --app manage.py importar-lote ./pasta --dry-run       # pré-visualiza importação em massa
-flask --app manage.py importar-lote ./pasta --auto-aprovar --ano-letivo "2024/2025"
-
-flask --app manage.py db migrate -m "descrição"             # gera nova migração
-flask --app manage.py db upgrade                            # aplica migrações
+```text
+http://localhost:5000
 ```
 
 ---
 
-## Deployment em produção
+# Testing
 
-```bash
-gunicorn -w 4 -b 0.0.0.0:8000 wsgi:app
+The repository includes a manual functional testing checklist with **200+ test cases** covering different stages of development.
+
+```text
+docs/TESTES.md
 ```
 
-Checklist mínimo:
-- `FLASK_ENV=production` e uma `SECRET_KEY` forte (a app recusa arrancar em produção com a chave de exemplo)
-- `DATABASE_URL` a apontar para PostgreSQL
-- `SESSION_COOKIE_SECURE` fica automaticamente ativo em produção (exige HTTPS)
-- Configurar `R2_*` para armazenamento persistente de ficheiros (discos locais não sobrevivem a deploys em muitas plataformas)
-- Configurar `MAIL_*` para envio real de email
+The technical documentation also provides a deeper explanation of the application's modules, architecture, services, and design decisions.
+
+```text
+docs/PONTO24_DOCUMENTACAO_TECNICA.pdf
+```
 
 ---
 
-## Documentação técnica
+# Roadmap
 
-- **`docs/TESTES.md`** — checklist manual de testes funcionais, organizado por fase de desenvolvimento (200+ itens).
-- **`docs/PONTO24_DOCUMENTACAO_TECNICA.pdf`** — documentação técnica completa, pasta a pasta e ficheiro a ficheiro: o que cada módulo faz, principais funções/classes, decisões de arquitetura (caminho materializado nas pastas, convenção "add mas não commit" nos serviços, mover ficheiros com garantia all-or-nothing, etc.) — pensada para debugging e para planear melhorias futuras.
-
----
-
-## Segurança
-
-- Formulários públicos protegidos por honeypot + rate limiting (Flask-Limiter) — sem CAPTCHA de terceiros
-- Palavra-passe obrigatoriamente forte (8+ caracteres, maiúscula, minúscula, dígito)
-- Cookies de sessão `HttpOnly` + `SameSite=Lax` (`Secure` em produção)
-- Cabeçalhos de segurança em todas as respostas: CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, HSTS
-- Emails de marketing incluem cabeçalhos `List-Unsubscribe`/`List-Unsubscribe-Post` (RFC 8058) e respeitam um limite diário de envio, para reduzir o risco de o remetente ser bloqueado
-
-Encontraste uma vulnerabilidade? Contacta a equipa através da página de Suporte em vez de abrir uma issue pública.
-
----
-
-## Roadmap
-
-- [x] Segurança, painel admin profissional, candidaturas, log de auditoria
-- [x] Sistema de pastas hierárquico com reorganização física dos ficheiros
-- [x] Email automático de candidaturas + campanhas de marketing em massa
-- [ ] API REST (para uma futura app mobile)
-- [ ] Testes automatizados (atualmente o checklist em `docs/TESTES.md` é manual)
-
----
-
-## Licença
-
-A definir pelo mantenedor do projeto.
+* [x] Core academic material platform
+* [x] Authentication
+* [x] Material moderation
+* [x] Credit system
+* [x] Administrative dashboard
+* [x] Audit logging
+* [x] Hierarchical folder system
+* [x] Automated application emails
+* [x] Marketing email infrastructure
+* [x] Security hardening
+* [x] Production deployment preparation
+* [ ] REST API
+* [ ] Automated test suite
+* [ ] Mobile application
+* [ ] Advanced recommendation/search features
